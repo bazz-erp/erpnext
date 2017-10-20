@@ -89,8 +89,9 @@ def get_columns(filters):
         ]
 
     columns += [
-        _("Remarks") + "::220", _("Voucher No") + ":Dynamic Link/"+_("Voucher Type")+":160",
-        _("Against Account") + "::120"
+        _("Voucher Type") + "::120",
+        _("Voucher No") + ":Dynamic Link/"+_("Voucher Type")+":160",
+        _("Against Account") + "::150"
     ]
 
     return columns
@@ -275,7 +276,7 @@ def get_result_as_list(data, filters):
         if filters.get("show_in_account_currency"):
             row += [d.get("debit_in_account_currency"), d.get("credit_in_account_currency"), d.get("balance_in_account_currency")]
 
-        row += [d.get("remarks"), d.get("voucher_no"), d.get("against")]
+        row += [d.get("voucher_type"), d.get("voucher_no"), d.get("against")]
 
         result.append(row)
 

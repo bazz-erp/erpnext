@@ -53,6 +53,8 @@ class PaymentEntry(AccountsController):
         self.validate_duplicate_entry()
         self.validate_allocated_amount()
 
+        self.validate_payment_lines()
+
     def on_submit(self):
         self.setup_party_account_field()
         if self.difference_amount:
@@ -67,8 +69,6 @@ class PaymentEntry(AccountsController):
         self.update_advance_paid()
         self.update_expense_claim()
         self.delink_advance_entry_references()
-
-        self.cancel_pay_entry_in_daily_movement()
 
     def validate_duplicate_entry(self):
         reference_names = []
@@ -97,6 +97,12 @@ class PaymentEntry(AccountsController):
                           "base_total_allocated_amount", "unallocated_amount"):
                 self.set(field, None)
             self.references = []
+
+        # Bazz
+        elif self.payment_type in ("Miscellaneous Income", "Miscellaneous Expenditure"):
+            self.party = None
+            self.party_balance = None
+
         else:
             if not self.party_type:
                 frappe.throw(_("Party Type is mandatory"))
@@ -143,7 +149,9 @@ class PaymentEntry(AccountsController):
                         d.set(field, value)
 
     def validate_payment_type(self):
-        if self.payment_type not in ("Receive", "Pay", "Internal Transfer"):
+        # Bazz has also Miscellaneous Income and Miscellaneous Expenditure
+        if self.payment_type not in ("Receive", "Pay", "Internal Transfer", "Miscellaneous Income",
+                                     "Miscellaneous Expenditure"):
             frappe.throw(_("Payment Type must be one of Receive, Pay and Internal Transfer"))
 
     def validate_party_details(self):
@@ -233,9 +241,9 @@ class PaymentEntry(AccountsController):
         for d in self.get("references"):
             if d.allocated_amount and d.reference_doctype == "Journal Entry":
                 je_accounts = frappe.db.sql("""select debit, credit from `tabJournal Entry Account`
-					where account = %s and party=%s and docstatus = 1 and parent = %s
-					and (reference_type is null or reference_type in ("", "Sales Order", "Purchase Order"))
-					""", (self.party_account, self.party, d.reference_name), as_dict=True)
+                        where account = %s and party=%s and docstatus = 1 and parent = %s
+                        and (reference_type is null or reference_type in ("", "Sales Order", "Purchase Order"))
+                        """, (self.party_account, self.party, d.reference_name), as_dict=True)
 
                 if not je_accounts:
                     frappe.throw(_(
@@ -318,7 +326,7 @@ class PaymentEntry(AccountsController):
         self.set("references", self.get("references", {"allocated_amount": ["not in", [0, None, ""]]}))
 
         frappe.db.sql("""delete from `tabPayment Entry Reference`
-          where parent = %s and allocated_amount = 0""", self.name)
+              where parent = %s and allocated_amount = 0""", self.name)
 
     def validate_payment_against_negative_invoice(self):
         if ((self.payment_type == "Pay" and self.party_type == "Customer")
@@ -341,8 +349,11 @@ class PaymentEntry(AccountsController):
     def set_title(self):
         if self.payment_type in ("Receive", "Pay"):
             self.title = self.party
+        # Bazz
+        elif self.payment_type in ("Miscellaneous Income", "Miscellaneous Expenditure"):
+            self.title = _(self.payment_type) + " - " + self.posting_date
         else:
-            self.title = self.paid_from + " - " + self.paid_to
+            self.title = self.paid_from + " " + self.paid_to
 
     def validate_transaction_reference(self):
         bank_account = self.paid_to if self.payment_type == "Receive" else self.paid_from
@@ -363,7 +374,7 @@ class PaymentEntry(AccountsController):
             remarks = [_("Amount {0} {1} {2} {3} {4}").format(
                 self.party_account_currency,
                 self.paid_amount if self.payment_type == "Receive" else self.received_amount,
-                _("received from") if self.payment_type == "Receive" else _("paid to"),_(self.party_type), self.party
+                _("received from") if self.payment_type == "Receive" else _("paid to"), _(self.party_type), self.party
             )]
 
         if self.reference_no:
@@ -389,8 +400,13 @@ class PaymentEntry(AccountsController):
             self.setup_party_account_field()
 
         gl_entries = []
-        self.add_party_gl_entries(gl_entries)
-        self.add_bank_gl_entries(gl_entries)
+        #self.add_party_gl_entries(gl_entries)
+        #self.add_bank_gl_entries(gl_entries)
+
+        # Bazz
+        self.add_lines_party_gl_entries(gl_entries)
+        self.add_lines_bank_gl_entries(gl_entries)
+
         self.add_deductions_gl_entries(gl_entries)
 
         make_gl_entries(gl_entries, cancel=cancel, adv_adj=adv_adj)
@@ -496,6 +512,98 @@ class PaymentEntry(AccountsController):
                     doc = frappe.get_doc("Expense Claim", d.reference_name)
                     update_reimbursed_amount(doc)
 
+    # Payment Lines
+    def validate_payment_lines(self):
+        total_amount = 0
+        for line in self.get("lines"):
+            self.validate_line_accounts(line)
+            self.validate_mod_of_payment(line)
+
+            self.validate_amount(line)
+            total_amount += line.paid_amount
+
+        if total_amount != self.paid_amount and self.remaining_amount == 0:
+            frappe.throw(_("Remaining Amount must be zero"))
+
+    def validate_line_accounts(self, line):
+        paid_from_type = ["Receivable"] if (self.payment_type == "Receive" or
+                                            self.payment_type == "Miscellaneous Income") else ["Bank", "Cash"]
+
+        paid_to_type = ["Payable"] if (self.payment_type == "Pay" or
+                                       self.payment_type == "Miscellaneous Expenditure") else ["Bank", "Cash"]
+        if not line.paid_from:
+            frappe.throw(_("{0} in Payment Line is mandatory").format("Paid From Account"))
+        if not line.paid_to:
+            frappe.throw(_("{0} in Payment Line is mandatory").format("Paid To Account"))
+        self.validate_account_type(line.paid_from, paid_from_type)
+        self.validate_account_type(line.paid_to, paid_to_type)
+
+
+    def validate_mod_of_payment(self, line):
+        if not frappe.db.exists("Mode of Payment", line.mode_of_payment):
+            frappe.throw(_("Invalid Mode of Payment {0}").format(line.mode_of_payment))
+
+    def validate_currency_fields(self, line):
+        if not line.paid_from_account_currency:
+            account = get_account_details(line.paid_from, self.posting_date)
+            line.paid_from_account_currency = account.account_currency
+        if not line.paid_to_account_currency:
+            account = get_account_details(line.paid_to, self.posting_date)
+            line.paid_to_account_currency = account.account_currency
+
+    def validate_exchange_rates(self, line):
+        if not line.source_exchange_rate:
+            line.source_exchange_rate = get_exchange_rate(line.paid_from_account_currency,
+                                                                  self.company_currency, self.posting_date)
+        if not line.target_exchange_rate:
+            line.target_exchange_rate = get_exchange_rate(line.paid_to_account_currency,
+                                                              self.company_currency, self.posting_date)
+
+    def validate_amount(self, line):
+        if not line.paid_amount:
+            frappe.throw(_("{0} in Payment Line is mandatory").format("Paid Amount"))
+
+    def add_lines_bank_gl_entries(self, gl_entries):
+        for line in self.get("lines"):
+            if self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
+                gl_entries.append(
+                    self.get_gl_dict({
+                        "account": line.paid_from,
+                        "against": self.party if self.party else _("Miscellaneous Expenditure"),
+                        "credit_in_account_currency": line.paid_amount,
+                        "credit": line.base_paid_amount
+                    })
+                )
+            if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
+                gl_entries.append(
+                    self.get_gl_dict({
+                        "account": line.paid_to,
+                        "against": self.party if self.party else _("Miscellaneous Income"),
+                        "debit_in_account_currency": line.paid_amount,
+                        "debit": line.paid_amount
+                    })
+                )
+
+    def add_lines_party_gl_entries(self, gl_entries):
+        for line in self.get("lines"):
+            if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
+                source_account = line.paid_from
+                against_account = line.paid_to
+                dr_or_cr = "credit"
+            else:
+                source_account = line.paid_to
+                against_account = line.paid_from
+                dr_or_cr = "debit"
+            gl_dict = self.get_gl_dict({
+                "account": source_account,
+
+                "against": against_account,
+                dr_or_cr: line.paid_amount
+            })
+            gl_entries.append(gl_dict)
+
+
+
 @frappe.whitelist()
 def get_outstanding_reference_documents(args):
     args = json.loads(args)
@@ -544,22 +652,22 @@ def get_orders_to_be_billed(posting_date, party_type, party, party_account_curre
         ref_field = "base_grand_total" if party_account_currency == company_currency else "grand_total"
 
         orders = frappe.db.sql("""
-			select
-				name as voucher_no,
-				{ref_field} as invoice_amount,
-				({ref_field} - advance_paid) as outstanding_amount,
-				transaction_date as posting_date
-			from
-				`tab{voucher_type}`
-			where
-				{party_type} = %s
-				and docstatus = 1
-				and ifnull(status, "") != "Closed"
-				and {ref_field} > advance_paid
-				and abs(100 - per_billed) > 0.01
-			order by
-				transaction_date, name
-			""".format(**{
+            select
+                name as voucher_no,
+                {ref_field} as invoice_amount,
+                ({ref_field} - advance_paid) as outstanding_amount,
+                transaction_date as posting_date
+            from
+                `tab{voucher_type}`
+            where
+                {party_type} = %s
+                and docstatus = 1
+                and ifnull(status, "") != "Closed"
+                and {ref_field} > advance_paid
+                and abs(100 - per_billed) > 0.01
+            order by
+                transaction_date, name
+            """.format(**{
             "ref_field": ref_field,
             "voucher_type": voucher_type,
             "party_type": scrub(party_type)
@@ -580,17 +688,17 @@ def get_negative_outstanding_invoices(party_type, party, party_account, total_fi
     if party_type != "Employee":
         voucher_type = "Sales Invoice" if party_type == "Customer" else "Purchase Invoice"
         return frappe.db.sql("""
-			select
-				"{voucher_type}" as voucher_type, name as voucher_no,
-				{total_field} as invoice_amount, outstanding_amount, posting_date,
-				due_date, conversion_rate as exchange_rate
-			from
-				`tab{voucher_type}`
-			where
-				{party_type} = %s and {party_account} = %s and docstatus = 1 and outstanding_amount < 0
-			order by
-				posting_date, name
-			""".format(**{
+            select
+                "{voucher_type}" as voucher_type, name as voucher_no,
+                {total_field} as invoice_amount, outstanding_amount, posting_date,
+                due_date, conversion_rate as exchange_rate
+            from
+                `tab{voucher_type}`
+            where
+                {party_type} = %s and {party_account} = %s and docstatus = 1 and outstanding_amount < 0
+            order by
+                posting_date, name
+            """.format(**{
             "total_field": total_field,
             "voucher_type": voucher_type,
             "party_type": scrub(party_type),
@@ -631,8 +739,13 @@ def get_account_details(account, date):
 
 @frappe.whitelist()
 def get_company_defaults(company):
-    fields = ["write_off_account", "exchange_gain_loss_account", "cost_center"]
+    fields = ["write_off_account", "exchange_gain_loss_account", "cost_center", "default_payable_account",
+              "default_receivable_account"]
     ret = frappe.db.get_value("Company", company, fields, as_dict=1)
+
+    #get currency of default accounts
+    ret.update({"default_receivable_account_currency": get_account_currency(ret.default_receivable_account),
+                "default_payable_account_currency": get_account_currency(ret.default_payable_account)});
 
     for fieldname in fields:
         if not ret[fieldname]:
