@@ -9,6 +9,7 @@ frappe.ui.form.on('Payment Entry', {
 			if (!frm.doc.paid_from) frm.set_value("paid_from_account_currency", null);
 			if (!frm.doc.paid_to) frm.set_value("paid_to_account_currency", null);
 		}
+
 	},
 
 	setup: function(frm) {
@@ -118,14 +119,16 @@ frappe.ui.form.on('Payment Entry', {
 	hide_unhide_fields: function(frm) {
 		var company_currency = frm.doc.company? frappe.get_doc(":Company", frm.doc.company).default_currency: "";
 
+		/** Bazz
 		frm.toggle_display("source_exchange_rate",
 			(frm.doc.paid_amount && frm.doc.paid_from_account_currency != company_currency));
+		*/
 
 		frm.toggle_display("target_exchange_rate", (frm.doc.received_amount &&
 			frm.doc.paid_to_account_currency != company_currency &&
 			frm.doc.paid_from_account_currency != frm.doc.paid_to_account_currency));
 
-		frm.toggle_display("base_paid_amount", frm.doc.paid_from_account_currency != company_currency);
+		//frm.toggle_display("base_paid_amount", frm.doc.paid_from_account_currency != company_currency);
 
 		frm.toggle_display("base_received_amount", (frm.doc.paid_to_account_currency != company_currency &&
 			frm.doc.paid_from_account_currency != frm.doc.paid_to_account_currency));
@@ -159,7 +162,8 @@ frappe.ui.form.on('Payment Entry', {
 		frm.set_currency_labels(["base_paid_amount", "base_received_amount", "base_total_allocated_amount",
 			"difference_amount"], company_currency);
 
-		frm.set_currency_labels(["paid_amount"], frm.doc.paid_from_account_currency);
+        // Bazz
+		frm.set_currency_labels(["paid_amount"], company_currency);
 
 		frm.set_currency_labels(["received_amount"], frm.doc.paid_to_account_currency);
 
@@ -184,8 +188,10 @@ frappe.ui.form.on('Payment Entry', {
 		cur_frm.set_df_property("target_exchange_rate", "description",
 			("1 " + frm.doc.paid_to_account_currency + " = [?] " + company_currency));
 
-	    //Set company currency to paid_amount in payment line
+
+		//Set company currency to paid_amount in payment line
 	    frm.set_currency_labels(["paid_amount"], company_currency, "lines");
+
 
 		frm.refresh_fields();
 	},
@@ -777,7 +783,7 @@ frappe.ui.form.on('Payment Entry', {
 
 	//Bazz
 	set_remaining_amount: function(frm) {
-		var remaining_amount = frm.doc.paid_amount;
+		var remaining_amount = frm.doc.paid_amount ? frm.doc.paid_amount : 0;
 		if (frm.doc.lines) {
 		    frm.doc.lines.forEach(function(row) {
 		        if (row.paid_amount) {
