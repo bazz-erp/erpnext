@@ -40,6 +40,8 @@ class PaymentEntry(AccountsController):
         self.set_missing_values()
         self.validate_payment_type()
         self.validate_party_details()
+
+        # Bazz not need paid_from and paid_to
         self.validate_bank_accounts()
         self.set_exchange_rate()
         self.validate_mandatory()
@@ -163,11 +165,10 @@ class PaymentEntry(AccountsController):
                 party_account_type = "Receivable" if self.party_type == "Customer" else "Payable"
                 self.validate_account_type(self.party_account, [party_account_type])
 
+    # Accounts are required only in Internal Transfer
     def validate_bank_accounts(self):
-        if self.payment_type in ("Pay", "Internal Transfer"):
+        if self.payment_type == "Internal Transfer":
             self.validate_account_type(self.paid_from, ["Bank", "Cash"])
-
-        if self.payment_type in ("Receive", "Internal Transfer"):
             self.validate_account_type(self.paid_to, ["Bank", "Cash"])
 
     def validate_account_type(self, account, account_types):
@@ -188,9 +189,9 @@ class PaymentEntry(AccountsController):
                                                           self.company_currency, self.posting_date)
 
     def validate_mandatory(self):
-        for field in ("paid_amount", "received_amount", "source_exchange_rate", "target_exchange_rate"):
-            if not self.get(field):
-                frappe.throw(_("{0} is mandatory").format(self.meta.get_label(field)))
+        # received_amount, source_exchange_rate and target_exchange_rate are not mandatory
+        if not self.get("paid_amount"):
+            frappe.throw(_("{0} is mandatory").format("paid_amount"))
 
     def validate_reference_documents(self):
         if self.party_type == "Customer":
@@ -401,8 +402,8 @@ class PaymentEntry(AccountsController):
 
         gl_entries = []
         #self.add_party_gl_entries(gl_entries)
-        #self.add_bank_gl_entries(gl_entries)
 
+        self.add_bank_gl_entries(gl_entries)
         # Bazz
         self.add_lines_party_gl_entries(gl_entries)
         self.add_lines_bank_gl_entries(gl_entries)
@@ -459,8 +460,9 @@ class PaymentEntry(AccountsController):
 
                 gl_entries.append(gle)
 
+    # Only adds gl entries of Internal Transfers
     def add_bank_gl_entries(self, gl_entries):
-        if self.payment_type in ("Pay", "Internal Transfer"):
+        if self.payment_type == "Internal Transfer":
             gl_entries.append(
                 self.get_gl_dict({
                     "account": self.paid_from,
@@ -470,7 +472,6 @@ class PaymentEntry(AccountsController):
                     "credit": self.base_paid_amount
                 })
             )
-        if self.payment_type in ("Receive", "Internal Transfer"):
             gl_entries.append(
                 self.get_gl_dict({
                     "account": self.paid_to,
@@ -480,6 +481,7 @@ class PaymentEntry(AccountsController):
                     "debit": self.base_received_amount
                 })
             )
+
 
     def add_deductions_gl_entries(self, gl_entries):
         for d in self.get("deductions"):
@@ -512,8 +514,12 @@ class PaymentEntry(AccountsController):
                     doc = frappe.get_doc("Expense Claim", d.reference_name)
                     update_reimbursed_amount(doc)
 
+
     # Payment Lines
     def validate_payment_lines(self):
+        # Remove empty lines
+        self.set("lines", self.get("lines", {"paid_amount": ["not in", [0, None, ""]]}))
+
         total_amount = 0
         for line in self.get("lines"):
             self.validate_line_accounts(line)
@@ -522,7 +528,7 @@ class PaymentEntry(AccountsController):
             self.validate_amount(line)
             total_amount += line.paid_amount
 
-        if total_amount != self.paid_amount or self.remaining_amount != 0:
+        if self.payment_type != "Internal Transfer" and (total_amount != self.paid_amount or self.remaining_amount != 0):
             frappe.throw(_("Remaining Amount must be zero"))
 
     def validate_line_accounts(self, line):
@@ -542,22 +548,6 @@ class PaymentEntry(AccountsController):
     def validate_mod_of_payment(self, line):
         if not frappe.db.exists("Mode of Payment", line.mode_of_payment):
             frappe.throw(_("Invalid Mode of Payment {0}").format(line.mode_of_payment))
-
-    def validate_currency_fields(self, line):
-        if not line.paid_from_account_currency:
-            account = get_account_details(line.paid_from, self.posting_date)
-            line.paid_from_account_currency = account.account_currency
-        if not line.paid_to_account_currency:
-            account = get_account_details(line.paid_to, self.posting_date)
-            line.paid_to_account_currency = account.account_currency
-
-    def validate_exchange_rates(self, line):
-        if not line.source_exchange_rate:
-            line.source_exchange_rate = get_exchange_rate(line.paid_from_account_currency,
-                                                                  self.company_currency, self.posting_date)
-        if not line.target_exchange_rate:
-            line.target_exchange_rate = get_exchange_rate(line.paid_to_account_currency,
-                                                              self.company_currency, self.posting_date)
 
     def validate_amount(self, line):
         if not line.paid_amount:
@@ -886,3 +876,11 @@ def get_payment_entry(dt, dn, party_amount=None, bank_account=None, bank_amount=
         pe.set_exchange_rate()
         pe.set_amounts()
     return pe
+
+# Bazz
+@frappe.whitelist()
+def get_mod_of_payments(company):
+    return frappe.db.sql("""select parent as name from `tabMode of Payment Account` 
+    where parenttype=%(parenttype)s and company=%(company)s""",
+                         {"parenttype": "Mode of Payment", "company": company}, as_dict=1)
+

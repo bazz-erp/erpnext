@@ -10,6 +10,28 @@ frappe.ui.form.on('Payment Entry', {
 			if (!frm.doc.paid_to) frm.set_value("paid_to_account_currency", null);
 		}
 
+
+        if (!frm.doc.lines) {
+            /**Fill Payment Lines with All Modes Of Payment */
+            frappe.call({
+                method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_mod_of_payments",
+                args: {
+                    company: frm.doc.company
+                },
+                callback: function (r) {
+                    if (r.message) {
+                        $.each(r.message, function (index, value) {
+                            var child = frm.add_child("lines");
+                            child.mode_of_payment = value.name;
+                            child.paid_amount = 0
+                        });
+                        frm.refresh_field("lines");
+                    }
+                }
+            });
+        }
+
+
 	},
 
 	setup: function(frm) {
@@ -102,6 +124,10 @@ frappe.ui.form.on('Payment Entry', {
 				filters: filters
 			};
 		});
+
+
+
+
 	},
 
 	refresh: function(frm) {
@@ -122,24 +148,28 @@ frappe.ui.form.on('Payment Entry', {
 		/** Bazz
 		frm.toggle_display("source_exchange_rate",
 			(frm.doc.paid_amount && frm.doc.paid_from_account_currency != company_currency));
-		*/
+
 
 		frm.toggle_display("target_exchange_rate", (frm.doc.received_amount &&
 			frm.doc.paid_to_account_currency != company_currency &&
 			frm.doc.paid_from_account_currency != frm.doc.paid_to_account_currency));
 
+
 		//frm.toggle_display("base_paid_amount", frm.doc.paid_from_account_currency != company_currency);
 
 		frm.toggle_display("base_received_amount", (frm.doc.paid_to_account_currency != company_currency &&
-			frm.doc.paid_from_account_currency != frm.doc.paid_to_account_currency));
+			frm.doc.paid_from_account_currency != frm.doc.paid_to_account_currency)); */
 
-		frm.toggle_display("received_amount", (frm.doc.payment_type=="Internal Transfer" ||
-			frm.doc.paid_from_account_currency != frm.doc.paid_to_account_currency))
+		frm.toggle_display("received_amount", (frm.doc.payment_type=="Internal Transfer" /*||
+			frm.doc.paid_from_account_currency != frm.doc.paid_to_account_currency*/))
+
+
 
 		frm.toggle_display(["base_total_allocated_amount"],
 			(frm.doc.paid_amount && frm.doc.received_amount && frm.doc.base_total_allocated_amount &&
 			((frm.doc.payment_type=="Receive" && frm.doc.paid_from_account_currency != company_currency) ||
 			(frm.doc.payment_type=="Pay" && frm.doc.paid_to_account_currency != company_currency))));
+
 
 		var party_amount = frm.doc.payment_type=="Receive" ?
 			frm.doc.paid_amount : frm.doc.received_amount;
@@ -164,8 +194,7 @@ frappe.ui.form.on('Payment Entry', {
 
         // Bazz
 		frm.set_currency_labels(["paid_amount"], company_currency);
-
-		frm.set_currency_labels(["received_amount"], frm.doc.paid_to_account_currency);
+		frm.set_currency_labels(["received_amount"], company_currency);
 
 		var party_account_currency = frm.doc.payment_type=="Receive" ?
 			frm.doc.paid_from_account_currency : frm.doc.paid_to_account_currency;
@@ -232,6 +261,7 @@ frappe.ui.form.on('Payment Entry', {
 			if(frm.doc.mode_of_payment)
 				frm.events.mode_of_payment(frm);
 		}
+		frm.refresh();
 	},
 
 	party_type: function(frm) {
@@ -256,6 +286,7 @@ frappe.ui.form.on('Payment Entry', {
 
 			frm.set_party_account_based_on_party = true;
 
+            /**
 			return frappe.call({
 				method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_party_details",
 				args: {
@@ -282,8 +313,10 @@ frappe.ui.form.on('Payment Entry', {
 						frm.set_party_account_based_on_party = false;
 					}
 				}
-			});
+			}); */
 		}
+
+
 	},
 
 	paid_from: function(frm) {
@@ -848,6 +881,26 @@ frappe.ui.form.on('Payment Entry Line', {
 
     lines_add: function (frm, cdt, cdn) {
         var line = locals[cdt][cdn];
+        set_up_line(frm, line);
+    },
+    paid_amount: function (frm, cdt, cdn) {
+        var line = locals[cdt][cdn];
+        frm.events.set_remaining_amount(frm);
+        set_up_line(frm, line);
+
+        frm.refresh_field("lines");
+    },
+
+    mode_of_payment: function (frm, cdt, cdn) {
+        var line = locals[cdt][cdn];
+        set_mode_of_payment_account(frm, line);
+    },
+
+
+});
+
+//Initializes pai_from and paid_to fields
+var set_up_line = function (frm, line) {
         if (frm.doc.payment_type == "Miscellaneous Income" || frm.doc.payment_type == "Miscellaneous Expenditure" || !frm.doc.party) {
             frappe.call({
                 method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_company_defaults",
@@ -882,37 +935,35 @@ frappe.ui.form.on('Payment Entry Line', {
                             line['paid_from'] = r.message.party_account;
                         }
                         else {
-                            line['paid_to'] = r.r.message.party_account;
+                            line['paid_to'] = r.message.party_account;
                         }
 					}
 				}
 		    });
 		}
+
+		set_mode_of_payment_account(frm,line);
+
         frm.refresh();
-    },
-    paid_amount: function (frm, cdt, cdn) {
-        var line = locals[cdt][cdn];
-        frm.events.set_remaining_amount(frm);
-    },
 
-    mode_of_payment: function (frm, cdt, cdn) {
-        var line = locals[cdt][cdn];
-        get_payment_mode_account(frm, line['mode_of_payment'], function(account) {
+};
 
-			var payment_account_field;
-			if (frm.doc.payment_type == "Receive" || frm.doc.payment_type == "Miscellaneous Income") {
-			    payment_account_field = "paid_to";
-			}
-			else {
-			    payment_account_field = "paid_from";
-			}
-			line [payment_account_field] = account;
-		    frm.refresh();
-		})
-    },
+var set_mode_of_payment_account = function (frm, line) {
+        if (line['mode_of_payment']) {
+		    get_payment_mode_account(frm, line['mode_of_payment'], function(account) {
 
-
-});
+                var payment_account_field;
+                if (frm.doc.payment_type == "Receive" || frm.doc.payment_type == "Miscellaneous Income") {
+                    payment_account_field = "paid_to";
+                }
+                else {
+                    payment_account_field = "paid_from";
+                }
+                line [payment_account_field] = account;
+                frm.refresh();
+		    });
+		}
+};
 
 /**var update_account = function (frm, line, account_field, account_currency_field, exchange_rate_field) {
     frappe.call({
