@@ -55,6 +55,7 @@ class PaymentEntry(AccountsController):
         self.validate_duplicate_entry()
         self.validate_allocated_amount()
 
+        self.set_concept()
         self.validate_payment_lines()
 
     def on_submit(self):
@@ -352,7 +353,7 @@ class PaymentEntry(AccountsController):
             self.title = self.party
         # Bazz
         elif self.payment_type in ("Miscellaneous Income", "Miscellaneous Expenditure"):
-            self.title = _(self.payment_type) + " - " + self.posting_date
+            self.title = _(self.payment_type) + "  " + self.posting_date
         else:
             self.title = self.paid_from + " " + self.paid_to
 
@@ -515,6 +516,18 @@ class PaymentEntry(AccountsController):
                     update_reimbursed_amount(doc)
 
 
+    def set_concept(self):
+        if not self.concept and (self.payment_type == "Miscellaneous Income" or
+                    self.payment_type == "Miscellaneous Expenditure"):
+            frappe.throw(_("Concept is Mandatory in Miscellaneous Income/Expenditure"))
+        if self.concept:
+            return
+        if self.payment_type == "Receive":
+            self.concept = _("Receive from") + " " + _(self.party_type) + " " + self.party
+        if self.payment_type == "Pay":
+            self.concept = _("Pay to") + " " + _(self.party_type) + " " + self.party
+
+
     # Payment Lines
     def validate_payment_lines(self):
         # Remove empty lines
@@ -561,7 +574,8 @@ class PaymentEntry(AccountsController):
                         "account": line.paid_from,
                         "against": self.party if self.party else _("Miscellaneous Expenditure"),
                         "credit_in_account_currency": line.paid_amount,
-                        "credit": line.paid_amount
+                        "credit": line.paid_amount,
+                        "concept": self.concept
                     })
                 )
             if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
@@ -570,7 +584,8 @@ class PaymentEntry(AccountsController):
                         "account": line.paid_to,
                         "against": self.party if self.party else _("Miscellaneous Income"),
                         "debit_in_account_currency": line.paid_amount,
-                        "debit": line.paid_amount
+                        "debit": line.paid_amount,
+                        "concept": self.concept
                     })
                 )
 
@@ -589,7 +604,8 @@ class PaymentEntry(AccountsController):
 
                 "against": against_account,
                 dr_or_cr: line.paid_amount,
-                dr_or_cr + "_in_account_currency": line.paid_amount
+                dr_or_cr + "_in_account_currency": line.paid_amount,
+                "concept": self.concept
             })
             gl_entries.append(gl_dict)
 

@@ -192,7 +192,7 @@ frappe.ui.form.on('Payment Entry', {
 		frm.set_currency_labels(["base_paid_amount", "base_received_amount", "base_total_allocated_amount",
 			"difference_amount"], company_currency);
 
-        // Bazz
+        // Paid amount always is in company currency
 		frm.set_currency_labels(["paid_amount"], company_currency);
 		frm.set_currency_labels(["received_amount"], company_currency);
 
@@ -286,7 +286,7 @@ frappe.ui.form.on('Payment Entry', {
 
 			frm.set_party_account_based_on_party = true;
 
-            /**
+
 			return frappe.call({
 				method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_party_details",
 				args: {
@@ -299,21 +299,24 @@ frappe.ui.form.on('Payment Entry', {
 					if(r.message) {
 						if(frm.doc.payment_type == "Receive") {
 							frm.set_value("paid_from", r.message.party_account);
-							frm.set_value("paid_from_account_currency", r.message.party_account_currency);
+							//frm.set_value("paid_from_account_currency", r.message.party_account_currency);
 							frm.set_value("paid_from_account_balance", r.message.account_balance);
 						} else if (frm.doc.payment_type == "Pay"){
 							frm.set_value("paid_to", r.message.party_account);
-							frm.set_value("paid_to_account_currency", r.message.party_account_currency);
+						//	frm.set_value("paid_to_account_currency", r.message.party_account_currency);
 							frm.set_value("paid_to_account_balance", r.message.account_balance);
 						}
 						frm.set_value("party_balance", r.message.party_balance);
-						frm.events.get_outstanding_documents(frm);
 						frm.events.hide_unhide_fields(frm);
 						frm.events.set_dynamic_labels(frm);
 						frm.set_party_account_based_on_party = false;
+
+						frm.events.get_outstanding_documents(frm);
+			            frm.events.set_concept(frm);
 					}
 				}
-			}); */
+			});
+
 		}
 
 
@@ -470,6 +473,7 @@ frappe.ui.form.on('Payment Entry', {
 
 	paid_amount: function(frm) {
 		frm.set_value("base_paid_amount", flt(frm.doc.paid_amount) * flt(frm.doc.source_exchange_rate));
+		frm.set_value("received_amount", frm.doc.paid_amount);
 		frm.trigger("reset_received_amount");
 
 		//Updates remaining amount
@@ -824,8 +828,20 @@ frappe.ui.form.on('Payment Entry', {
 		        }
 		    });
 		}
+		frm.set_value("allocated_to_mode_of_payment_amount", frm.doc.paid_amount - remaining_amount);
 		frm.set_value("remaining_amount", remaining_amount);
 
+	},
+
+	set_concept: function (frm) {
+	    //asumes that party_type and party has value
+	    if (frm.doc.payment_type == "Receive") {
+	        frm.set_value("concept",__("Receive from") + " " + __(frm.doc.party_type) + " "  + frm.doc.party);
+	    }
+	    if (frm.doc.payment_type == "Pay") {
+	        frm.set_value("concept",__("Pay to") + " " + __(frm.doc.party_type) + " " + frm.doc.party);
+	    }
+	    frm.refresh();
 	}
 
 });
@@ -964,54 +980,3 @@ var set_mode_of_payment_account = function (frm, line) {
 		    });
 		}
 };
-
-/**var update_account = function (frm, line, account_field, account_currency_field, exchange_rate_field) {
-    frappe.call({
-	    method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_account_details",
-		args: {
-            "account": line[account_field],
-            "date": frm.doc.posting_date
-	    },
-        callback: function(r, rt) {
-            if(r.message) {
-                line[account_currency_field] = r.message['account_currency'];
-                update_exchange_rate(frm, line, account_currency_field ,exchange_rate_field);
-                frm.refresh();
-            }
-        }
-	});
-};
-
-var update_exchange_rate = function (frm,line,account_currency_field ,exchange_rate_field) {
-     var company_currency = frappe.get_doc(":Company", frm.doc.company).default_currency;
-     if (company_currency == line[account_currency_field]) {
-        line[exchange_rate_field] = 1;
-        frm.refresh();
-     }
-     else {
-        frappe.call({
-            method: "erpnext.setup.utils.get_exchange_rate",
-            args: {
-                transaction_date: frm.doc.posting_date,
-                from_currency: line[account_currency_field],
-                to_currency: company_currency
-            },
-            callback: function(r, rt) {
-                line[exchange_rate_field] = r.message;
-                frm.set_df_property(exchange_rate_field, "description",
-			("1 " + line[account_currency_field] + " = [?] " + company_currency),frm.doc.name, "lines");
-                frm.refresh();
-            }
-        });
-     }
-}
-
-var update_base_paid_amount = function(frm, line) {
-    if (line['paid_amount'] != null && line['source_exchange_rate'] != null) {
-        line['base_paid_amount'] = flt(line['paid_amount']) * flt(line['source_exchange_rate']);
-    }
-    else {
-        line['base_paid_amount'] = null;
-    }
-    frm.refresh();
-} */

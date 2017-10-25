@@ -84,7 +84,7 @@ DocType: Payment Entry,Account Paid From,De cuenta de pago
 DocType: Payment Entry,Account Paid To,Cuenta pagado hasta
 apps/erpnext/erpnext/accounts/doctype/cheque_print_template/cheque_print_template.js +25,Account Pay Only,Sólo cuenta de pago
 DocType: Account,Account Type,Tipo de Cuenta
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +174,Account Type for {0} must be {1},Tipo de cuenta para {0} debe ser {1}
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +178,Account Type for {0} must be {1},Tipo de cuenta para {0} debe ser {1}
 apps/erpnext/erpnext/accounts/doctype/account/account.py +119,"Account balance already in Credit, you are not allowed to set 'Balance Must Be' as 'Debit'","Balance de la cuenta ya en Crédito, no le está permitido establecer 'Balance Debe Ser' como 'Débito'"
 apps/erpnext/erpnext/accounts/doctype/account/account.py +117,"Account balance already in Debit, you are not allowed to set 'Balance Must Be' as 'Credit'","Balance de la cuenta ya en Débito, no le está permitido establecer ""Balance Debe Ser"" como ""Crédito"""
 DocType: POS Profile,Account for Change Amount,Cuenta para Monto de Cambio
@@ -310,6 +310,7 @@ DocType: Purchase Invoice Advance,Allocated Amount,Allocated Amount
 DocType: Payment Reconciliation Payment,Allocated amount,Monto asignado
 apps/erpnext/erpnext/accounts/utils.py +360,Allocated amount can not be negative,Monto asignado no puede ser negativo
 apps/erpnext/erpnext/accounts/utils.py +362,Allocated amount can not greater than unadjusted amount,importe asignado no puede superar el importe no ajustado
+DocType: Payment Entry,Allocated to Mode of Payment Amount,Monto Asignado a un Medio de Pago
 apps/erpnext/erpnext/hr/doctype/leave_type/leave_type.js +3,Allocations,Asignaciones
 DocType: POS Profile,Allow Delete,Permitir Borrar
 DocType: Buying Settings,Allow Item to be added multiple times in a transaction,Permitir añadir el artículo varias veces en una transacción
@@ -338,10 +339,10 @@ DocType: Salary Detail,Amount based on formula,Cantidad basada en fórmula
 DocType: Payment Request,Amount in customer's currency,Monto en divisa del cliente
 apps/erpnext/erpnext/accounts/report/purchase_order_items_to_be_billed/purchase_order_items_to_be_billed.py +20,Amount to Bill,Monto a Facturar
 ,Amount to Deliver,Cantidad para envío
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +385,Amount {0} {1} against {2} {3},Monto {0} {1} {2} contra {3}
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +391,Amount {0} {1} deducted against {2},Monto {0} {1} deducido contra {2}
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +368,Amount {0} {1} transferred from {2} to {3},Monto {0} {1} transferido desde {2} a {3}
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +372,Amount {0} {1} {2} {3} {4},Monto {0} {1} {2} {3} {4}
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +389,Amount {0} {1} against {2} {3},Monto {0} {1} {2} contra {3}
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +395,Amount {0} {1} deducted against {2},Monto {0} {1} deducido contra {2}
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +372,Amount {0} {1} transferred from {2} to {3},Monto {0} {1} transferido desde {2} a {3}
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +376,Amount {0} {1} {2} {3} {4},Monto {0} {1} {2} {3} {4}
 apps/erpnext/erpnext/controllers/trends.py +149,Amt,Monto
 apps/erpnext/erpnext/setup/doctype/customer_group/customer_group.py +20,An Customer exists with same name,Existe un cliente con el mismo nombre
 apps/erpnext/erpnext/stock/doctype/item/item.py +505,"An Item Group exists with same name, please change the item name or rename the item group","Existe un grupo de elementos con el mismo nombre , por favor, cambie el nombre del artículo , o cambiar el nombre del grupo de artículos"
@@ -718,7 +719,7 @@ apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +154,Cannot
 apps/erpnext/erpnext/buying/doctype/request_for_quotation/request_for_quotation.js +957,Cannot set a received RFQ to No Quote,Calculations
 apps/erpnext/erpnext/selling/doctype/quotation/quotation.py +80,Cannot set as Lost as Sales Order is made.,"No se puede definir como pérdida, cuando la orden de venta esta hecha."
 apps/erpnext/erpnext/setup/doctype/authorization_rule/authorization_rule.py +38,Cannot set authorization on basis of Discount for {0},No se puede establecer la autorización sobre la base de descuento para {0}
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +921,Cannot {0} {1} {2} without any negative outstanding invoice,No se puede {0} {1} {2} sin ninguna factura pendiente negativa
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +964,Cannot {0} {1} {2} without any negative outstanding invoice,No se puede {0} {1} {2} sin ninguna factura pendiente negativa
 DocType: Manufacturing Settings,Capacity Planning,Planificación de capacidad
 apps/erpnext/erpnext/manufacturing/doctype/production_order/production_order.py +346,Capacity Planning Error,Error en la planificación de capacidad
 DocType: Manufacturing Settings,Capacity Planning For (Days),Planificación de capacidad para (Días)
@@ -851,7 +852,8 @@ DocType: Maintenance Visit,Completion Status,Estado de finalización
 DocType: Salary Detail,Component,Componente
 DocType: Fee Structure,Components,Componentes
 apps/erpnext/erpnext/setup/setup_wizard/industry_type.py +17,Computer,Computadora
-DocType: Payment Entry,Concept,Concepto
+DocType: GL Entry,Concept,Concepto
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +522,Concept is Mandatory in Miscellaneous Income/Expenditure,Concept is Mandatory in Miscellaneous Income/Expenditure
 DocType: Salary Detail,Condition,Condición
 DocType: Salary Detail,Condition and Formula Help,Condición y la Fórmula de Ayuda
 DocType: Training Event,Conference,Conferencia
@@ -1004,7 +1006,7 @@ DocType: Currency Exchange,Currency Exchange,Cambio de Divisas
 DocType: Purchase Invoice,Currency and Price List,Divisa y listas de precios
 apps/erpnext/erpnext/accounts/doctype/account/account.py +127,Currency can not be changed after making entries using some other currency,El tipo de moneda/divisa no se puede cambiar después de crear la entrada contable
 apps/erpnext/erpnext/config/accounts.py +312,Currency exchange rate master.,Configuración principal para el cambio de divisas
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +487,Currency for {0} must be {1},Moneda para {0} debe ser {1}
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +492,Currency for {0} must be {1},Moneda para {0} debe ser {1}
 apps/erpnext/erpnext/shopping_cart/doctype/shopping_cart_settings/shopping_cart_settings.py +37,Currency is required for Price List {0},La divisa/moneda es requerida para lista de precios {0}
 apps/erpnext/erpnext/accounts/doctype/period_closing_voucher/period_closing_voucher.py +33,Currency of the Closing Account must be {0},La divisa / moneda de la cuenta de cierre debe ser {0}
 apps/erpnext/erpnext/manufacturing/doctype/bom/bom.py +258,Currency of the price list {0} is not similar with the selected currency {1},Moneda de la lista de precios {0} no es similar con la moneda seleccionada {1}
@@ -1248,7 +1250,7 @@ DocType: Stock Entry Detail,Difference Account,Cuenta para la Diferencia
 apps/erpnext/erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py +241,"Difference Account must be a Asset/Liability type account, since this Stock Reconciliation is an Opening Entry","Una cuenta distinta debe ser del tipo Activo / Pasivo, ya que la reconciliación del stock es una entrada de apertura"
 DocType: Stock Reconciliation,Difference Amount,Diferencia
 DocType: Payment Entry,Difference Amount (Company Currency),Diferencia de Monto (Divisas de la Compañía)
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +59,Difference Amount must be zero,La diferencia de montos debe ser cero
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +64,Difference Amount must be zero,La diferencia de montos debe ser cero
 apps/erpnext/erpnext/stock/doctype/packing_slip/packing_slip.js +100,Different UOM for items will lead to incorrect (Total) Net Weight value. Make sure that Net Weight of each item is in the same UOM.,Unidad de Medida diferente para elementos dará lugar a Peso Neto (Total) incorrecto. Asegúrese de que el peso neto de cada artículo esté en la misma Unidad de Medida.
 apps/erpnext/erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts.py +79,Direct Expenses,Gastos directos
 apps/erpnext/erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts.py +128,Direct Income,Ingreso directo
@@ -1926,7 +1928,7 @@ DocType: Grading Scale,Intervals,intervalos
 DocType: Training Event,Introduction,Introducción
 apps/erpnext/erpnext/controllers/item_variant.py +92,Invalid Attribute,Atributo no válido
 apps/erpnext/erpnext/regional/india/utils.py +15,Invalid GSTIN or Enter NA for Unregistered,GSTIN no válido o Enter NA para No registrado
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +542,Invalid Mode of Payment {0},Invalid Mode of Payment {0}
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +563,Invalid Mode of Payment {0},Invalid Mode of Payment {0}
 apps/erpnext/erpnext/controllers/item_variant.py +217,Invalid attribute {0} {1},atributo no válido {0} {1}
 apps/erpnext/erpnext/stock/doctype/packing_slip/packing_slip.js +84,Invalid quantity specified for item {0}. Quantity should be greater than 0.,La cantidad especificada es inválida para el elemento {0}. La cantidad debe ser mayor que 0 .
 apps/erpnext/erpnext/utilities/transaction_base.py +96,Invalid reference {0} {1},Referencia Inválida {0} {1}
@@ -2615,7 +2617,6 @@ DocType: Item Attribute,Numeric Values,Valores Numéricos
 DocType: Employee,O+,O +
 DocType: Employee,O-,O-
 DocType: Opportunity,OPTY-,OPTY-
-DocType: Payment Entry,Observations,Observations
 DocType: Guardian,Occupation,Ocupación
 DocType: Vehicle Log,Odometer,Cuentakilómetros
 DocType: Vehicle Log,Odometer Reading,Lectura del podómetro
@@ -2765,7 +2766,7 @@ DocType: Purchase Invoice Item,Page Break,Salto de Página
 DocType: Payment Request,Paid,Pagado
 DocType: Payment Entry,Paid Amount,Cantidad Pagada
 DocType: Payment Entry,Paid Amount (Company Currency),Monto pagado (Divisa por defecto)
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +926,Paid Amount cannot be greater than total negative outstanding amount {0},La cantidad pagada no puede ser superior a cantidad pendiente negativa total de {0}
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +969,Paid Amount cannot be greater than total negative outstanding amount {0},La cantidad pagada no puede ser superior a cantidad pendiente negativa total de {0}
 DocType: Payment Entry Line,Paid From Account Currency,Paid From Account Currency
 DocType: Payment Entry Line,Paid To Account Currency,Paid To Account Currency
 apps/erpnext/erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py +81,Paid amount + Write Off Amount can not be greater than Grand Total,"El total de la cantidad pagada + desajuste, no puede ser mayor que el gran total"
@@ -2803,17 +2804,18 @@ DocType: Purchase Invoice,Party Account Currency,Divisa de la cuenta de tercero/
 DocType: Journal Entry Account,Party Balance,Saldo de tercero/s
 DocType: Payment Entry,Party Name,Nombre de Parte
 DocType: GL Entry,Party Type,Tipo de entidad
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +106,Party Type is mandatory,Tipo de parte es obligatorio
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +109,Party is mandatory,Parte es obligatoria
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +111,Party Type is mandatory,Tipo de parte es obligatorio
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +114,Party is mandatory,Parte es obligatoria
 DocType: Employee,Passport Number,Número de pasaporte
 DocType: Supplier Scorecard Scoring Variable,Path,Page Missing or Moved
 DocType: Payment Entry,Pay,Pagar
 DocType: Journal Entry,Pay To / Recd From,Pagar a / Recibido de
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1170,Pay to,Pago a
 DocType: Account,Payable,Pagadero
 DocType: Expense Claim,Payable Account,Cuenta por pagar
 DocType: Email Digest,Payables,Cuentas por pagar
 DocType: Cheque Print Template,Payer Settings,Configuración del pagador
-apps/erpnext/erpnext/accounts/doctype/purchase_invoice/purchase_invoice.js +782,Payment,Payment
+apps/erpnext/erpnext/accounts/doctype/purchase_invoice/purchase_invoice.js +782,Payment,Pago
 apps/erpnext/erpnext/accounts/report/daily_movements/daily_movements.py +56,Payment ,
 DocType: Payment Gateway Account,Payment Account,Cuenta de pagos
 DocType: Repayment Schedule,Payment Date,Fecha de Pago
@@ -2848,7 +2850,7 @@ DocType: Payment Request,Payment Request,Solicitud de Pago
 apps/erpnext/erpnext/accounts/doctype/payment_request/payment_request.py +29,Payment Request already exists {0},Solicitud de pago ya existe {0}
 DocType: Shopping Cart Settings,Payment Success Url,Parameter Name
 DocType: Payment Entry,Payment Type,Tipo de pago
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +153,"Payment Type must be one of Receive, Pay and Internal Transfer","Tipo de pago debe ser uno de Recibir, Pagar y Transferencia Interna"
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +158,"Payment Type must be one of Receive, Pay and Internal Transfer","Tipo de pago debe ser uno de Recibir, Pagar y Transferencia Interna"
 apps/erpnext/erpnext/accounts/doctype/journal_entry/journal_entry.py +276,Payment against {0} {1} cannot be greater than Outstanding Amount {2},El pago para {0} {1} no puede ser mayor que el pago pendiente {2}
 apps/erpnext/erpnext/hr/doctype/process_payroll/process_payroll.py +337,Payment of salary from {0} to {1},Pago de salario de {0} a {1}
 DocType: Payment Reconciliation,Payments,Pagos.
@@ -2989,7 +2991,7 @@ apps/erpnext/erpnext/setup/doctype/company/company.py +139,Please select Existin
 apps/erpnext/erpnext/maintenance/doctype/maintenance_schedule/maintenance_schedule.py +153,Please select Incharge Person's name,"Por favor, seleccione el nombre de la persona a cargo"
 apps/erpnext/erpnext/selling/doctype/product_bundle/product_bundle.js +13,"Please select Item where ""Is Stock Item"" is ""No"" and ""Is Sales Item"" is ""Yes"" and there is no other Product Bundle","Por favor, seleccione el ítem donde ""Es Elemento de Stock"" es ""No"" y ""¿Es de artículos de venta"" es ""Sí"", y no hay otro paquete de producto"
 apps/erpnext/erpnext/accounts/report/general_ledger/general_ledger.js +74,Please select Party Type first,"Por favor, seleccione primero el tipo de entidad"
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +574,Please select Posting Date before selecting Party,"Por favor, seleccione fecha de publicación antes de seleccionar la Parte"
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +610,Please select Posting Date before selecting Party,"Por favor, seleccione fecha de publicación antes de seleccionar la Parte"
 apps/erpnext/erpnext/accounts/doctype/journal_entry/journal_entry.js +359,Please select Posting Date first,"Por favor, seleccione fecha de publicación primero"
 apps/erpnext/erpnext/manufacturing/doctype/bom/bom.py +154,Please select Price List,"Por favor, seleccione la lista de precios"
 apps/erpnext/erpnext/schools/doctype/student_group/student_group.py +23,Please select Program,Seleccione el programa
@@ -3014,7 +3016,7 @@ apps/erpnext/erpnext/schools/report/course_wise_assessment_report/course_wise_as
 apps/erpnext/erpnext/selling/report/sales_person_wise_transaction_summary/sales_person_wise_transaction_summary.py +36,Please select the document type first,"Por favor, seleccione primero el tipo de documento"
 apps/erpnext/erpnext/hr/doctype/holiday_list/holiday_list.py +29,Please select weekly off day,Por favor seleccione el día libre de la semana
 apps/erpnext/erpnext/controllers/recurring_document.py +169,Please select {0},"Por favor, seleccione {0}"
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1023,Please select {0} first,"Por favor, seleccione primero {0}"
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1066,Please select {0} first,"Por favor, seleccione primero {0}"
 apps/erpnext/erpnext/public/js/controllers/transaction.js +67,Please set 'Apply Additional Discount On',"Por favor, establece ""Aplicar descuento adicional en"""
 apps/erpnext/erpnext/accounts/doctype/asset/depreciation.py +192,Please set 'Asset Depreciation Cost Center' in Company {0},Ajuste &#39;Centro de la amortización del coste del activo&#39; en la empresa {0}
 apps/erpnext/erpnext/accounts/doctype/asset/depreciation.py +190,Please set 'Gain/Loss Account on Asset Disposal' in Company {0},Ajuste &#39;Cuenta / Pérdida de beneficios por enajenaciones de activos&#39; en su empresa {0}
@@ -3390,6 +3392,7 @@ DocType: Payment Reconciliation,Receivable / Payable Account,Cuenta por Cobrar /
 apps/erpnext/erpnext/accounts/report/item_wise_sales_register/item_wise_sales_register.py +80,Receivable Account,Cuenta por cobrar
 DocType: Email Digest,Receivables,Cuentas por cobrar
 DocType: Payment Entry,Receive,Cobro
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1167,Receive from,Cobro de
 apps/erpnext/erpnext/buying/doctype/request_for_quotation/request_for_quotation.js +954,Received,Recibido
 DocType: Payment Entry,Received Amount,Cantidad recibida
 DocType: Payment Entry,Received Amount (Company Currency),Cantidad recibida (Divisa de Compañia)
@@ -3425,11 +3428,11 @@ apps/erpnext/erpnext/accounts/doctype/journal_entry/journal_entry.py +354,Refere
 DocType: Journal Entry,Reference Date,Fecha de referencia
 DocType: Payment Request,Reference Details,Detalles Referencia
 DocType: Payment Request,Reference Doctype,Re:
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +205,Reference Doctype must be one of {0},Doctype de referencia debe ser uno de {0}
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +209,Reference Doctype must be one of {0},Doctype de referencia debe ser uno de {0}
 DocType: Sales Invoice,Reference Document,Documento de referencia
 DocType: Journal Entry Account,Reference Name,Nombre de referencia
 apps/erpnext/erpnext/accounts/doctype/journal_entry/journal_entry.py +118,Reference No & Reference Date is required for {0},Se requiere de No. de referencia y fecha para {0}
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +362,Reference No and Reference Date is mandatory for Bank transaction,Nro de referencia y fecha de referencia es obligatoria para las transacciones bancarias
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +366,Reference No and Reference Date is mandatory for Bank transaction,Nro de referencia y fecha de referencia es obligatoria para las transacciones bancarias
 apps/erpnext/erpnext/accounts/doctype/journal_entry/journal_entry.py +122,Reference No is mandatory if you entered Reference Date,El No. de referencia es obligatoria si usted introdujo la fecha
 DocType: Journal Entry,Reference Number,Número de referencia
 DocType: Payment Reconciliation Payment,Reference Row,Fila de Referencia
@@ -3455,8 +3458,8 @@ apps/erpnext/erpnext/schools/report/student_and_guardian_contact_details/student
 apps/erpnext/erpnext/schools/report/student_and_guardian_contact_details/student_and_guardian_contact_details.py +60,Relation with Guardian2,Relación con Tutor2
 DocType: Employee,Relieving Date,Fecha de relevo
 apps/erpnext/erpnext/hr/doctype/employee/employee.py +116,Relieving Date must be greater than Date of Joining,La fecha de relevo debe ser mayor que la fecha de inicio
-DocType: Payment Entry,Remaining Amount (Company Currency),Monto Restante
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +524,Remaining Amount must be zero,Monto restante por pagar debe ser cero
+DocType: Payment Entry,Remaining Amount,Monto Restante
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +545,Remaining Amount must be zero,Monto restante por pagar debe ser cero
 DocType: Journal Entry,Remark,Observación
 DocType: GL Entry,Remarks,Observaciones
 apps/erpnext/erpnext/stock/doctype/landed_cost_voucher/landed_cost_voucher.js +49,Remove item if charges is not applicable to that item,Eliminar el elemento si los cargos no son aplicables al mismo
@@ -3586,7 +3589,7 @@ apps/erpnext/erpnext/controllers/sales_and_purchase_return.py +87,Row # {0}: Rat
 apps/erpnext/erpnext/controllers/sales_and_purchase_return.py +80,Row # {0}: Returned Item {1} does not exists in {2} {3},Línea # {0}: El artículo devuelto {1} no existe en {2} {3}
 apps/erpnext/erpnext/controllers/sales_and_purchase_return.py +96,Row # {0}: Serial No is mandatory,Línea # {0}: El número de serie es obligatorio
 apps/erpnext/erpnext/controllers/sales_and_purchase_return.py +101,Row # {0}: Serial No {1} does not match with {2} {3},Línea # {0}: Número de serie {1} no coincide con {2} {3}
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +84,Row #{0}: Allocated Amount cannot be greater than outstanding amount.,Fila # {0}: Importe asignado no puede ser mayor que la cantidad pendiente.
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +89,Row #{0}: Allocated Amount cannot be greater than outstanding amount.,Fila # {0}: Importe asignado no puede ser mayor que la cantidad pendiente.
 apps/erpnext/erpnext/controllers/accounts_controller.py +548,Row #{0}: Asset is mandatory for fixed asset purchase/sale,Fila # {0}: el elemento es obligatorio para los activos fijos de compra / venta
 apps/erpnext/erpnext/controllers/accounts_controller.py +578,"Row #{0}: Asset {1} cannot be submitted, it is already {2}","Fila # {0}: el elemento {1} no puede ser presentado, ya es {2}"
 apps/erpnext/erpnext/controllers/accounts_controller.py +554,Row #{0}: Asset {1} does not belong to company {2},Fila # {0}: Activo {1} no pertenece a la empresa {2}
@@ -3594,7 +3597,7 @@ apps/erpnext/erpnext/controllers/accounts_controller.py +558,Row #{0}: Asset {1}
 apps/erpnext/erpnext/controllers/accounts_controller.py +566,Row #{0}: Asset {1} is already {2},Fila # {0}: Activo {1} ya es {2}
 apps/erpnext/erpnext/controllers/accounts_controller.py +562,Row #{0}: Asset {1} must be submitted,Fila # {0}: Activo {1} debe ser presentado
 apps/erpnext/erpnext/accounts/doctype/bank_reconciliation/bank_reconciliation.py +81,Row #{0}: Clearance date {1} cannot be before Cheque Date {2},Fila # {0}: Fecha de Liquidación {1} no puede ser anterior a la Fecha de Cheque {2}
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +75,Row #{0}: Duplicate entry in References {1} {2},Row # {0}: Entrada duplicada en Referencias {1} {2}
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +80,Row #{0}: Duplicate entry in References {1} {2},Row # {0}: Entrada duplicada en Referencias {1} {2}
 apps/erpnext/erpnext/selling/doctype/sales_order/sales_order.py +55,Row #{0}: Expected Delivery Date cannot be before Purchase Order Date,Fila # {0}: La fecha de entrega esperada no puede ser anterior a la fecha de la orden de compra
 apps/erpnext/erpnext/selling/doctype/sales_order/sales_order.py +292,Row #{0}: Not allowed to change Supplier as Purchase Order already exists,Fila # {0}: No se permite cambiar de proveedores debido a que la Orden de Compra ya existe
 apps/erpnext/erpnext/stock/doctype/stock_entry/stock_entry.py +190,Row #{0}: Operation {1} is not completed for {2} qty of finished goods in Production Order # {3}. Please update operation status via Time Logs,"Línea # {0}: La operación {1} no se ha completado para la cantidad: {2} de productos terminados en orden de producción # {3}. Por favor, actualice el estado de la operación a través de la gestión de tiempos"
@@ -3605,9 +3608,9 @@ apps/erpnext/erpnext/controllers/accounts_controller.py +569,Row #{0}: Posting D
 apps/erpnext/erpnext/controllers/accounts_controller.py +571,Row #{0}: Purchase Invoice cannot be made against an existing asset {1},Fila # {0}: Factura de compra no se puede hacer frente a un activo existente {1}
 apps/erpnext/erpnext/controllers/accounts_controller.py +544,"Row #{0}: Qty must be 1, as item is a fixed asset. Please use separate row for multiple qty.","Fila # {0}: Cantidad debe ser 1, como elemento es un activo fijo. Por favor, use fila separada para cantidad múltiple."
 apps/erpnext/erpnext/utilities/transaction_base.py +110,Row #{0}: Rate must be same as {1}: {2} ({3} / {4}) ,Línea # {0}: El valor debe ser el mismo que {1}: {2} ({3} / {4})
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1056,Row #{0}: Reference Document Type must be one of Expense Claim or Journal Entry,Roles Html
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1048,"Row #{0}: Reference Document Type must be one of Purchase Order, Purchase Invoice or Journal Entry","Fila # {0}: Tipo de documento de referencia debe ser uno de la orden de compra, factura de compra o de entrada de diario"
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1040,"Row #{0}: Reference Document Type must be one of Sales Order, Sales Invoice or Journal Entry","Fila # {0}: Tipo de documento de referencia debe ser una de órdenes de venta, factura de venta o entrada de diario"
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1099,Row #{0}: Reference Document Type must be one of Expense Claim or Journal Entry,Roles Html
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1091,"Row #{0}: Reference Document Type must be one of Purchase Order, Purchase Invoice or Journal Entry","Fila # {0}: Tipo de documento de referencia debe ser uno de la orden de compra, factura de compra o de entrada de diario"
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1083,"Row #{0}: Reference Document Type must be one of Sales Order, Sales Invoice or Journal Entry","Fila # {0}: Tipo de documento de referencia debe ser una de órdenes de venta, factura de venta o entrada de diario"
 apps/erpnext/erpnext/controllers/buying_controller.py +297,Row #{0}: Rejected Qty can not be entered in Purchase Return,Línea # {0}: La cantidad rechazada no se puede introducir en el campo 'retorno de compras'
 apps/erpnext/erpnext/controllers/buying_controller.py +308,Row #{0}: Rejected Warehouse is mandatory against rejected Item {1},Fila # {0}: Almacén Rechazado es obligatorio en la partida rechazada {1}
 apps/erpnext/erpnext/selling/doctype/sales_order/sales_order.py +166,Row #{0}: Set Supplier for item {1},Fila # {0}: Asignar Proveedor para el elemento {1}
@@ -4632,7 +4635,7 @@ DocType: Asset Movement,Transaction Date,Fecha de transacción
 DocType: Payment Entry,Transaction ID,ID de transacción
 apps/erpnext/erpnext/accounts/doctype/payment_request/payment_request.py +34,Transaction currency must be same as Payment Gateway currency,Moneda de la transacción debe ser la misma que la moneda de la pasarela de pago
 apps/erpnext/erpnext/stock/doctype/stock_entry/stock_entry.py +461,Transaction not allowed against stopped Production Order {0},Transacción no permitida contra Orden Producción Detenida {0}
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +379,Transaction reference no {0} dated {1},Referencia de la transacción nro {0} fechada {1}
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +383,Transaction reference no {0} dated {1},Referencia de la transacción nro {0} fechada {1}
 apps/erpnext/erpnext/setup/doctype/company/delete_company_transactions.py +17,Transactions can only be deleted by the creator of the Company,Las transacciones sólo pueden ser borradas por el creador de la compañía
 apps/erpnext/erpnext/accounts/doctype/asset/asset.js +287,Transfer,Transferencia
 apps/erpnext/erpnext/accounts/doctype/asset/asset.js +260,Transfer Asset,Transferir Activo
@@ -4978,11 +4981,11 @@ apps/erpnext/erpnext/templates/includes/projects/project_tasks.html +9,modified,
 DocType: Salary Slip,net pay info,información de pago neto
 DocType: Cost Center,old_parent,old_parent
 apps/erpnext/erpnext/templates/pages/task_info.html +90,on,module
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +375,paid to,pagado a
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +379,paid to,pagado a
 DocType: Payment Request,payment_url,url_de_pago
 apps/erpnext/erpnext/templates/includes/product_page.js +18,per,por
 DocType: Workstation,per hour,por hora
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +375,received from,recibido
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +379,received from,recibido
 DocType: Cost Center,rgt,rgt
 DocType: Homepage Featured Product,route,red
 DocType: Activity Cost,title,tags
@@ -5015,7 +5018,7 @@ apps/erpnext/erpnext/accounts/doctype/pos_profile/pos_profile.py +41,{0} does no
 apps/erpnext/erpnext/stock/doctype/item/item.py +436,{0} entered twice in Item Tax,{0} se ingresó dos veces en impuesto del artículo
 apps/erpnext/erpnext/projects/doctype/activity_cost/activity_cost.py +21,{0} for {1},{0} de {1}
 apps/erpnext/erpnext/projects/doctype/project/project_dashboard.html +15,{0} hours,{0} horas
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +533,{0} in Payment Line is mandatory,{0} en una linea de pago es obligatorio
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +554,{0} in Payment Line is mandatory,{0} en una linea de pago es obligatorio
 apps/erpnext/erpnext/buying/doctype/supplier_quotation/supplier_quotation.py +84,"{0} indicates that {1} will not provide a quotation, but all items \
 					have been quoted. Updating the RFQ quote status.","{0} indicates that {1} will not provide a quotation, but all items \
 					have been quoted. Updating the RFQ quote status."
@@ -5040,11 +5043,11 @@ apps/erpnext/erpnext/utilities/bot.py +29,{0} units of [{1}](#Form/Item/{1}) fou
 apps/erpnext/erpnext/stock/stock_ledger.py +372,{0} units of {1} needed in {2} on {3} {4} for {5} to complete this transaction.,{0} unidades de {1} necesaria en {2} sobre {3} {4} {5} para completar esta transacción.
 apps/erpnext/erpnext/stock/stock_ledger.py +368,{0} units of {1} needed in {2} to complete this transaction.,{0} unidades de {1} necesaria en {2} para completar esta transacción.
 apps/erpnext/erpnext/stock/utils.py +205,{0} valid serial nos for Item {1},{0} núms. de serie válidos para el artículo {1}
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +216,{0} {1} does not associated with {2} {3},{0} {1} no asociada a {2} {3}
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +210,{0} {1} does not exist,{0} {1} no existe
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +220,{0} {1} does not associated with {2} {3},{0} {1} no asociada a {2} {3}
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +214,{0} {1} does not exist,{0} {1} no existe
 apps/erpnext/erpnext/buying/doctype/purchase_order/purchase_order.py +171,{0} {1} has been modified. Please refresh.,{0} {1} ha sido modificado. Por favor actualice.
 apps/erpnext/erpnext/stock/doctype/material_request/material_request.py +143,{0} {1} has not been submitted so the action cannot be completed,{0} {1} no fue enviado por lo tanto la acción no   puede estar completa
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +230,"{0} {1} is associated with {2}, but Party Account is {3}","{0} currently has a {1} Supplier Scorecard standing, and RFQs to this supplier should be issued with caution."
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +234,"{0} {1} is associated with {2}, but Party Account is {3}","{0} currently has a {1} Supplier Scorecard standing, and RFQs to this supplier should be issued with caution."
 apps/erpnext/erpnext/controllers/selling_controller.py +286,{0} {1} is cancelled or closed,{0} {1} está cancelado o cerrado
 apps/erpnext/erpnext/stock/doctype/material_request/material_request.py +213,{0} {1} is cancelled or stopped,{0} {1} está cancelado o detenido
 apps/erpnext/erpnext/stock/doctype/material_request/material_request.py +134,{0} {1} is cancelled so the action cannot be completed,{0} {1} esta cancelado por lo tanto la acción no puede estar completa
@@ -5054,7 +5057,7 @@ apps/erpnext/erpnext/accounts/party.py +357,{0} {1} is frozen,{0} {1} está cong
 apps/erpnext/erpnext/accounts/doctype/journal_entry/journal_entry.py +244,{0} {1} is fully billed,{0} {1} está totalmente facturado
 apps/erpnext/erpnext/accounts/party.py +361,{0} {1} is not active,{0} {1} no está activo
 apps/erpnext/erpnext/accounts/doctype/journal_entry/journal_entry.py +241,{0} {1} is not submitted,{0} {1} no se ha enviado
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +235,{0} {1} must be submitted,{0} {1} debe ser presentado
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +239,{0} {1} must be submitted,{0} {1} debe ser presentado
 apps/erpnext/erpnext/accounts/utils.py +76,{0} {1} not in any active Fiscal Year.,{0} {1} no en cualquier año fiscal activa.
 apps/erpnext/erpnext/buying/utils.py +80,{0} {1} status is {2},{0} {1} el estado es {2}
 apps/erpnext/erpnext/accounts/doctype/gl_entry/gl_entry.py +79,{0} {1}: 'Profit and Loss' type account {2} not allowed in Opening Entry,"{0} {1}: cuenta de tipo ""Pérdidas y Ganancias"" {2} no se permite una entrada de apertura"
