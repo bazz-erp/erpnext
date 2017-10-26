@@ -10,27 +10,30 @@ frappe.ui.form.on('Payment Entry', {
 			if (!frm.doc.paid_to) frm.set_value("paid_to_account_currency", null);
 		}
 
+        set_up_payment_lines(frm);
 
-        if (!frm.doc.lines) {
-            /**Fill Payment Lines with All Modes Of Payment */
-            frappe.call({
-                method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_mod_of_payments",
-                args: {
-                    company: frm.doc.company
-                },
-                callback: function (r) {
-                    if (r.message) {
-                        $.each(r.message, function (index, value) {
-                            var child = frm.add_child("lines");
-                            child.mode_of_payment = value.name;
-                            child.paid_amount = 0
-                        });
-                        frm.refresh_field("lines");
-                    }
-                }
-            });
-        }
+        frm.get_field('incoming_bank_checks').grid.editable_fields = [
+            {fieldname: 'payment_date', columns: 2},
+            {fieldname: 'bank', columns: 2},
+            {fieldname: 'amount', columns: 2},
+            {fieldname: 'number', columns: 2},
+            {fieldname: 'internal_number', columns: 2}
+	    ];
 
+	    frm.get_field('outgoing_bank_checks').grid.editable_fields = [
+            {fieldname: 'issue_date', columns: 2},
+            {fieldname: 'account', columns: 2},
+            {fieldname: 'amount', columns: 2},
+            {fieldname: 'number', columns: 2},
+	    ];
+
+	    if (frm.doc.incoming_bank_checks.length != 0) {
+	        frm.set_df_property("incoming_bank_checks", "hidden", false);
+	    }
+	    if (frm.doc.outgoing_bank_checks.length != 0) {
+	        frm.set_df_property("outgoing_bank_checks","hidden" ,false);
+	    }
+	    frm.refresh_fields();
 
 	},
 
@@ -125,9 +128,15 @@ frappe.ui.form.on('Payment Entry', {
 			};
 		});
 
-
-
-
+		frm.set_query("account", "outgoing_bank_checks", function() {
+			return {
+				filters: {
+					"is_group": 0,
+					"company": frm.doc.company,
+					"account_type": "Bank"
+				}
+			}
+		});
 	},
 
 	refresh: function(frm) {
@@ -261,7 +270,27 @@ frappe.ui.form.on('Payment Entry', {
 			if(frm.doc.mode_of_payment)
 				frm.events.mode_of_payment(frm);
 		}
+
+		frm.set_value("party_type", null);
+		frm.set_value("party", null);
+		frm.set_value("references", null);
+
+
+		//clear payment lines
+		frm.set_value("lines", null);
+		frm.set_value("remaining_amount", null);
+		frm.set_value("allocated_to_mode_of_payment_amount", null);
+
+		//clear bank checks
+		frm.set_value("incoming_bank_checks", null);
+		frm.toggle_display("incoming_bank_checks", false);
+		frm.set_value("outgoing_bank_checks", null);
+		frm.set_value("outgoing_bank_checks", false);
+
+
+		set_up_payment_lines(frm);
 		frm.refresh();
+
 	},
 
 	party_type: function(frm) {
@@ -820,28 +849,34 @@ frappe.ui.form.on('Payment Entry', {
 
 	//Bazz
 	set_remaining_amount: function(frm) {
-		var remaining_amount = frm.doc.paid_amount ? frm.doc.paid_amount : 0;
+		var allocated_to_mode_of_payment_amount = 0;
 		if (frm.doc.lines) {
 		    frm.doc.lines.forEach(function(row) {
 		        if (row.paid_amount) {
-		            remaining_amount -= row.paid_amount;
+		            allocated_to_mode_of_payment_amount += row.paid_amount;
 		        }
 		    });
 		}
-		frm.set_value("allocated_to_mode_of_payment_amount", frm.doc.paid_amount - remaining_amount);
-		frm.set_value("remaining_amount", remaining_amount);
+		frm.set_value("allocated_to_mode_of_payment_amount", allocated_to_mode_of_payment_amount);
+		if (frm.doc.paid_amount) {
+		    frm.set_value("remaining_amount", frm.doc.paid_amount - allocated_to_mode_of_payment_amount);
+		}
+
 
 	},
 
 	set_concept: function (frm) {
-	    //asumes that party_type and party has value
-	    if (frm.doc.payment_type == "Receive") {
-	        frm.set_value("concept",__("Receive from") + " " + __(frm.doc.party_type) + " "  + frm.doc.party);
-	    }
-	    if (frm.doc.payment_type == "Pay") {
-	        frm.set_value("concept",__("Pay to") + " " + __(frm.doc.party_type) + " " + frm.doc.party);
-	    }
-	    frm.refresh();
+        if (frm.doc.party && frm.doc.payment_type) {
+            if (frm.doc.payment_type == "Receive") {
+	            frm.set_value("concept",__("Receive from") + " " + __(frm.doc.party_type) + " "  + frm.doc.party);
+            }
+            if (frm.doc.payment_type == "Pay") {
+                frm.set_value("concept",__("Pay to") + " " + __(frm.doc.party_type) + " " + frm.doc.party);
+            }
+        }
+        else {
+            frm.set_value("concept", "");
+        }
 	}
 
 });
@@ -904,7 +939,11 @@ frappe.ui.form.on('Payment Entry Line', {
         frm.events.set_remaining_amount(frm);
         set_up_line(frm, line);
 
-        frm.refresh_field("lines");
+        if (line.mode_of_payment == "Cheque") {
+            frm.toggle_display("incoming_bank_checks", line.paid_amount != 0 && (frm.doc.payment_type == "Receive" || frm.doc.payment_type == "Miscellaneous Income"));
+            frm.toggle_display("outgoing_bank_checks", line.paid_amount != 0 && (frm.doc.payment_type == "Pay" || frm.doc.payment_type == "Miscellaneous Expenditure"));
+        }
+
     },
 
     mode_of_payment: function (frm, cdt, cdn) {
@@ -980,3 +1019,33 @@ var set_mode_of_payment_account = function (frm, line) {
 		    });
 		}
 };
+
+var set_up_payment_lines = function (frm) {
+    if (!frm.doc.lines) {
+            /**Fill Payment Lines with All Modes Of Payment */
+            frappe.call({
+                method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_mod_of_payments",
+                args: {
+                    company: frm.doc.company
+                },
+                callback: function (r) {
+                    if (r.message) {
+                        $.each(r.message, function (index, value) {
+                            var child = frm.add_child("lines");
+                            child.mode_of_payment = value.name;
+                            child.paid_amount = 0
+                        });
+                        frm.refresh();
+                    }
+                }
+            });
+    }
+}
+
+frappe.ui.form.on('Bank Check', {
+	outgoing_bank_checks_add: function (frm, cdt, cdn) {
+	    check = locals[cdt][cdn];
+	    check.concept = frm.doc.concept;
+	    frm.refresh();
+	}
+})

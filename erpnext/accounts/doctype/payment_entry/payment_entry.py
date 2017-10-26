@@ -57,6 +57,7 @@ class PaymentEntry(AccountsController):
 
         self.set_concept()
         self.validate_payment_lines()
+        self.validate_bank_checks()
 
     def on_submit(self):
         self.setup_party_account_field()
@@ -192,7 +193,7 @@ class PaymentEntry(AccountsController):
     def validate_mandatory(self):
         # received_amount, source_exchange_rate and target_exchange_rate are not mandatory
         if not self.get("paid_amount"):
-            frappe.throw(_("{0} is mandatory").format("paid_amount"))
+            frappe.throw(_("{0} is mandatory").format(self.meta.get_label("paid_amount")))
 
     def validate_reference_documents(self):
         if self.party_type == "Customer":
@@ -608,6 +609,41 @@ class PaymentEntry(AccountsController):
                 "concept": self.concept
             })
             gl_entries.append(gl_dict)
+
+    def validate_bank_checks(self):
+        mandatory_fields = []
+        if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
+            self.outgoing_bank_checks = None
+            checks = "incoming_bank_checks"
+            mandatory_fields = ["payment_date", "bank","internal_number"]
+        elif self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
+            self.incoming_bank_checks = None
+            checks = "outgoing_bank_checks"
+            mandatory_fields = ["issue_date", "account", "concept"]
+
+        total_amount_paid_with_checks = 0
+        for check in self.get(checks):
+            self.validate_check(mandatory_fields, check)
+            total_amount_paid_with_checks += check.amount
+
+        if total_amount_paid_with_checks != self.get_amount_assigned_to_checks():
+            frappe.throw(_("Total Amount Paid with checks must be equal to amount assigned to mode of payment Check"))
+
+    def validate_check(self, mandatory_fields, check):
+        for field in mandatory_fields:
+            if not check.get(field):
+                frappe.throw(_("{0} in Bank Check is mandatory").format(field))
+
+
+    def get_amount_assigned_to_checks(self):
+        lines_assigned_to_bank_check = self.get("lines", {"paid_amount": ["not in", [0, None, ""]],
+                                                          "mode_of_payment": "Cheque"})
+        total_amount_assigned_to_checks = 0
+        for line in lines_assigned_to_bank_check:
+            total_amount_assigned_to_checks += line.paid_amount
+        return total_amount_assigned_to_checks
+
+
 
 
 
