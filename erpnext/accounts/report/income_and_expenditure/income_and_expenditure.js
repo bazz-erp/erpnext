@@ -1,6 +1,5 @@
 // Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 // License: GNU General Public License v3. See license.txt
-
 frappe.query_reports["Income and Expenditure"] = {
 	"filters": [
 		{
@@ -47,10 +46,11 @@ frappe.query_reports["Income and Expenditure"] = {
 	],
 	"formatter": function (row, cell, value, columnDef, dataContext, default_formatter) {
 	    value = default_formatter(row, cell, value, columnDef, dataContext);
+
 	    if (columnDef.id == __("Account") && dataContext[__("Account")] == "'" + __("Opening") + "'" ) {
 	        value = "<span style='color:green!important;font-weight:bold'>" + value + "</span>";
 	    }
-	    if (columnDef.id == __("Account") && dataContext[__("Account")] == "'" + __("Closing (Opening + Totals)") + "'" ) {
+	    if (columnDef.id == __("Account") && dataContext[__("Account")] == "'" + __("Saldo") + "'" ) {
 	        value = "<span style='color:red!important;font-weight:bold'>" + value + "</span>";
 	    }
 	    return value;
