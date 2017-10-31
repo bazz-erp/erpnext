@@ -77,7 +77,7 @@ def set_account_currency(filters):
 
 def get_columns(filters):
     columns = [
-        _("Posting Date") + ":Date:90", _("Account") + ":Link/Account:180",
+        _("Posting Date") + ":Date:90", _("Account") + ":Data:180",
         _("Debit") + ":Float:100", _("Credit") + ":Float:100", _("Balance") + ":Float:100"
     ]
 
@@ -90,8 +90,7 @@ def get_columns(filters):
 
     columns += [
         _("Voucher Type") + "::120",
-        _("Voucher No") + ":Dynamic Link/"+_("Voucher Type")+":160",
-        _("Against Account") + "::150"
+        _("Voucher No") + ":Dynamic Link/"+_("Voucher Type")+":160"
     ]
 
     return columns
@@ -119,7 +118,7 @@ def get_gl_entries(filters):
             posting_date, account, party_type, party,
             sum(debit) as debit, sum(credit) as credit,
             voucher_type, voucher_no, cost_center, project,
-            against_voucher_type, against_voucher,
+            against_voucher_type, against_voucher,concept,
             remarks, against, is_opening {select_fields}
         from `tabGL Entry`
         where company=%(company)s {conditions}
@@ -155,7 +154,7 @@ def get_data_with_opening_closing(filters, account_details, gl_entries):
     for acc, acc_dict in gle_map.items():
         if acc_dict.entries:
             # Opening for individual ledger, if grouped by account
-            data.append(get_balance_row(_("Opening"), acc_dict.opening_credit, acc_dict.opening_debit,
+            data.append(get_balance_row(acc, acc_dict.opening_credit, acc_dict.opening_debit,
                     acc_dict.opening_credit_in_account_currency, acc_dict.opening_debit_in_account_currency))
 
             data += acc_dict.entries
@@ -167,14 +166,19 @@ def get_data_with_opening_closing(filters, account_details, gl_entries):
             account_closing_credit_in_account_currency = acc_dict.opening_credit_in_account_currency + acc_dict.total_credit_in_account_currency
             account_closing_debit_in_account_currency = acc_dict.opening_debit_in_account_currency + acc_dict.total_debit_in_account_currency
 
-            data += [get_balance_row(_("Closing (Opening + Totals)"),
-                        account_closing_credit, account_closing_debit, account_closing_credit_in_account_currency,
-                                    account_closing_debit_in_account_currency), {}]
+            data += [get_balance_row(_("Saldo"), account_closing_credit, account_closing_debit,
+                                     account_closing_credit_in_account_currency,
+                                     account_closing_debit_in_account_currency), {}]
+
+        else:
+            data += [get_balance_row(acc, acc_dict.opening_credit, acc_dict.opening_debit,
+                                 acc_dict.opening_credit_in_account_currency,
+                                 acc_dict.opening_debit_in_account_currency), {}]
 
     # Total debit and credit between from and to date
     if total_debit or total_credit:
         data.append({
-            "account": "'" + _("Totals") + "'",
+            "concept": _("Totals"),
             "debit": total_debit,
             "credit": total_credit,
             "balance": total_debit - total_credit,
@@ -236,8 +240,6 @@ def get_accountwise_gle(filters, gl_entries, gle_map):
             gle.update({"balance": balance, "balance_in_account_currency": balance_in_account_currency})
             gle_map[gle.account].entries.append(gle)
 
-            total_debit += flt(gle.debit, 3)
-            total_credit += flt(gle.credit, 3)
 
             if filters.get("show_in_account_currency"):
                 gle_map[gle.account].total_debit_in_account_currency += flt(gle.debit_in_account_currency, 3)
@@ -246,13 +248,17 @@ def get_accountwise_gle(filters, gl_entries, gle_map):
                 total_debit_in_account_currency += flt(gle.debit_in_account_currency, 3)
                 total_credit_in_account_currency += flt(gle.credit_in_account_currency, 3)
 
+        if gle.posting_date <= to_date:
+            total_debit += flt(gle.debit, 3)
+            total_credit += flt(gle.credit, 3)
+
     return opening_debit, opening_credit, total_debit, total_credit, opening_debit_in_account_currency, \
            opening_credit_in_account_currency, total_debit_in_account_currency, total_credit_in_account_currency, gle_map
 
 
 def get_balance_row(label, credit, debit, credit_in_account_currency=None, debit_in_account_currency=None):
     balance_row = {
-        "account": "'" + label + "'",
+        "concept": label,
         "debit": debit,
         "credit": credit,
         "balance": debit - credit
@@ -271,12 +277,12 @@ def get_balance_row(label, credit, debit, credit_in_account_currency=None, debit
 def get_result_as_list(data, filters):
     result = []
     for d in data:
-        row = [d.get("posting_date"), d.get("account"), d.get("debit"), d.get("credit"), d.get("balance")]
+        row = [d.get("posting_date"), d.get("concept"), d.get("debit"), d.get("credit"), d.get("balance")]
 
         if filters.get("show_in_account_currency"):
             row += [d.get("debit_in_account_currency"), d.get("credit_in_account_currency"), d.get("balance_in_account_currency")]
 
-        row += [d.get("voucher_type"), d.get("voucher_no"), d.get("against")]
+        row += [d.get("voucher_type"), d.get("voucher_no")]
 
         result.append(row)
 
