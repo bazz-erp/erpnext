@@ -6,7 +6,8 @@ from __future__ import unicode_literals
 import frappe, json
 from frappe import _, scrub, ValidationError
 from frappe.utils import flt, comma_or, nowdate
-from erpnext.accounts.utils import get_outstanding_invoices, get_account_currency, get_balance_on, get_last_daily_movement_balance
+from erpnext.accounts.utils import get_outstanding_invoices, get_account_currency, get_balance_on, \
+    get_last_daily_movement_balance
 from erpnext.accounts.party import get_party_account
 from erpnext.accounts.doctype.journal_entry.journal_entry \
     import get_average_exchange_rate, get_default_bank_cash_account
@@ -403,7 +404,7 @@ class PaymentEntry(AccountsController):
             self.setup_party_account_field()
 
         gl_entries = []
-        #self.add_party_gl_entries(gl_entries)
+        # self.add_party_gl_entries(gl_entries)
 
         self.add_bank_gl_entries(gl_entries)
         # Bazz
@@ -484,7 +485,6 @@ class PaymentEntry(AccountsController):
                 })
             )
 
-
     def add_deductions_gl_entries(self, gl_entries):
         for d in self.get("deductions"):
             if d.amount:
@@ -516,10 +516,9 @@ class PaymentEntry(AccountsController):
                     doc = frappe.get_doc("Expense Claim", d.reference_name)
                     update_reimbursed_amount(doc)
 
-
     def set_concept(self):
         if not self.concept and (self.payment_type == "Miscellaneous Income" or
-                    self.payment_type == "Miscellaneous Expenditure"):
+                                         self.payment_type == "Miscellaneous Expenditure"):
             frappe.throw(_("Concept is Mandatory in Miscellaneous Income/Expenditure"))
         if self.concept:
             return
@@ -527,7 +526,6 @@ class PaymentEntry(AccountsController):
             self.concept = _("Receive from") + " " + _(self.party_type) + " " + self.party
         if self.payment_type == "Pay":
             self.concept = _("Pay to") + " " + _(self.party_type) + " " + self.party
-
 
     # Payment Lines
     def validate_payment_lines(self):
@@ -542,7 +540,8 @@ class PaymentEntry(AccountsController):
             self.validate_amount(line)
             total_amount += line.paid_amount
 
-        if self.payment_type != "Internal Transfer" and (total_amount != self.paid_amount or self.remaining_amount != 0):
+        if self.payment_type != "Internal Transfer" and (
+                total_amount != self.paid_amount or self.remaining_amount != 0):
             frappe.throw(_("Remaining Amount must be zero"))
 
     def validate_line_accounts(self, line):
@@ -557,7 +556,6 @@ class PaymentEntry(AccountsController):
             frappe.throw(_("{0} in Payment Line is mandatory").format("Paid To Account"))
         self.validate_account_type(line.paid_from, paid_from_type)
         self.validate_account_type(line.paid_to, paid_to_type)
-
 
     def validate_mod_of_payment(self, line):
         if not frappe.db.exists("Mode of Payment", line.mode_of_payment):
@@ -615,7 +613,7 @@ class PaymentEntry(AccountsController):
         if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
             self.outgoing_bank_checks = None
             checks = "incoming_bank_checks"
-            mandatory_fields = ["payment_date", "bank","internal_number"]
+            mandatory_fields = ["payment_date", "bank", "internal_number"]
         elif self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
             self.incoming_bank_checks = None
             checks = "outgoing_bank_checks"
@@ -634,7 +632,6 @@ class PaymentEntry(AccountsController):
             if not check.get(field):
                 frappe.throw(_("{0} in Bank Check is mandatory").format(field))
 
-
     def get_amount_assigned_to_checks(self):
         lines_assigned_to_bank_check = self.get("lines", {"paid_amount": ["not in", [0, None, ""]],
                                                           "mode_of_payment": "Cheque"})
@@ -642,9 +639,6 @@ class PaymentEntry(AccountsController):
         for line in lines_assigned_to_bank_check:
             total_amount_assigned_to_checks += line.paid_amount
         return total_amount_assigned_to_checks
-
-
-
 
 
 @frappe.whitelist()
@@ -786,7 +780,7 @@ def get_company_defaults(company):
               "default_receivable_account"]
     ret = frappe.db.get_value("Company", company, fields, as_dict=1)
 
-    #get currency of default accounts
+    # get currency of default accounts
     ret.update({"default_receivable_account_currency": get_account_currency(ret.default_receivable_account),
                 "default_payable_account_currency": get_account_currency(ret.default_payable_account)});
 
@@ -929,10 +923,10 @@ def get_payment_entry(dt, dn, party_amount=None, bank_account=None, bank_amount=
         pe.set_amounts()
     return pe
 
+
 # Bazz
 @frappe.whitelist()
 def get_mod_of_payments(company):
     return frappe.db.sql("""select parent as name from `tabMode of Payment Account` 
     where parenttype=%(parenttype)s and company=%(company)s""",
                          {"parenttype": "Mode of Payment", "company": company}, as_dict=1)
-

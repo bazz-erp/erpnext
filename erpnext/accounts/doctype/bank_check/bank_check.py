@@ -8,3 +8,8 @@ from frappe.model.document import Document
 
 class BankCheck(Document):
 	pass
+
+
+@frappe.whitelist()
+def get_last_internal_number():
+	return frappe.db.sql("""SELECT Count(*) as number FROM `tabBank Check`""", as_dict = 1)
