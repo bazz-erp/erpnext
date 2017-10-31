@@ -937,6 +937,7 @@ frappe.ui.form.on('Payment Entry Line', {
         set_up_line(frm, line);
 
         if (line.mode_of_payment == "Cheque") {
+        	get_check_internal_number()
 			var display_bank_checks = line.paid_amount != 0;
             if (frm.doc.payment_type == "Receive" || frm.doc.payment_type == "Miscellaneous Income") {
                 frm.toggle_display("incoming_bank_checks_section", display_bank_checks);
