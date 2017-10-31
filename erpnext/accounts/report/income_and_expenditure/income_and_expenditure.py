@@ -166,9 +166,14 @@ def get_data_with_opening_closing(filters, account_details, gl_entries):
             account_closing_credit_in_account_currency = acc_dict.opening_credit_in_account_currency + acc_dict.total_credit_in_account_currency
             account_closing_debit_in_account_currency = acc_dict.opening_debit_in_account_currency + acc_dict.total_debit_in_account_currency
 
-            data += [get_balance_row(_("Saldo"),
-                        account_closing_credit, account_closing_debit, account_closing_credit_in_account_currency,
-                                    account_closing_debit_in_account_currency), {}]
+            data += [get_balance_row(_("Saldo"), account_closing_credit, account_closing_debit,
+                                     account_closing_credit_in_account_currency,
+                                     account_closing_debit_in_account_currency), {}]
+
+        else:
+            data += [get_balance_row(acc, acc_dict.opening_credit, acc_dict.opening_debit,
+                                 acc_dict.opening_credit_in_account_currency,
+                                 acc_dict.opening_debit_in_account_currency), {}]
 
     # Total debit and credit between from and to date
     if total_debit or total_credit:
@@ -235,8 +240,6 @@ def get_accountwise_gle(filters, gl_entries, gle_map):
             gle.update({"balance": balance, "balance_in_account_currency": balance_in_account_currency})
             gle_map[gle.account].entries.append(gle)
 
-            total_debit += flt(gle.debit, 3)
-            total_credit += flt(gle.credit, 3)
 
             if filters.get("show_in_account_currency"):
                 gle_map[gle.account].total_debit_in_account_currency += flt(gle.debit_in_account_currency, 3)
@@ -244,6 +247,10 @@ def get_accountwise_gle(filters, gl_entries, gle_map):
 
                 total_debit_in_account_currency += flt(gle.debit_in_account_currency, 3)
                 total_credit_in_account_currency += flt(gle.credit_in_account_currency, 3)
+
+        if gle.posting_date <= to_date:
+            total_debit += flt(gle.debit, 3)
+            total_credit += flt(gle.credit, 3)
 
     return opening_debit, opening_credit, total_debit, total_credit, opening_debit_in_account_currency, \
            opening_credit_in_account_currency, total_debit_in_account_currency, total_credit_in_account_currency, gle_map
