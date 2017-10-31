@@ -284,13 +284,9 @@ frappe.ui.form.on('Payment Entry', {
 
 		//clear bank checks
 		frm.set_value("incoming_bank_checks", null);
-		frm.toggle_display("incoming_bank_checks", false);
-		frm.set_df_property("incoming_bank_checks_section", "hidden", 1);
-
+		frm.toggle_display("incoming_bank_checks_section", false);
 		frm.set_value("outgoing_bank_checks", null);
-		frm.toggle_display("outgoing_bank_checks", false);
-		frm.set_df_property("outgoing_bank_checks_section", "hidden", 1);
-
+		frm.toggle_display("outgoing_bank_checks_section", false);
 
 		set_up_payment_lines(frm);
 		frm.refresh();
@@ -944,26 +940,20 @@ frappe.ui.form.on('Payment Entry Line', {
         set_up_line(frm, line);
 
         if (line.mode_of_payment == "Cheque") {
-            var display_incoming_bank_checks = line.paid_amount != 0 && (frm.doc.payment_type == "Receive" || frm.doc.payment_type == "Miscellaneous Income");
-            frm.toggle_display("incoming_bank_checks_section", display_incoming_bank_checks);
-            frm.toggle_display("incoming_bank_checks", display_incoming_bank_checks);
-
-
-            var display_outgoing_bank_checks = line.paid_amount != 0 && (frm.doc.payment_type == "Pay" || frm.doc.payment_type == "Miscellaneous Expenditure");
-            frm.toggle_display("outgoing_bank_checks_section", display_outgoing_bank_checks);
-            frm.toggle_display("outgoing_bank_checks", display_outgoing_bank_checks);
-
-            //Add a new line to input a check
+			var display_bank_checks = line.paid_amount != 0;
             if (frm.doc.payment_type == "Receive" || frm.doc.payment_type == "Miscellaneous Income") {
+                frm.toggle_display("incoming_bank_checks_section", display_bank_checks);
+                frm.toggle_display("incoming_bank_checks", display_bank_checks);
                 frm.add_child("incoming_bank_checks");
             }
             else {
+                frm.toggle_display("outgoing_bank_checks_section", display_bank_checks);
+                frm.toggle_display("outgoing_bank_checks", display_bank_checks);
                 frm.add_child("outgoing_bank_checks");
             }
             frm.refresh();
         }
-
-
+		
     },
 
     mode_of_payment: function (frm, cdt, cdn) {
