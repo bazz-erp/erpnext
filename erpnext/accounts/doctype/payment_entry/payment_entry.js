@@ -21,16 +21,17 @@ frappe.ui.form.on('Payment Entry', {
 	    ];
 
 	    frm.get_field('outgoing_bank_checks').grid.editable_fields = [
-            {fieldname: 'issue_date', columns: 2},
+            {fieldname: 'payment_date', columns: 2},
             {fieldname: 'account', columns: 2},
             {fieldname: 'amount', columns: 2},
             {fieldname: 'number', columns: 2},
 	    ];
 
-	    if (frm.doc.incoming_bank_checks.length != 0) {
+	    if (frm.doc.incoming_bank_checks && frm.doc.incoming_bank_checks.length != 0) {
 	        frm.set_df_property("incoming_bank_checks", "hidden", false);
+
 	    }
-	    if (frm.doc.outgoing_bank_checks.length != 0) {
+	    if (frm.doc.outgoing_bank_checks && frm.doc.outgoing_bank_checks.length != 0) {
 	        frm.set_df_property("outgoing_bank_checks","hidden" ,false);
 	    }
 	    frm.refresh_fields();
@@ -284,8 +285,11 @@ frappe.ui.form.on('Payment Entry', {
 		//clear bank checks
 		frm.set_value("incoming_bank_checks", null);
 		frm.toggle_display("incoming_bank_checks", false);
+		frm.set_df_property("incoming_bank_checks_section", "hidden", 1);
+
 		frm.set_value("outgoing_bank_checks", null);
-		frm.set_value("outgoing_bank_checks", false);
+		frm.toggle_display("outgoing_bank_checks", false);
+		frm.set_df_property("outgoing_bank_checks_section", "hidden", 1);
 
 
 		set_up_payment_lines(frm);
@@ -940,9 +944,25 @@ frappe.ui.form.on('Payment Entry Line', {
         set_up_line(frm, line);
 
         if (line.mode_of_payment == "Cheque") {
-            frm.toggle_display("incoming_bank_checks", line.paid_amount != 0 && (frm.doc.payment_type == "Receive" || frm.doc.payment_type == "Miscellaneous Income"));
-            frm.toggle_display("outgoing_bank_checks", line.paid_amount != 0 && (frm.doc.payment_type == "Pay" || frm.doc.payment_type == "Miscellaneous Expenditure"));
+            var display_incoming_bank_checks = line.paid_amount != 0 && (frm.doc.payment_type == "Receive" || frm.doc.payment_type == "Miscellaneous Income");
+            frm.toggle_display("incoming_bank_checks_section", display_incoming_bank_checks);
+            frm.toggle_display("incoming_bank_checks", display_incoming_bank_checks);
+
+
+            var display_outgoing_bank_checks = line.paid_amount != 0 && (frm.doc.payment_type == "Pay" || frm.doc.payment_type == "Miscellaneous Expenditure");
+            frm.toggle_display("outgoing_bank_checks_section", display_outgoing_bank_checks);
+            frm.toggle_display("outgoing_bank_checks", display_outgoing_bank_checks);
+
+            //Add a new line to input a check
+            if (frm.doc.payment_type == "Receive" || frm.doc.payment_type == "Miscellaneous Income") {
+                frm.add_child("incoming_bank_checks");
+            }
+            else {
+                frm.add_child("outgoing_bank_checks");
+            }
+            frm.refresh();
         }
+
 
     },
 
