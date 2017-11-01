@@ -617,7 +617,7 @@ class PaymentEntry(AccountsController):
         elif self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
             self.incoming_bank_checks = None
             checks = "outgoing_bank_checks"
-            mandatory_fields = ["issue_date", "account", "concept"]
+            mandatory_fields = ["payment_date", "account", "concept"]
 
         total_amount_paid_with_checks = 0
         for check in self.get(checks):
