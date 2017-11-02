@@ -410,6 +410,7 @@ class PaymentEntry(AccountsController):
         # Bazz
         self.add_lines_party_gl_entries(gl_entries)
         self.add_lines_bank_gl_entries(gl_entries)
+        self.generate_gl_entries_for_bank_checks(gl_entries)
 
         self.add_deductions_gl_entries(gl_entries)
 
@@ -566,58 +567,66 @@ class PaymentEntry(AccountsController):
             frappe.throw(_("{0} in Payment Line is mandatory").format("Paid Amount"))
 
     def add_lines_bank_gl_entries(self, gl_entries):
-        for line in self.get("lines"):
-            if self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
-                gl_entries.append(
-                    self.get_gl_dict({
-                        "account": line.paid_from,
-                        "against": self.party if self.party else _("Miscellaneous Expenditure"),
-                        "credit_in_account_currency": line.paid_amount,
-                        "credit": line.paid_amount,
-                        "concept": self.concept
-                    })
-                )
-            if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
-                gl_entries.append(
-                    self.get_gl_dict({
-                        "account": line.paid_to,
-                        "against": self.party if self.party else _("Miscellaneous Income"),
-                        "debit_in_account_currency": line.paid_amount,
-                        "debit": line.paid_amount,
-                        "concept": self.concept
-                    })
-                )
+        # Movements for bank checks are generated separately
+        for line in self.get("lines", {"mode_of_payment": ["!=", "Cheque"]}):
+            self.generate_gl_bank_line(line, gl_entries)
+
+    def generate_gl_bank_line(self, line, gl_entries):
+        if self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
+            gl_entries.append(
+                self.get_gl_dict({
+                    "account": line.paid_from,
+                    "against": self.party if self.party else _("Miscellaneous Expenditure"),
+                    "credit_in_account_currency": line.paid_amount,
+                    "credit": line.paid_amount,
+                    "concept": self.concept
+                })
+            )
+        if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
+            gl_entries.append(
+                self.get_gl_dict({
+                    "account": line.paid_to,
+                    "against": self.party if self.party else _("Miscellaneous Income"),
+                    "debit_in_account_currency": line.paid_amount,
+                    "debit": line.paid_amount,
+                    "concept": self.concept
+                })
+            )
 
     def add_lines_party_gl_entries(self, gl_entries):
-        for line in self.get("lines"):
-            if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
-                source_account = line.paid_from
-                against_account = line.paid_to
-                dr_or_cr = "credit"
-            else:
-                source_account = line.paid_to
-                against_account = line.paid_from
-                dr_or_cr = "debit"
-            gl_dict = self.get_gl_dict({
-                "account": source_account,
+        # Movements for bank checks are generated separately
+        for line in self.get("lines", {"mode_of_payment": ["!=", "Cheque"]}):
+            self.generate_gl_party_line(line, gl_entries)
 
-                "against": against_account,
-                dr_or_cr: line.paid_amount,
-                dr_or_cr + "_in_account_currency": line.paid_amount,
-                "concept": self.concept
-            })
-            gl_entries.append(gl_dict)
+    def generate_gl_party_line(self, line, gl_entries):
+        if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
+            source_account = line.paid_from
+            against_account = line.paid_to
+            dr_or_cr = "credit"
+        else:
+            source_account = line.paid_to
+            against_account = line.paid_from
+            dr_or_cr = "debit"
+        gl_dict = self.get_gl_dict({
+            "account": source_account,
+
+            "against": against_account,
+            dr_or_cr: line.paid_amount,
+            dr_or_cr + "_in_account_currency": line.paid_amount,
+            "concept": self.concept
+        })
+        gl_entries.append(gl_dict)
 
     def validate_bank_checks(self):
         mandatory_fields = []
         if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
             self.outgoing_bank_checks = None
             checks = "incoming_bank_checks"
-            mandatory_fields = ["payment_date", "bank", "internal_number"]
+            mandatory_fields = ["payment_date", "bank", "number", "internal_number"]
         elif self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
             self.incoming_bank_checks = None
             checks = "outgoing_bank_checks"
-            mandatory_fields = ["payment_date", "account"]
+            mandatory_fields = ["payment_date", "number", "account"]
 
         total_amount_paid_with_checks = 0
         for check in self.get(checks):
@@ -643,6 +652,50 @@ class PaymentEntry(AccountsController):
         for line in lines_assigned_to_bank_check:
             total_amount_assigned_to_checks += line.paid_amount
         return total_amount_assigned_to_checks
+
+    def generate_gl_entries_for_bank_checks(self, gl_entries):
+        check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheque"]})
+
+        # if the payment is an income, all checks are considered as one movement. Thus,
+        # gl_entries are generated in the same way that others modes of payment.
+        if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
+            for line in check_lines:
+                self.generate_gl_bank_line(line, gl_entries)
+                self.generate_gl_party_line(line, gl_entries)
+        else:
+            self.generate_gl_entries_for_outgoing_bank_checks(gl_entries)
+
+    def generate_gl_entries_for_outgoing_bank_checks(self, gl_entries):
+        check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheque"]})
+        if not check_lines:
+            return
+        # get dest account of check line. All lines has the same dest account
+        dest_account = check_lines[0].paid_to
+
+        for check in self.get("outgoing_bank_checks"):
+            gl_entries.append(
+                self.get_gl_dict({
+                    "account": check.account,
+                    "against": self.party if self.party else _("Miscellaneous Expenditure"),
+                    "credit": check.amount,
+                    "credit_in_account_currency": check.amount,
+                    "concept": self.concept
+                })
+            )
+            gl_entries.append(
+                self.get_gl_dict({
+                    "account": dest_account,
+                    "against": check.account,
+                    "debit": check.amount,
+                    "debit_in_account_currency": check.amount,
+                    "concept": self.concept
+               })
+            )
+
+
+
+
+
 
 
 @frappe.whitelist()
