@@ -152,10 +152,13 @@ def get_data_with_opening_closing(filters, account_details, gl_entries):
         total_credit_in_account_currency, gle_map = get_accountwise_gle(filters, gl_entries, gle_map)
 
     for acc, acc_dict in gle_map.items():
+        data.append({"concept": acc})
+        data.append(get_balance_row(_("Balance"), acc_dict.opening_credit, acc_dict.opening_debit,
+                                    acc_dict.opening_credit_in_account_currency,
+                                    acc_dict.opening_debit_in_account_currency, False))
+
         if acc_dict.entries:
             # Opening for individual ledger, if grouped by account
-            data.append(get_balance_row(acc, acc_dict.opening_credit, acc_dict.opening_debit,
-                    acc_dict.opening_credit_in_account_currency, acc_dict.opening_debit_in_account_currency))
 
             data += acc_dict.entries
 
@@ -166,12 +169,12 @@ def get_data_with_opening_closing(filters, account_details, gl_entries):
             account_closing_credit_in_account_currency = acc_dict.opening_credit_in_account_currency + acc_dict.total_credit_in_account_currency
             account_closing_debit_in_account_currency = acc_dict.opening_debit_in_account_currency + acc_dict.total_debit_in_account_currency
 
-            data += [get_balance_row(_("Saldo"), account_closing_credit, account_closing_debit,
+            data += [get_balance_row(_("Saldo") + " " + acc, account_closing_credit, account_closing_debit,
                                      account_closing_credit_in_account_currency,
                                      account_closing_debit_in_account_currency), {}]
 
         else:
-            data += [get_balance_row(acc, acc_dict.opening_credit, acc_dict.opening_debit,
+            data += [get_balance_row(_("Saldo") + " " + acc, acc_dict.opening_credit, acc_dict.opening_debit,
                                  acc_dict.opening_credit_in_account_currency,
                                  acc_dict.opening_debit_in_account_currency), {}]
 
@@ -179,8 +182,6 @@ def get_data_with_opening_closing(filters, account_details, gl_entries):
     if total_debit or total_credit:
         data.append({
             "concept": _("Totals"),
-            "debit": total_debit,
-            "credit": total_credit,
             "balance": total_debit - total_credit,
             "debit_in_account_currency": total_debit_in_account_currency,
             "credit_in_account_currency": total_credit_in_account_currency
@@ -256,20 +257,23 @@ def get_accountwise_gle(filters, gl_entries, gle_map):
            opening_credit_in_account_currency, total_debit_in_account_currency, total_credit_in_account_currency, gle_map
 
 
-def get_balance_row(label, credit, debit, credit_in_account_currency=None, debit_in_account_currency=None):
+def get_balance_row(label, credit, debit, credit_in_account_currency=None, debit_in_account_currency=None, only_balance =True):
     balance_row = {
         "concept": label,
-        "debit": debit,
-        "credit": credit,
         "balance": debit - credit
     }
-
-    if credit_in_account_currency and debit_in_account_currency:
+    if not only_balance:
         balance_row.update({
-            "debit_in_account_currency": debit_in_account_currency,
-            "credit_in_account_currency": credit_in_account_currency,
-            "balance_in_account_currency": debit_in_account_currency - credit_in_account_currency
+            "debit": debit,
+            "credit": credit
         })
+
+        if credit_in_account_currency and debit_in_account_currency:
+            balance_row.update({
+                "debit_in_account_currency": debit_in_account_currency,
+                "credit_in_account_currency": credit_in_account_currency,
+                "balance_in_account_currency": debit_in_account_currency - credit_in_account_currency
+            })
 
     return balance_row
 
