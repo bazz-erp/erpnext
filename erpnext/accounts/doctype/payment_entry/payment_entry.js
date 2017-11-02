@@ -281,9 +281,15 @@ frappe.ui.form.on('Payment Entry', {
 
 		//clear bank checks
 		frm.set_value("incoming_bank_checks", null);
-		frm.toggle_display("incoming_bank_checks_section", false);
 		frm.set_value("outgoing_bank_checks", null);
-		frm.toggle_display("outgoing_bank_checks_section", false);
+
+		frm.set_value("checks_topay", 0);
+		frm.set_value("checks_acumulated", 0);
+		frm.set_value("checks_balance", 0);
+		frm.toggle_display("incoming_bank_checks", false);
+		frm.toggle_display("outgoing_bank_checks", false);
+		frm.toggle_display("bank_checks_section", false);
+		frm.toggle_display("checks_amounts_section", false);
 
         set_up_payment_lines(frm);
         frm.refresh();
@@ -874,7 +880,22 @@ frappe.ui.form.on('Payment Entry', {
         else {
             frm.set_value("concept", "");
         }
-	}
+	},
+
+	refresh_checks_amounts: function (frm) {
+        var acumulated = 0;
+        var checks = (is_income(frm)) ? frm.doc.incoming_bank_checks : frm.doc.outgoing_bank_checks;
+        if(checks) {
+            checks.forEach(function(row) {
+                if(row.amount){
+                    acumulated += row.amount;
+                }
+            });
+        }
+
+        frm.set_value("checks_acumulated", acumulated);
+        frm.set_value("checks_balance", frm.doc.checks_topay - acumulated);
+    }
 
 });
 
@@ -936,19 +957,15 @@ frappe.ui.form.on('Payment Entry Line', {
         frm.events.set_remaining_amount(frm);
         set_up_line(frm, line);
 
-        if (line.mode_of_payment == "Cheque") {
-        	get_check_internal_number()
-			var display_bank_checks = line.paid_amount != 0;
-            if (frm.doc.payment_type == "Receive" || frm.doc.payment_type == "Miscellaneous Income") {
-                frm.toggle_display("incoming_bank_checks_section", display_bank_checks);
-                frm.toggle_display("incoming_bank_checks", display_bank_checks);
-                frm.add_child("incoming_bank_checks");
-            }
-            else {
-                frm.toggle_display("outgoing_bank_checks_section", display_bank_checks);
-                frm.toggle_display("outgoing_bank_checks", display_bank_checks);
-                frm.add_child("outgoing_bank_checks");
-            }
+        if (line.mode_of_payment === "Cheque") {
+			var display_bank_checks = line.paid_amount !== 0;
+            frm.toggle_display("bank_checks_section", display_bank_checks);
+            frm.toggle_display("checks_amounts_section", display_bank_checks);
+            frm.toggle_display(is_income(frm) ? "incoming_bank_checks" : "outgoing_bank_checks", display_bank_checks);
+
+            frm.set_value("checks_topay", line.paid_amount);
+
+            frm.events.refresh_checks_amounts(frm);
             frm.refresh();
         }
 
@@ -968,19 +985,18 @@ frappe.ui.form.on('Bank Check', {
         check.concept = frm.doc.concept;
         frm.refresh();
     },
+    outgoing_bank_checks_remove: function (frm) {
+        frm.events.refresh_checks_amounts(frm);
+    },
     incoming_bank_checks_add: function (frm, cdt, cdn) {
         check = locals[cdt][cdn];
-        check.internal_number = last_internal_number(frm);
-        frm.refresh();
+        set_check_internal_number(check, frm)
     },
-    incoming_bank_checks_remove: function (frm, cdt, cdn) {
-        checks = frm.doc.incoming_bank_checks;
-        if (checks[checks.length - 1].internal_number !== last_internal_number(frm)) {
-            $.each(checks, function (index, value) {
-                value.internal_number = db_internal_number + index;
-            });
-            frm.refresh();
-        }
+    incoming_bank_checks_remove: function (frm) {
+        frm.events.refresh_checks_amounts(frm);
+    },
+    amount: function (frm) {
+        frm.events.refresh_checks_amounts(frm);
     }
 })
 
@@ -1072,30 +1088,27 @@ var set_up_payment_lines = function (frm) {
     }
 }
 
+var counter = 0;
 /**
- * @description
- * Represents the last internal number registered on the database.
+ * @description Gets the last internal number registered on the database and sets the check internal number.
+ * @param check to set the internal number
  */
-
-var db_internal_number;
-
-/**
- * @description Gets the last internal number registered on the database.
- */
-var get_check_internal_number = function () {
+var set_check_internal_number = function (check, frm) {
     frappe.call({
         method: "erpnext.accounts.doctype.bank_check.bank_check.get_last_internal_number",
         args: {},
         callback: function (r) {
-            db_internal_number = r.message[0].number;
+        	counter++;
+            check.internal_number = parseInt(r.message[0]) + counter;
+            frm.refresh();
         }
     });
 }
 
 /**
- *  @description Gets the last internal number registered on the actual form table.
- *  @param frm
+ * @description Returns if the payment entry is an income or not.
+ * @returns {boolean}
  */
-var last_internal_number = (frm) => {
-    return db_internal_number + (frm.doc.incoming_bank_checks.length - 1);
+var is_income = function (frm) {
+    return (frm.doc.payment_type == "Receive" || frm.doc.payment_type == "Miscellaneous Income");
 }
