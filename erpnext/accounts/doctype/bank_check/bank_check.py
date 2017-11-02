@@ -12,4 +12,4 @@ class BankCheck(Document):
 
 @frappe.whitelist()
 def get_last_internal_number():
-	return frappe.db.sql("""SELECT Count(*) as number FROM `tabBank Check`""", as_dict = 1)
+	return frappe.db.sql("""SELECT COALESCE(MAX(internal_number), 0) FROM `tabBank Check` """)
