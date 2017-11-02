@@ -624,6 +624,10 @@ class PaymentEntry(AccountsController):
             self.validate_check(mandatory_fields, check)
             total_amount_paid_with_checks += check.amount
 
+            # set concept of payment entry to check
+            if checks == "outgoing_bank_checks" and not check.concept:
+                check.concept = self.concept
+
         if total_amount_paid_with_checks != self.get_amount_assigned_to_checks():
             frappe.throw(_("Total Amount Paid with checks must be equal to amount assigned to mode of payment Check"))
 

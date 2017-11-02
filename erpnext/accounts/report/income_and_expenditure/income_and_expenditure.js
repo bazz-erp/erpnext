@@ -49,14 +49,16 @@ frappe.query_reports["Income and Expenditure"] = {
 
 	    value = default_formatter(row, cell, value, columnDef, dataContext);
 
-	    if (!dataContext[__("Voucher No")] && !dataContext[__("Voucher Type")]) {
-	        if (dataContext[__("Account")] == __("Saldo")) {
-	            value = "<span style='color:red;font-weight:bold'>" + value + "</span>";
-            } else if (dataContext[__("Account")] == __("Totals")) {
+	    if (!dataContext[__("Voucher No")] && !dataContext[__("Voucher Type")]
+			&& dataContext[__("Account")] != __("Balance")) {
+
+	        if (dataContext[__("Account")] == __("Totals")) {
                 value = "<span style='font-weight:bold;font-size:larger'>" + value + "</span>";
-            } else {
-    	        value = "<span style='color:green;font-weight:bold'>" + value + "</span>";
             }
+            else {
+                value = "<span style='font-weight:bold'>" + value + "</span>";
+	        }
+
 	    }
 
 	    return value;
