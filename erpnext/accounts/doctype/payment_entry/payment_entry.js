@@ -12,7 +12,7 @@ frappe.ui.form.on('Payment Entry', {
 
         set_up_payment_lines(frm);
 
-        frm.get_field('incoming_bank_checks').grid.editable_fields = [
+        frm.get_field('third_party_bank_checks').grid.editable_fields = [
             {fieldname: 'payment_date', columns: 2},
             {fieldname: 'bank', columns: 2},
             {fieldname: 'amount', columns: 2},
@@ -27,10 +27,7 @@ frappe.ui.form.on('Payment Entry', {
             {fieldname: 'number', columns: 2},
         ];
 
-	    if (frm.doc.incoming_bank_checks && frm.doc.incoming_bank_checks.length != 0) {
-	        frm.set_df_property("incoming_bank_checks", "hidden", false);
 
-	    }
 	    if (frm.doc.outgoing_bank_checks && frm.doc.outgoing_bank_checks.length != 0) {
 	        frm.set_df_property("outgoing_bank_checks","hidden" ,false);
 	    }
@@ -138,6 +135,7 @@ frappe.ui.form.on('Payment Entry', {
                 }
             }
         });
+
     },
 
     refresh: function (frm) {
@@ -280,13 +278,13 @@ frappe.ui.form.on('Payment Entry', {
         frm.set_value("allocated_to_mode_of_payment_amount", null);
 
 		//clear bank checks
-		frm.set_value("incoming_bank_checks", null);
+		frm.set_value("third_party_bank_checks", null);
 		frm.set_value("outgoing_bank_checks", null);
 
 		frm.set_value("checks_topay", 0);
 		frm.set_value("checks_acumulated", 0);
 		frm.set_value("checks_balance", 0);
-		frm.toggle_display("incoming_bank_checks", false);
+		frm.toggle_display("third_party_bank_checks", false);
 		frm.toggle_display("outgoing_bank_checks", false);
 		frm.toggle_display("bank_checks_section", false);
 		frm.toggle_display("checks_amounts_section", false);
@@ -961,13 +959,27 @@ frappe.ui.form.on('Payment Entry Line', {
 			var display_bank_checks = line.paid_amount !== 0;
             frm.toggle_display("bank_checks_section", display_bank_checks);
             frm.toggle_display("checks_amounts_section", display_bank_checks);
-            frm.toggle_display(is_income(frm) ? "incoming_bank_checks" : "outgoing_bank_checks", display_bank_checks);
+            frm.toggle_display("outgoing_bank_checks", display_bank_checks);
 
             frm.set_value("checks_topay", line.paid_amount);
 
             frm.events.refresh_checks_amounts(frm);
             frm.refresh();
         }
+
+        {
+        	var display_third_party_checks = line.paid_amount !== 0;
+        	frm.toggle_display("third_party_bank_checks_section", display_third_party_checks);
+        	frm.toggle_display("third_party_bank_checks", display_third_party_checks);
+
+        	//Display all unused third party checks to paid with them
+        	if (is_expenditure(frm) && !frm.doc.third_party_bank_checks) {
+				frm.set_df_property("third_party_bank_checks", "read_only", true);
+				frm.refresh_field("third_party_bank_checks");
+        		show_third_party_checks(frm);
+			}
+
+		}
 
     },
 
@@ -983,18 +995,22 @@ frappe.ui.form.on('Bank Check', {
     outgoing_bank_checks_add: function (frm, cdt, cdn) {
         check = locals[cdt][cdn];
         check.concept = frm.doc.concept;
+        check.company = frm.doc.company;
         frm.refresh();
     },
     outgoing_bank_checks_remove: function (frm) {
         frm.events.refresh_checks_amounts(frm);
     },
-    incoming_bank_checks_add: function (frm, cdt, cdn) {
-        check = locals[cdt][cdn];
-        set_check_internal_number(check, frm)
+    third_party_bank_checks_add: function (frm, cdt, cdn) {
+        check = locals[cdt][cdn]
+		check.company = frm.doc.company;
+		if (is_income(frm)) {
+            set_check_internal_number(check, frm)
+        }
     },
-    incoming_bank_checks_remove: function (frm) {
+ /*   incoming_bank_checks_remove: function (frm) {
         frm.events.refresh_checks_amounts(frm);
-    },
+    }, */
     amount: function (frm) {
         frm.events.refresh_checks_amounts(frm);
     }
@@ -1010,7 +1026,7 @@ var set_up_line = function (frm, line) {
             },
             callback: function (r, rt) {
                 if (r.message) {
-                    if (frm.doc.payment_type == "Miscellaneous Income" || frm.doc.payment_type == "Receive") {
+                    if (is_income(frm)) {
                         line['paid_from'] = r.message.default_receivable_account;
                     }
                     else {
@@ -1054,7 +1070,7 @@ var set_mode_of_payment_account = function (frm, line) {
 		    get_payment_mode_account(frm, line['mode_of_payment'], function(account) {
 
             var payment_account_field;
-            if (frm.doc.payment_type == "Receive" || frm.doc.payment_type == "Miscellaneous Income") {
+            if (is_income(frm)) {
                 payment_account_field = "paid_to";
             }
             else {
@@ -1072,7 +1088,8 @@ var set_up_payment_lines = function (frm) {
         frappe.call({
             method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_mod_of_payments",
             args: {
-                company: frm.doc.company
+                company: frm.doc.company,
+				payment_type: is_income(frm) ? "income": "expenditure"
             },
             callback: function (r) {
                 if (r.message) {
@@ -1111,4 +1128,32 @@ var set_check_internal_number = function (check, frm) {
  */
 var is_income = function (frm) {
     return (frm.doc.payment_type == "Receive" || frm.doc.payment_type == "Miscellaneous Income");
+}
+
+var is_expenditure = function (frm) {
+	return (frm.doc.payment_type == "Pay" || frm.doc.payment_type == "Miscellaneous Expenditure");
+}
+
+/**
+ * @description get all third party checks that are unused
+ * @param frm
+ */
+var show_third_party_checks = function (frm) {
+	frappe.call({
+		method: "erpnext.accounts.doctype.bank_check.bank_check.get_unused_third_party_checks",
+		args: {
+			"company": frm.doc.company,
+		},
+		callback: function (r) {
+			$.each(r.message, function (index, check) {
+				var row = frm.add_child("third_party_bank_checks");
+				row.bank = check.bank;
+				row.number = check.number;
+				row.internal_number = check.internal_number;
+				row.payment_date = check.payment_date;
+				row.amount = check.amount;
+            });
+			frm.refresh();
+        }
+	});
 }

@@ -983,7 +983,12 @@ def get_payment_entry(dt, dn, party_amount=None, bank_account=None, bank_amount=
 
 # Bazz
 @frappe.whitelist()
-def get_mod_of_payments(company):
-    return frappe.db.sql("""select parent as name from `tabMode of Payment Account` 
+def get_mod_of_payments(company, payment_type):
+    mode_of_payments = frappe.db.sql("""select parent as name from `tabMode of Payment Account` 
     where parenttype=%(parenttype)s and company=%(company)s""",
                          {"parenttype": "Mode of Payment", "company": company}, as_dict=1)
+
+    if payment_type == "income":
+        return filter(lambda x: x.name != "Cheque", mode_of_payments)
+
+    return mode_of_payments
