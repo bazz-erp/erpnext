@@ -2,6 +2,7 @@
 // For license information, please see license.txt
 {% include "erpnext/public/js/controllers/accounts.js" %}
 
+var event_bound = false;
 frappe.ui.form.on('Payment Entry', {
 
     onload: function (frm) {
@@ -863,7 +864,6 @@ frappe.ui.form.on('Payment Entry', {
 		    frm.set_value("remaining_amount", frm.doc.paid_amount - allocated_to_mode_of_payment_amount);
 		}
 
-
 	},
 
 	set_concept: function (frm) {
@@ -893,7 +893,16 @@ frappe.ui.form.on('Payment Entry', {
 
         frm.set_value("checks_acumulated", acumulated);
         frm.set_value("checks_balance", frm.doc.checks_topay - acumulated);
-    }
+    },
+
+	on_select_third_party_bank_checks_row: function (frm) {
+    	$('div[data-fieldname="third_party_bank_checks"] .grid-row-check').change(function (event) {
+			var changed_row = event.target;
+			update_selected_third_party_bank_checks(frm, changed_row);
+		});
+	}
+
+
 
 });
 
@@ -966,18 +975,21 @@ frappe.ui.form.on('Payment Entry Line', {
             frm.events.refresh_checks_amounts(frm);
             frm.refresh();
         }
-
-        {
+        if (line.mode_of_payment === "Cheque de Terceros") {
         	var display_third_party_checks = line.paid_amount !== 0;
         	frm.toggle_display("third_party_bank_checks_section", display_third_party_checks);
         	frm.toggle_display("third_party_bank_checks", display_third_party_checks);
 
         	//Display all unused third party checks to paid with them
         	if (is_expenditure(frm) && !frm.doc.third_party_bank_checks) {
-				frm.set_df_property("third_party_bank_checks", "read_only", true);
+
+        		frm.set_df_property("third_party_bank_checks", "read_only", true);
 				frm.refresh_field("third_party_bank_checks");
         		show_third_party_checks(frm);
+
 			}
+
+			frm.set_value("third_party_bank_checks_amount", line.paid_amount);
 
 		}
 
@@ -1099,6 +1111,7 @@ var set_up_payment_lines = function (frm) {
                         child.paid_amount = 0
                     });
                     frm.refresh();
+
                 }
             }
         });
@@ -1154,6 +1167,67 @@ var show_third_party_checks = function (frm) {
 				row.amount = check.amount;
             });
 			frm.refresh();
+			frm.events.on_select_third_party_bank_checks_row(frm);
         }
 	});
 }
+
+
+function update_selected_third_party_bank_checks(frm, changed_row) {
+
+	//calculate number of row checked to retrieve the element
+	var row_index = $(changed_row).next().text();
+
+	var bank_checks = $(frm.doc.third_party_bank_checks).filter(function (i, element) {
+		return element.idx == row_index;
+    });
+
+	changed_bank_check = bank_checks[0];
+
+	//Check was selected
+	if ( $(changed_row).is(':checked') ) {
+		var child = frm.add_child("selected_third_party_bank_checks");
+		child.amount = changed_bank_check.amount;
+		child.number = changed_bank_check.number;
+		child.idx = changed_bank_check.idx;
+		console.log(frm.doc.selected_third_party_bank_checks);
+	}
+	// Removes check from selected check list
+	else {
+		remove_bank_check(frm, changed_bank_check);
+	}
+	refresh_selected_third_party_bank_checks(frm);
+
+}
+
+/**
+ * Find changed_bank_check in selected_third_party_bank_checks and deletes it.
+ * the equality is given by idx of a check
+ * @param frm
+ * @param changed_bank_check
+ */
+function remove_bank_check(frm, changed_bank_check) {
+	var delete_index;
+	// find the index of the check that must be removed
+	$.each(frm.doc.selected_third_party_bank_checks, function (pos, check) {
+		if (check.idx == changed_bank_check.idx) {
+			delete_index = pos;
+		}
+    });
+
+	frm.doc.selected_third_party_bank_checks.splice(delete_index, 1);
+	console.log(frm.doc.selected_third_party_bank_checks);
+
+	frm.refresh_field("selected_third_party_bank_checks");
+}
+
+function refresh_selected_third_party_bank_checks (frm) {
+	var acumulated = 0;
+	$.each(frm.doc.selected_third_party_bank_checks, function (index, check) {
+		acumulated += check.amount;
+    });
+	frm.set_value("third_party_bank_checks_acumulated", acumulated);
+	frm.set_value("third_party_bank_checks_remaining", frm.doc.third_party_bank_checks_amount - acumulated);
+	frm.refresh();
+}
+
