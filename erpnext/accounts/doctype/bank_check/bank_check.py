@@ -17,5 +17,5 @@ def get_last_internal_number():
 
 @frappe.whitelist()
 def get_unused_third_party_checks(company):
-    return frappe.db.sql("""SELECT payment_date, bank, internal_number, amount, number FROM
+    return frappe.db.sql("""SELECT name, payment_date, bank, internal_number, amount, number FROM
     `tabBank Check` WHERE company=%(company)s and third_party_check and used=FALSE """, {"company": company}, as_dict=1)

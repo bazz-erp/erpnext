@@ -1183,14 +1183,15 @@ function update_selected_third_party_bank_checks(frm, changed_row) {
     });
 
 	changed_bank_check = bank_checks[0];
+	console.log(changed_bank_check);
 
 	//Check was selected
 	if ( $(changed_row).is(':checked') ) {
 		var child = frm.add_child("selected_third_party_bank_checks");
 		child.amount = changed_bank_check.amount;
-		child.number = changed_bank_check.number;
+		child.internal_number = changed_bank_check.internal_number;
+		child.payment_date = changed_bank_check.payment_date;
 		child.idx = changed_bank_check.idx;
-		console.log(frm.doc.selected_third_party_bank_checks);
 	}
 	// Removes check from selected check list
 	else {
@@ -1216,7 +1217,6 @@ function remove_bank_check(frm, changed_bank_check) {
     });
 
 	frm.doc.selected_third_party_bank_checks.splice(delete_index, 1);
-	console.log(frm.doc.selected_third_party_bank_checks);
 
 	frm.refresh_field("selected_third_party_bank_checks");
 }
