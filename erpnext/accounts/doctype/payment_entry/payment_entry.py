@@ -619,28 +619,24 @@ class PaymentEntry(AccountsController):
         gl_entries.append(gl_dict)
 
     def validate_bank_checks(self):
-        mandatory_fields = []
         if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
             self.outgoing_bank_checks = None
-            checks = "incoming_bank_checks"
-            mandatory_fields = ["payment_date", "bank", "internal_number"]
         elif self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
-            self.incoming_bank_checks = None
-            checks = "outgoing_bank_checks"
-            mandatory_fields = ["payment_date", "account"]
+            self.validate_checks("outgoing_bank_checks", "Cheque")
+        self.validate_third_party_bank_checks()
 
-        for check in self.get(checks):
-            self.validate_check(mandatory_fields, check)
-
+    def validate_checks(self, check_field, mode_of_payment):
+        for check in self.get(check_field):
+            self.validate_check(check)
             # set concept of payment entry to check
-            if checks == "outgoing_bank_checks" and not check.concept:
+            if check_field == "outgoing_bank_checks" and not check.concept:
                 check.concept = self.concept
 
         if self.get("checks_topay") != self.get("checks_acumulated"):
-            frappe.throw(_("Total Amount Paid with checks must be equal to amount assigned to mode of payment Cheque"))
+            frappe.throw(_("Total Amount Paid with checks must be equal to amount assigned to mode of payment ") + mode_of_payment)
 
-    def validate_check(self, mandatory_fields, check):
-        for field in mandatory_fields:
+    def validate_check(self, check):
+        for field in ["payment_date", "amount"]:
             if not check.get(field):
                 frappe.throw(_("{0} in Bank Check is mandatory").format(field))
 
@@ -668,17 +664,37 @@ class PaymentEntry(AccountsController):
 
         return total_amount_assigned
 
-    def generate_gl_entries_for_bank_checks(self, gl_entries):
-        check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheque"]})
 
-        # if the payment is an income, all checks are considered as one movement. Thus,
-        # gl_entries are generated in the same way that others modes of payment.
+    def validate_third_party_bank_checks(self):
         if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
-            for line in check_lines:
-                self.generate_gl_bank_line(line, gl_entries)
-                self.generate_gl_party_line(line, gl_entries)
+            self.validate_checks("third_party_bank_checks", "Cheque de Terceros")
         else:
+            self.validate_selected_third_party_bank_checks()
+
+    def validate_selected_third_party_bank_checks(self):
+        self.validate_checks("selected_third_party_bank_checks", "Cheque de Terceros")
+        for selected_check in self.get("selected_third_party_bank_checks"):
+            docs = frappe.get_all("Bank Check", {"internal_number": selected_check.internal_number})
+            # check must be unused
+            if not docs or docs[0].used:
+                frappe.throw(_("Check with Internal Number {0} was already used").format(selected_check.internal_number))
+
+        self.update_selected_third_party_bank_checks()
+        # clear availables third party checks table
+        self.set("third_party_bank_checks", None)
+
+    def update_selected_third_party_bank_checks(self):
+        for selected_check in self.get("selected_third_party_bank_checks"):
+            docs = frappe.get_all("Bank Check", {"internal_number": selected_check.internal_number})
+            # first doc contains selected_check info
+            frappe.db.sql("""UPDATE `tabBank Check` set used=true WHERE name=%(name)s""", {"name": docs[0].name})
+
+    def generate_gl_entries_for_bank_checks(self, gl_entries):
+
+        if self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
             self.generate_gl_entries_for_outgoing_bank_checks(gl_entries)
+
+        self.generate_gl_entries_for_third_party_bank_checks(gl_entries)
 
     def generate_gl_entries_for_outgoing_bank_checks(self, gl_entries):
         check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheque"]})
@@ -707,10 +723,12 @@ class PaymentEntry(AccountsController):
                })
             )
 
-
-
-
-
+    def generate_gl_entries_for_third_party_bank_checks(self, gl_entries):
+        third_party_check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheque de Terceros"], "paid_amount":
+        ["!=", 0]})
+        for line in third_party_check_lines:
+            self.generate_gl_bank_line(line, gl_entries)
+            self.generate_gl_party_line(line, gl_entries)
 
 
 @frappe.whitelist()
@@ -998,7 +1016,12 @@ def get_payment_entry(dt, dn, party_amount=None, bank_account=None, bank_amount=
 
 # Bazz
 @frappe.whitelist()
-def get_mod_of_payments(company):
-    return frappe.db.sql("""select parent as name from `tabMode of Payment Account` 
+def get_mod_of_payments(company, payment_type):
+    mode_of_payments = frappe.db.sql("""select parent as name from `tabMode of Payment Account` 
     where parenttype=%(parenttype)s and company=%(company)s""",
                          {"parenttype": "Mode of Payment", "company": company}, as_dict=1)
+
+    if payment_type == "income":
+        return filter(lambda x: x.name != "Cheque", mode_of_payments)
+
+    return mode_of_payments
