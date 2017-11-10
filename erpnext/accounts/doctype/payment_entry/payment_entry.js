@@ -28,6 +28,12 @@ frappe.ui.form.on('Payment Entry', {
             {fieldname: 'number', columns: 2},
         ];
 
+        frm.get_field('third_party_documents').grid.editable_fields = [
+            {fieldname: 'internal_number', columns: 2},
+            {fieldname: 'date', columns: 2},
+            {fieldname: 'amount', columns: 2}
+        ];
+
         frm.get_field('documents').grid.editable_fields = [
             {fieldname: 'internal_number', columns: 2},
             {fieldname: 'date', columns: 2},
@@ -299,6 +305,7 @@ frappe.ui.form.on('Payment Entry', {
         //clear bank checks
         frm.set_value("third_party_bank_checks", null);
         frm.set_value("outgoing_bank_checks", null);
+        frm.set_value("third_party_documents", null);
         frm.set_value("documents", null);
 
         frm.set_value("checks_topay", 0);
@@ -312,6 +319,8 @@ frappe.ui.form.on('Payment Entry', {
         frm.toggle_display("outgoing_bank_checks", false);
         frm.toggle_display("bank_checks_section", false);
         frm.toggle_display("checks_amounts_section", false);
+
+        frm.toggle_display("third_party_documents", false)
         frm.toggle_display("documents", false);
         frm.toggle_display("documents_section", false);
         frm.toggle_display("documents_amounts_section", false);
@@ -878,7 +887,6 @@ frappe.ui.form.on('Payment Entry', {
         }
     },
 
-    //Bazz
     set_remaining_amount: function (frm) {
         var allocated_to_mode_of_payment_amount = 0;
         if (frm.doc.lines) {
@@ -944,6 +952,13 @@ frappe.ui.form.on('Payment Entry', {
     	$('div[data-fieldname="third_party_bank_checks"] .grid-row-check').change(function (event) {
 			var changed_row = event.target;
 			update_selected_third_party_bank_checks(frm, changed_row);
+		});
+	},
+
+	on_select_third_party_documents_row: function (frm) {
+    	$('div[data-fieldname="third_party_documents"] .grid-row-check').change(function (event) {
+			var changed_row = event.target;
+			update_selected_third_party_documents(frm, changed_row);
 		});
 	}
 
@@ -1045,7 +1060,22 @@ frappe.ui.form.on('Payment Entry Line', {
 
                 }
 
-			    frm.set_value("third_party_bank_checks_amount", line.paid_amount);
+			    frm.set_value("third_party_bank_checks_topay", line.paid_amount);
+                break;
+
+            case "Documentos de Terceros":
+                frm.toggle_display("third_party_documents_section", display);
+                frm.toggle_display("third_party_documents", display);
+
+                if (is_expenditure(frm) && !frm.doc.third_party_documents) {
+
+                    frm.set_df_property("third_party_documents", "read_only", true);
+                    frm.refresh_field("third_party_documents");
+                    show_third_party_documents(frm);
+
+                }
+
+			    frm.set_value("third_party_documents_topay", line.paid_amount);
                 break;
 
             default:
@@ -1105,11 +1135,15 @@ frappe.ui.form.on('Document', {
     },
     documents_add: function (frm, cdt, cdn) {
         doc = locals[cdt][cdn];
-        console.log("entro");
         set_internal_number(doc, frm)
     },
     amount: function (frm) {
-        frm.events.refresh_documents_amounts(frm);
+        if (is_income(frm)) {
+    		refresh_third_party_documents(frm, frm.doc.third_party_documents);
+		}
+		else {
+            frm.events.refresh_documents_amounts(frm);
+		}
     }
 })
 
@@ -1233,6 +1267,9 @@ var is_expenditure = function (frm) {
 	return (frm.doc.payment_type == "Pay" || frm.doc.payment_type == "Miscellaneous Expenditure");
 }
 
+
+/** CHECK WALLET IMPLEMENTATION **/
+
 /**
  * @description get all third party checks that are unused
  * @param frm
@@ -1258,8 +1295,7 @@ var show_third_party_checks = function (frm) {
 	});
 }
 
-
-function update_selected_third_party_bank_checks(frm, changed_row) {
+var update_selected_third_party_bank_checks = function (frm, changed_row) {
 
 	//calculate number of row checked to retrieve the element
 	var row_index = $(changed_row).next().text();
@@ -1292,7 +1328,7 @@ function update_selected_third_party_bank_checks(frm, changed_row) {
  * @param frm
  * @param changed_bank_check
  */
-function remove_bank_check(frm, changed_bank_check) {
+var remove_bank_check = function (frm, changed_bank_check) {
 	var delete_index;
 	// find the index of the check that must be removed
 	$.each(frm.doc.selected_third_party_bank_checks, function (pos, check) {
@@ -1306,13 +1342,98 @@ function remove_bank_check(frm, changed_bank_check) {
 	frm.refresh_field("selected_third_party_bank_checks");
 }
 
-function refresh_third_party_bank_checks (frm, check_field) {
+var refresh_third_party_bank_checks = function (frm, check_field) {
 	var acumulated = 0;
 	$.each(check_field, function (index, check) {
 		acumulated += check.amount;
     });
 	frm.set_value("third_party_bank_checks_acumulated", acumulated);
-	frm.set_value("third_party_bank_checks_remaining", frm.doc.third_party_bank_checks_amount - acumulated);
+	frm.set_value("third_party_bank_checks_balance", frm.doc.third_party_bank_checks_topay - acumulated);
+	frm.refresh();
+}
+
+
+/** DOCUMENTS WALLET IMPLEMENTATION **/
+
+/**
+ * @description get all third party documents that are unused
+ * @param frm
+ */
+var show_third_party_documents = function (frm) {
+	frappe.call({
+		method: "erpnext.accounts.doctype.document.document.get_unused_third_party_documents",
+		args: {
+			"company": frm.doc.company,
+		},
+		callback: function (r) {
+			$.each(r.message, function (index, doc) {
+				var row = frm.add_child("third_party_documents");
+				row.date = doc.date;
+				row.client_detail = doc.client_detail;
+				row.internal_number = doc.internal_number;
+				row.amount = doc.amount;
+            });
+			frm.refresh();
+			frm.events.on_select_third_party_documents_row(frm);
+        }
+	});
+}
+
+var update_selected_third_party_documents = function (frm, changed_row) {
+
+	//calculate number of row checked to retrieve the element
+	var row_index = $(changed_row).next().text();
+
+	var documents = $(frm.doc.third_party_documents).filter(function (i, element) {
+		return element.idx == row_index;
+    });
+
+	var changed_document = documents[0];
+
+	//Document was selected
+	if ( $(changed_row).is(':checked') ) {
+		var child = frm.add_child("selected_third_party_documents");
+		child.amount = changed_document.amount;
+		child.internal_number = changed_document.internal_number;
+		child.date = changed_document.date;
+		child.client_detail = changed_document.client_detail;
+		child.idx = changed_document.idx;
+	}
+	// Removes document from selected documents list
+	else {
+		remove_document(frm, changed_document);
+	}
+	refresh_third_party_documents(frm, frm.doc.selected_third_party_documents);
+
+}
+
+/**
+ * Find changed_document in selected_third_party_documents and deletes it.
+ * the equality is given by idx of a document
+ * @param frm
+ * @param changed_document
+ */
+var remove_document = function (frm, changed_document) {
+	var delete_index;
+	// find the index of the check that must be removed
+	$.each(frm.doc.selected_third_party_documents, function (pos, doc) {
+		if (doc.idx == changed_document.idx) {
+			delete_index = pos;
+		}
+    });
+
+	frm.doc.selected_third_party_documents.splice(delete_index, 1);
+
+	frm.refresh_field("selected_third_party_documents");
+}
+
+var refresh_third_party_documents = function (frm, document_field) {
+	var acumulated = 0;
+	$.each(document_field, function (index, doc) {
+		acumulated += doc.amount;
+    });
+	frm.set_value("third_party_documents_acumulated", acumulated);
+	frm.set_value("third_party_documents_balance", frm.doc.third_party_documents_topay - acumulated);
 	frm.refresh();
 }
 
