@@ -58,7 +58,7 @@ class PaymentEntry(AccountsController):
 
         self.set_concept()
         self.validate_payment_lines()
-        self.validate_bank_checks()
+        self.save_bank_checks()
 
     def on_submit(self):
         self.setup_party_account_field()
@@ -568,7 +568,7 @@ class PaymentEntry(AccountsController):
 
     def add_lines_bank_gl_entries(self, gl_entries):
         # Movements for bank checks are generated separately
-        for line in self.get("lines", {"mode_of_payment": ["!=", "Cheque"]}):
+        for line in self.get("lines", {"mode_of_payment": ["not in", ["Cheque", "Cheque de Terceros"]]}):
             self.generate_gl_bank_line(line, gl_entries)
 
     def generate_gl_bank_line(self, line, gl_entries):
@@ -595,7 +595,7 @@ class PaymentEntry(AccountsController):
 
     def add_lines_party_gl_entries(self, gl_entries):
         # Movements for bank checks are generated separately
-        for line in self.get("lines", {"mode_of_payment": ["!=", "Cheque"]}):
+        for line in self.get("lines", {"mode_of_payment": ["not in", ["Cheque", "Cheque de Terceros"]]}):
             self.generate_gl_party_line(line, gl_entries)
 
     def generate_gl_party_line(self, line, gl_entries):
@@ -617,7 +617,7 @@ class PaymentEntry(AccountsController):
         })
         gl_entries.append(gl_dict)
 
-    def validate_bank_checks(self):
+    def save_bank_checks(self):
         if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
             self.outgoing_bank_checks = None
         elif self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
@@ -633,14 +633,22 @@ class PaymentEntry(AccountsController):
             # set concept of payment entry to check
             if check_field == "outgoing_bank_checks" and not check.concept:
                 check.concept = self.concept
+                check.third_party_check = False
+
+            # mark check as third party
+            elif check_field == "third_party_bank_checks":
+                check.third_party_check = True
+
+
 
         if total_amount_paid_with_checks != self.get_total_amount_assigned_to_mode_of_payment(mode_of_payment):
-            frappe.throw(_("Total Amount Paid with checks must be equal to amount assigned to mode of payment ") + mode_of_payment)
+            frappe.throw(_("Total Amount Paid with checks must be equal to amount assigned to mode of payment") + " " + mode_of_payment)
 
     def validate_check(self, check):
         for field in ["payment_date", "amount"]:
             if not check.get(field):
-                frappe.throw(_("{0} in Bank Check is mandatory").format(field))
+                label = frappe.get_meta("Bank Check").get_label(field)
+                frappe.throw(_("{0} in Bank Check is mandatory").format(label))
 
     def get_total_amount_assigned_to_mode_of_payment(self, mode_of_payment):
         lines_assigned_to_bank_check = self.get("lines", {"paid_amount": ["not in", [0, None, ""]],
@@ -666,6 +674,7 @@ class PaymentEntry(AccountsController):
                 frappe.throw(_("Check with Internal Number {0} was already used").format(selected_check.internal_number))
 
         self.update_selected_third_party_bank_checks()
+
         # clear availables third party checks table
         self.set("third_party_bank_checks", None)
 

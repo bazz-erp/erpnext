@@ -32,6 +32,12 @@ frappe.ui.form.on('Payment Entry', {
 	    if (frm.doc.outgoing_bank_checks && frm.doc.outgoing_bank_checks.length != 0) {
 	        frm.set_df_property("outgoing_bank_checks","hidden" ,false);
 	    }
+
+	    if (frm.doc.selected_third_party_bank_checks &&
+			frm.doc.selected_third_party_bank_checks != 0) {
+	    	frm.set_df_property("third_party_bank_checks_section", "hidden", false);
+	    	frm.set_df_property("selected_third_party_bank_checks", "hidden", false);
+		}
 	    frm.refresh_fields();
 
     },
@@ -1017,14 +1023,20 @@ frappe.ui.form.on('Bank Check', {
         check = locals[cdt][cdn]
 		check.company = frm.doc.company;
 		if (is_income(frm)) {
-            set_check_internal_number(check, frm)
+            set_check_internal_number(check, frm);
         }
     },
- /*   incoming_bank_checks_remove: function (frm) {
+    incoming_bank_checks_remove: function (frm) {
         frm.events.refresh_checks_amounts(frm);
-    }, */
-    amount: function (frm) {
-        frm.events.refresh_checks_amounts(frm);
+    },
+    amount: function (frm, cdt, cdn) {
+    	if (is_income(frm)) {
+    		refresh_third_party_bank_checks(frm, frm.doc.third_party_bank_checks);
+		}
+		else {
+    		frm.events.refresh_checks_amounts(frm);
+		}
+
     }
 })
 
@@ -1183,7 +1195,6 @@ function update_selected_third_party_bank_checks(frm, changed_row) {
     });
 
 	changed_bank_check = bank_checks[0];
-	console.log(changed_bank_check);
 
 	//Check was selected
 	if ( $(changed_row).is(':checked') ) {
@@ -1197,7 +1208,7 @@ function update_selected_third_party_bank_checks(frm, changed_row) {
 	else {
 		remove_bank_check(frm, changed_bank_check);
 	}
-	refresh_selected_third_party_bank_checks(frm);
+	refresh_third_party_bank_checks(frm, frm.doc.selected_third_party_bank_checks);
 
 }
 
@@ -1221,9 +1232,9 @@ function remove_bank_check(frm, changed_bank_check) {
 	frm.refresh_field("selected_third_party_bank_checks");
 }
 
-function refresh_selected_third_party_bank_checks (frm) {
+function refresh_third_party_bank_checks (frm, check_field) {
 	var acumulated = 0;
-	$.each(frm.doc.selected_third_party_bank_checks, function (index, check) {
+	$.each(check_field, function (index, check) {
 		acumulated += check.amount;
     });
 	frm.set_value("third_party_bank_checks_acumulated", acumulated);
