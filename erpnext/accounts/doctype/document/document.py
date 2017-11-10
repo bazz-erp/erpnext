@@ -11,6 +11,10 @@ class Document(FrappeDocument):
 
 
 @frappe.whitelist()
+def get_last_internal_number():
+	return frappe.db.sql("""SELECT COALESCE(MAX(internal_number), 0) FROM `tabDocument` """)
+
+@frappe.whitelist()
 def get_unused_third_party_documents(company):
     return frappe.db.sql("""SELECT name, date, internal_number, amount FROM
     `tabDocument` WHERE company=%(company)s and third_party and used=FALSE """, {"company": company}, as_dict=1)
