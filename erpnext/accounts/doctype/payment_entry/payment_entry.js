@@ -1050,6 +1050,7 @@ frappe.ui.form.on('Payment Entry Line', {
             case "Cheque de Terceros":
                 frm.toggle_display("third_party_bank_checks_section", display);
                 frm.toggle_display("third_party_bank_checks", display);
+                frm.toggle_display("third_party_bank_checks_amounts_section", display);
 
                 //Display all unused third party checks to paid with them
                 if (is_expenditure(frm) && !frm.doc.third_party_bank_checks) {
@@ -1066,6 +1067,7 @@ frappe.ui.form.on('Payment Entry Line', {
             case "Documentos de Terceros":
                 frm.toggle_display("third_party_documents_section", display);
                 frm.toggle_display("third_party_documents", display);
+                frm.toggle_display("third_party_documents_amounts_section", display);
 
                 if (is_expenditure(frm) && !frm.doc.third_party_documents) {
 
