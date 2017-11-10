@@ -1112,7 +1112,7 @@ frappe.ui.form.on('Bank Check', {
         check = locals[cdt][cdn]
 		check.company = frm.doc.company;
 		if (is_income(frm)) {
-            set_internal_number(check, frm);
+            set_check_internal_number(check, frm);
         }
     },
     incoming_bank_checks_remove: function (frm) {
@@ -1144,7 +1144,7 @@ frappe.ui.form.on('Document', {
         row = locals[cdt][cdn];
 		row.company = frm.doc.company;
 		if (is_income(frm)) {
-            set_internal_number(row, frm);
+            set_doc_internal_number(row, frm);
         }
     },
     amount: function (frm) {
@@ -1247,18 +1247,36 @@ var set_up_payment_lines = function (frm) {
     }
 }
 
-var counter = 0;
+var check_counter = 0;
 /**
  * @description Gets the last internal number registered on the database and sets the given object internal number.
  * @param obj to set the internal number
  */
-var set_internal_number = function (obj, frm) {
+var set_check_internal_number = function (obj, frm) {
     frappe.call({
         method: "erpnext.accounts.doctype.bank_check.bank_check.get_last_internal_number",
         args: {},
         callback: function (r) {
-            counter++;
-            obj.internal_number = parseInt(r.message[0]) + counter;
+            check_counter++;
+            obj.internal_number = parseInt(r.message[0]) + check_counter;
+
+            frm.refresh();
+        }
+    });
+}
+
+var doc_counter = 0;
+/**
+ * @description Gets the last internal number registered on the database and sets the given object internal number.
+ * @param obj to set the internal number
+ */
+var set_doc_internal_number = function (obj, frm) {
+    frappe.call({
+        method: "erpnext.accounts.doctype.document.document.get_last_internal_number",
+        args: {},
+        callback: function (r) {
+            doc_counter++;
+            obj.internal_number = parseInt(r.message[0]) + doc_counter;
 
             frm.refresh();
         }
