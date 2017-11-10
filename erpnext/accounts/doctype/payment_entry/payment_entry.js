@@ -1032,26 +1032,25 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.refresh();
                 break;
 
+            case "Cheque de Terceros":
+                frm.toggle_display("third_party_bank_checks_section", display);
+                frm.toggle_display("third_party_bank_checks", display);
+
+                //Display all unused third party checks to paid with them
+                if (is_expenditure(frm) && !frm.doc.third_party_bank_checks) {
+
+                    frm.set_df_property("third_party_bank_checks", "read_only", true);
+                    frm.refresh_field("third_party_bank_checks");
+                    show_third_party_checks(frm);
+
+                }
+
+			    frm.set_value("third_party_bank_checks_amount", line.paid_amount);
+                break;
+
             default:
                 break;
         }
-        if (line.mode_of_payment === "Cheque de Terceros") {
-        	var display_third_party_checks = line.paid_amount !== 0;
-        	frm.toggle_display("third_party_bank_checks_section", display_third_party_checks);
-        	frm.toggle_display("third_party_bank_checks", display_third_party_checks);
-
-        	//Display all unused third party checks to paid with them
-        	if (is_expenditure(frm) && !frm.doc.third_party_bank_checks) {
-
-        		frm.set_df_property("third_party_bank_checks", "read_only", true);
-				frm.refresh_field("third_party_bank_checks");
-        		show_third_party_checks(frm);
-
-			}
-
-			frm.set_value("third_party_bank_checks_amount", line.paid_amount);
-
-		}
 
     },
 
@@ -1216,7 +1215,7 @@ var set_internal_number = function (obj, frm) {
         callback: function (r) {
             counter++;
             obj.internal_number = parseInt(r.message[0]) + counter;
-            console.log(obj);
+
             frm.refresh();
         }
     });
