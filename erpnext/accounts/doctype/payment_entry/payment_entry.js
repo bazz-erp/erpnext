@@ -31,7 +31,8 @@ frappe.ui.form.on('Payment Entry', {
         frm.get_field('third_party_documents').grid.editable_fields = [
             {fieldname: 'internal_number', columns: 2},
             {fieldname: 'date', columns: 2},
-            {fieldname: 'amount', columns: 2}
+            {fieldname: 'amount', columns: 2},
+            {fieldname: 'client_detail', columns: 2}
         ];
 
         frm.get_field('documents').grid.editable_fields = [

@@ -776,7 +776,7 @@ class PaymentEntry(AccountsController):
 
     def update_selected_third_party_documents(self):
         for document in self.get("selected_third_party_documents"):
-            docs = frappe.get_all("Bank Check", {"internal_number": document.internal_number})
+            docs = frappe.get_all("Document", {"internal_number": document.internal_number})
 
             # first doc contains selected_document info
             frappe.db.sql("""UPDATE `tabDocument` set used=true WHERE name=%(name)s""", {"name": docs[0].name})

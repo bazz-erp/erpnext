@@ -12,5 +12,5 @@ class Document(FrappeDocument):
 
 @frappe.whitelist()
 def get_unused_third_party_documents(company):
-    return frappe.db.sql("""SELECT name, date, internal_number, amount FROM
+    return frappe.db.sql("""SELECT name, date, internal_number, amount, client_detail FROM
     `tabDocument` WHERE company=%(company)s and third_party and used=FALSE """, {"company": company}, as_dict=1)
