@@ -59,7 +59,7 @@ class PaymentEntry(AccountsController):
         self.set_concept()
         self.validate_payment_lines()
         self.save_bank_checks()
-        self.validate_documents()
+        self.save_documents()
 
     def on_submit(self):
         self.setup_party_account_field()
@@ -648,20 +648,6 @@ class PaymentEntry(AccountsController):
                 label = frappe.get_meta("Bank Check").get_label(field)
                 frappe.throw(_("{0} in Bank Check is mandatory").format(label))
 
-    def validate_documents(self):
-
-        for doc in self.get("documents"):
-            self.validate_document(["date", "internal_number"], doc)
-            if self.party_type == "Customer":
-                doc.client_detail = self.get("party")
-
-        if self.get("documents_topay") != self.get("documents_acumulated"):
-            frappe.throw(_("Total Amount Paid with documents must be equal to amount assigned to mode of payment Documentos"))
-
-    def validate_document(self, mandatory_fields, doc):
-        for field in mandatory_fields:
-            if not doc.get(field):
-                frappe.throw(_("{0} in Document is mandatory").format(field))
 
     def get_amount_assigned_to(self, mode):
         lines_assigned = self.get("lines", {"paid_amount": ["not in", [0, None, ""]],
@@ -739,6 +725,61 @@ class PaymentEntry(AccountsController):
             self.generate_gl_bank_line(line, gl_entries)
             self.generate_gl_party_line(line, gl_entries)
 
+
+    def save_documents(self):
+        if self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
+            self.validate_outgoing_documents()
+        self.validate_third_party_documents()
+
+    def validate_outgoing_documents(self):
+        for doc in self.get("documents"):
+            self.validate_document(["date", "amount"], doc)
+            doc.company = self.company
+            doc.third_party = False
+
+        if self.get("documents_topay") != self.get("documents_acumulated"):
+            frappe.throw(
+                _("Total Amount Paid with documents must be equal to amount assigned to mode of payment Documentos"))
+
+    def validate_third_party_documents(self):
+        if self.get("third_party_documents_topay") != self.get("third_party_documents_acumulated"):
+            frappe.throw(
+                _("Total Amount Paid with documents must be equal to amount assigned to mode of payment Documentos de Terceros"))
+
+        if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
+            self.validate_selected_third_party_documents()
+        if self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
+            self.validate_new_third_party_documents()
+
+    def validate_new_third_party_documents(self):
+        for doc in self.get("third_party_documents"):
+            self.validate_document(["date", "amount", "internal_number"], doc)
+            doc.company
+            doc.third_party = True
+            doc.client_detail = self.concept
+
+    def validate_document(self, mandatory_fields, doc):
+        for field in mandatory_fields:
+            label = frappe.get_meta("Document").get_label(field)
+            if not doc.get(field):
+                frappe.throw(_("{0} in Document is mandatory").format(label))
+
+
+    def validate_selected_third_party_documents(self):
+        for document in self.get("selected_third_party_documents"):
+            docs = frappe.get_all("Document", {"internal_number": document.internal_number})
+            # check must be unused
+            if not docs or docs[0].used:
+                frappe.throw(
+                    _("Document with Internal Number {0} was already used").format(document.internal_number))
+        self.update_selected_third_party_documents()
+
+    def update_selected_third_party_documents(self):
+        for document in self.get("selected_third_party_documents"):
+            docs = frappe.get_all("Bank Check", {"internal_number": document.internal_number})
+
+            # first doc contains selected_document info
+            frappe.db.sql("""UPDATE `tabDocument` set used=true WHERE name=%(name)s""", {"name": docs[0].name})
 
 @frappe.whitelist()
 def get_outstanding_reference_documents(args):
