@@ -1137,6 +1137,13 @@ frappe.ui.form.on('Document', {
         doc = locals[cdt][cdn];
         set_internal_number(doc, frm)
     },
+    third_party_documents_add: function (frm, cdt, cdn) {
+        document = locals[cdt][cdn]
+		document.company = frm.doc.company;
+		if (is_income(frm)) {
+            set_internal_number(document, frm);
+        }
+    },
     amount: function (frm) {
         if (is_income(frm)) {
     		refresh_third_party_documents(frm, frm.doc.third_party_documents);
