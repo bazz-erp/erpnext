@@ -747,9 +747,9 @@ class PaymentEntry(AccountsController):
                 _("Total Amount Paid with documents must be equal to amount assigned to mode of payment Documentos de Terceros"))
 
         if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
-            self.validate_selected_third_party_documents()
-        if self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
             self.validate_new_third_party_documents()
+        if self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
+            self.validate_selected_third_party_documents()
 
     def validate_new_third_party_documents(self):
         for doc in self.get("third_party_documents"):
