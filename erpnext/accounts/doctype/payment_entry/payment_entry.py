@@ -59,6 +59,7 @@ class PaymentEntry(AccountsController):
         self.set_concept()
         self.validate_payment_lines()
         self.save_bank_checks()
+        self.validate_documents()
 
     def on_submit(self):
         self.setup_party_account_field()
@@ -625,11 +626,8 @@ class PaymentEntry(AccountsController):
         self.validate_third_party_bank_checks()
 
     def validate_checks(self, check_field, mode_of_payment):
-        total_amount_paid_with_checks = 0
         for check in self.get(check_field):
             self.validate_check(check)
-            total_amount_paid_with_checks += check.amount
-
             # set concept of payment entry to check
             if check_field == "outgoing_bank_checks" and not check.concept:
                 check.concept = self.concept
@@ -641,7 +639,7 @@ class PaymentEntry(AccountsController):
 
 
 
-        if total_amount_paid_with_checks != self.get_total_amount_assigned_to_mode_of_payment(mode_of_payment):
+        if self.get("checks_topay") != self.get("checks_acumulated"):
             frappe.throw(_("Total Amount Paid with checks must be equal to amount assigned to mode of payment") + " " + mode_of_payment)
 
     def validate_check(self, check):
@@ -650,13 +648,29 @@ class PaymentEntry(AccountsController):
                 label = frappe.get_meta("Bank Check").get_label(field)
                 frappe.throw(_("{0} in Bank Check is mandatory").format(label))
 
-    def get_total_amount_assigned_to_mode_of_payment(self, mode_of_payment):
-        lines_assigned_to_bank_check = self.get("lines", {"paid_amount": ["not in", [0, None, ""]],
-                                                          "mode_of_payment": mode_of_payment})
-        total_amount_assigned_to_checks = 0
-        for line in lines_assigned_to_bank_check:
-            total_amount_assigned_to_checks += line.paid_amount
-        return total_amount_assigned_to_checks
+    def validate_documents(self):
+
+        for doc in self.get("documents"):
+            self.validate_document(["date", "internal_number"], doc)
+            if self.party_type == "Customer":
+                doc.client_detail = self.get("party")
+
+        if self.get("documents_topay") != self.get("documents_acumulated"):
+            frappe.throw(_("Total Amount Paid with documents must be equal to amount assigned to mode of payment Documentos"))
+
+    def validate_document(self, mandatory_fields, doc):
+        for field in mandatory_fields:
+            if not doc.get(field):
+                frappe.throw(_("{0} in Document is mandatory").format(field))
+
+    def get_amount_assigned_to(self, mode):
+        lines_assigned = self.get("lines", {"paid_amount": ["not in", [0, None, ""]],
+                                                          "mode_of_payment": mode})
+        total_amount_assigned = 0
+        for line in lines_assigned:
+            total_amount_assigned+= line.paid_amount
+
+        return total_amount_assigned
 
 
     def validate_third_party_bank_checks(self):
