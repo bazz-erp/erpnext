@@ -42,7 +42,6 @@ class PaymentEntry(AccountsController):
         self.validate_payment_type()
         self.validate_party_details()
 
-        # Bazz not need paid_from and paid_to
         self.validate_bank_accounts()
         self.set_exchange_rate()
         self.validate_mandatory()
@@ -104,7 +103,6 @@ class PaymentEntry(AccountsController):
                 self.set(field, None)
             self.references = []
 
-        # Bazz
         elif self.payment_type in ("Miscellaneous Income", "Miscellaneous Expenditure"):
             self.party = None
             self.party_balance = None
@@ -155,7 +153,6 @@ class PaymentEntry(AccountsController):
                         d.set(field, value)
 
     def validate_payment_type(self):
-        # Bazz has also Miscellaneous Income and Miscellaneous Expenditure
         if self.payment_type not in ("Receive", "Pay", "Internal Transfer", "Miscellaneous Income",
                                      "Miscellaneous Expenditure"):
             frappe.throw(_("Payment Type must be one of Receive, Pay and Internal Transfer"))
@@ -354,7 +351,7 @@ class PaymentEntry(AccountsController):
     def set_title(self):
         if self.payment_type in ("Receive", "Pay"):
             self.title = self.party
-        # Bazz
+
         elif self.payment_type in ("Miscellaneous Income", "Miscellaneous Expenditure"):
             self.title = _(self.payment_type) + "  " + self.posting_date
         else:
@@ -408,7 +405,7 @@ class PaymentEntry(AccountsController):
         # self.add_party_gl_entries(gl_entries)
 
         self.add_bank_gl_entries(gl_entries)
-        # Bazz
+
         self.add_lines_party_gl_entries(gl_entries)
         self.add_lines_bank_gl_entries(gl_entries)
         self.generate_gl_entries_for_bank_checks(gl_entries)
@@ -1064,7 +1061,6 @@ def get_payment_entry(dt, dn, party_amount=None, bank_account=None, bank_amount=
     return pe
 
 
-# Bazz
 @frappe.whitelist()
 def get_mod_of_payments(company, payment_type):
     mode_of_payments = frappe.db.sql("""select parent as name from `tabMode of Payment Account` 

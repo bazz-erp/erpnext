@@ -41,9 +41,6 @@ frappe.ui.form.on('Payment Entry', {
             {fieldname: 'amount', columns: 2}
         ];
 
-        if (frm.doc.incoming_bank_checks && frm.doc.incoming_bank_checks.length != 0) {
-            frm.set_df_property("incoming_bank_checks", "hidden", false);
-        }
 	    if (frm.doc.outgoing_bank_checks && frm.doc.outgoing_bank_checks.length != 0) {
 	        frm.set_df_property("outgoing_bank_checks","hidden" ,false);
 	    }
@@ -309,22 +306,18 @@ frappe.ui.form.on('Payment Entry', {
         frm.set_value("third_party_documents", null);
         frm.set_value("documents", null);
 
-        frm.set_value("checks_topay", 0);
-        frm.set_value("checks_acumulated", 0);
-        frm.set_value("checks_balance", 0);
-        frm.set_value("documents_topay", 0);
-        frm.set_value("documents_acumulated", 0);
-        frm.set_value("documents_balance", 0);
-
         frm.toggle_display("third_party_bank_checks", false);
         frm.toggle_display("outgoing_bank_checks", false);
         frm.toggle_display("bank_checks_section", false);
-        frm.toggle_display("checks_amounts_section", false);
 
         frm.toggle_display("third_party_documents", false)
         frm.toggle_display("documents", false);
         frm.toggle_display("documents_section", false);
+
         frm.toggle_display("documents_amounts_section", false);
+        frm.toggle_display("checks_amounts_section", false);
+        frm.toggle_display("third_party_documents_amounts_section", false);
+        frm.toggle_display("third_party_checks_amounts_section", false);
 
         set_up_payment_lines(frm);
         frm.refresh();
@@ -919,34 +912,21 @@ frappe.ui.form.on('Payment Entry', {
         }
     },
 
-    refresh_checks_amounts: function (frm) {
+    refresh_amounts: function (frm, name, objects) {
         var acumulated = 0;
-        var checks = (is_income(frm)) ? frm.doc.incoming_bank_checks : frm.doc.outgoing_bank_checks;
-        if (checks) {
-            checks.forEach(function (row) {
+        if (objects) {
+            objects.forEach(function (row) {
                 if (row.amount) {
                     acumulated += row.amount;
                 }
             });
         }
 
-        frm.set_value("checks_acumulated", acumulated);
-        frm.set_value("checks_balance", frm.doc.checks_topay - acumulated);
-    },
+        frm.refresh_field(name + '_topay');
+        var topay = frm.get_field(name + '_topay').value;
 
-    refresh_documents_amounts: function (frm) {
-        var acumulated = 0;
-        var documents = frm.doc.documents;
-        if (documents) {
-            documents.forEach(function (row) {
-                if (row.amount) {
-                    acumulated += row.amount;
-                }
-            });
-        }
-
-        frm.set_value("documents_acumulated", acumulated);
-        frm.set_value("documents_balance", frm.doc.documents_topay - acumulated);
+        frm.set_value(name + "_acumulated", acumulated);
+        frm.set_value(name + "_balance", topay - acumulated);
     },
 
 	on_select_third_party_bank_checks_row: function (frm) {
@@ -1032,8 +1012,7 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.toggle_display("outgoing_bank_checks", display);
 
                 frm.set_value("checks_topay", line.paid_amount);
-
-                frm.events.refresh_checks_amounts(frm);
+                frm.events.refresh_amounts(frm, "checks", frm.doc.outgoing_bank_checks);
                 frm.refresh();
                 break;
 
@@ -1044,14 +1023,14 @@ frappe.ui.form.on('Payment Entry Line', {
 
                 frm.set_value("documents_topay", line.paid_amount);
 
-                frm.events.refresh_documents_amounts(frm);
+                frm.events.refresh_amounts(frm, "documents", frm.doc.documents);
                 frm.refresh();
                 break;
 
             case "Cheques de Terceros":
                 frm.toggle_display("third_party_bank_checks_section", display);
                 frm.toggle_display("third_party_bank_checks", display);
-                frm.toggle_display("third_party_bank_checks_amounts_section", display);
+                frm.toggle_display("third_party_checks_amounts_section", display);
 
                 //Display all unused third party checks to paid with them
                 if (is_expenditure(frm) && !frm.doc.third_party_bank_checks) {
@@ -1063,6 +1042,7 @@ frappe.ui.form.on('Payment Entry Line', {
                 }
 
 			    frm.set_value("third_party_bank_checks_topay", line.paid_amount);
+                frm.events.refresh_amounts(frm, "third_party_bank_checks", frm.doc.third_party_bank_checks);
                 break;
 
             case "Documentos de Terceros":
@@ -1079,6 +1059,7 @@ frappe.ui.form.on('Payment Entry Line', {
                 }
 
 			    frm.set_value("third_party_documents_topay", line.paid_amount);
+                frm.events.refresh_amounts(frm, "third_party_documents", frm.doc.third_party_documents);
                 break;
 
             default:
@@ -1106,7 +1087,7 @@ frappe.ui.form.on('Bank Check', {
         frm.refresh();
     },
     outgoing_bank_checks_remove: function (frm) {
-        frm.events.refresh_checks_amounts(frm);
+        frm.events.refresh_amounts(frm, "checks", frm.doc.outgoing_bank_checks);
     },
     third_party_bank_checks_add: function (frm, cdt, cdn) {
         check = locals[cdt][cdn]
@@ -1115,15 +1096,11 @@ frappe.ui.form.on('Bank Check', {
             set_check_internal_number(check, frm);
         }
     },
-    incoming_bank_checks_remove: function (frm) {
-        frm.events.refresh_checks_amounts(frm);
-    },
     amount: function (frm, cdt, cdn) {
-    	if (is_income(frm)) {
-    		refresh_third_party_bank_checks(frm, frm.doc.third_party_bank_checks);
-		}
-		else {
-    		frm.events.refresh_checks_amounts(frm);
+        frm.events.refresh_amounts(frm, "third_party_bank_checks", frm.doc.third_party_bank_checks);
+
+		if(is_expenditure(frm)) {
+            frm.events.refresh_amounts(frm, "checks", frm.doc.outgoing_bank_checks);
 		}
 
     }
@@ -1134,11 +1111,11 @@ frappe.ui.form.on('Bank Check', {
  */
 frappe.ui.form.on('Document', {
     documents_remove: function (frm) {
-        frm.events.refresh_documents_amounts(frm);
+        frm.events.refresh_amounts(frm, "documents", frm.doc.documents);
     },
     documents_add: function (frm, cdt, cdn) {
         doc = locals[cdt][cdn];
-        set_internal_number(doc, frm)
+        set_doc_internal_number(doc, frm);
     },
     third_party_documents_add: function (frm, cdt, cdn) {
         row = locals[cdt][cdn];
@@ -1149,11 +1126,10 @@ frappe.ui.form.on('Document', {
         }
     },
     amount: function (frm) {
-        if (is_income(frm)) {
-    		refresh_third_party_documents(frm, frm.doc.third_party_documents);
-		}
-		else {
-            frm.events.refresh_documents_amounts(frm);
+        frm.events.refresh_amounts(frm, "third_party_documents", frm.doc.third_party_documents);
+
+		if(is_expenditure(frm)) {
+		    frm.events.refresh_amounts(frm, "documents", frm.doc.documents);
 		}
     }
 })
@@ -1347,7 +1323,7 @@ var update_selected_third_party_bank_checks = function (frm, changed_row) {
 	else {
 		remove_bank_check(frm, changed_bank_check);
 	}
-	refresh_third_party_bank_checks(frm, frm.doc.selected_third_party_bank_checks);
+	frm.events.refresh_amounts(frm, "third_party_bank_checks", frm.doc.third_party_bank_checks);
 
 }
 
@@ -1369,16 +1345,6 @@ var remove_bank_check = function (frm, changed_bank_check) {
 	frm.doc.selected_third_party_bank_checks.splice(delete_index, 1);
 
 	frm.refresh_field("selected_third_party_bank_checks");
-}
-
-var refresh_third_party_bank_checks = function (frm, check_field) {
-	var acumulated = 0;
-	$.each(check_field, function (index, check) {
-		acumulated += check.amount;
-    });
-	frm.set_value("third_party_bank_checks_acumulated", acumulated);
-	frm.set_value("third_party_bank_checks_balance", frm.doc.third_party_bank_checks_topay - acumulated);
-	frm.refresh();
 }
 
 
@@ -1432,7 +1398,7 @@ var update_selected_third_party_documents = function (frm, changed_row) {
 	else {
 		remove_document(frm, changed_document);
 	}
-	refresh_third_party_documents(frm, frm.doc.selected_third_party_documents);
+    frm.events.refresh_amounts(frm, "third_party_documents", frm.doc.third_party_documents);
 
 }
 
@@ -1454,15 +1420,5 @@ var remove_document = function (frm, changed_document) {
 	frm.doc.selected_third_party_documents.splice(delete_index, 1);
 
 	frm.refresh_field("selected_third_party_documents");
-}
-
-var refresh_third_party_documents = function (frm, document_field) {
-	var acumulated = 0;
-	$.each(document_field, function (index, doc) {
-		acumulated += doc.amount;
-    });
-	frm.set_value("third_party_documents_acumulated", acumulated);
-	frm.set_value("third_party_documents_balance", frm.doc.third_party_documents_topay - acumulated);
-	frm.refresh();
 }
 
