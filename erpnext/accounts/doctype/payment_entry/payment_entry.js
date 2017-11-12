@@ -1026,7 +1026,7 @@ frappe.ui.form.on('Payment Entry Line', {
         set_up_line(frm, line);
 
         switch (line.mode_of_payment) {
-            case "Cheque":
+            case "Cheques propios":
                 frm.toggle_display("bank_checks_section", display);
                 frm.toggle_display("checks_amounts_section", display);
                 frm.toggle_display("outgoing_bank_checks", display);
@@ -1037,7 +1037,7 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.refresh();
                 break;
 
-            case "Documentos":
+            case "Documentos propios":
                 frm.toggle_display("documents_section", display);
                 frm.toggle_display("documents_amounts_section", display);
                 frm.toggle_display("documents", display);
@@ -1048,7 +1048,7 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.refresh();
                 break;
 
-            case "Cheque de Terceros":
+            case "Cheques de Terceros":
                 frm.toggle_display("third_party_bank_checks_section", display);
                 frm.toggle_display("third_party_bank_checks", display);
                 frm.toggle_display("third_party_bank_checks_amounts_section", display);

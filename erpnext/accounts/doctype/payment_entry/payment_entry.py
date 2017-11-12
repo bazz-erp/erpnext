@@ -569,7 +569,7 @@ class PaymentEntry(AccountsController):
 
     def add_lines_bank_gl_entries(self, gl_entries):
         # Movements for bank checks are generated separately
-        for line in self.get("lines", {"mode_of_payment": ["not in", ["Cheque", "Cheque de Terceros"]]}):
+        for line in self.get("lines", {"mode_of_payment": ["not in", ["Cheques propios", "Cheques de Terceros"]]}):
             self.generate_gl_bank_line(line, gl_entries)
 
     def generate_gl_bank_line(self, line, gl_entries):
@@ -596,7 +596,7 @@ class PaymentEntry(AccountsController):
 
     def add_lines_party_gl_entries(self, gl_entries):
         # Movements for bank checks are generated separately
-        for line in self.get("lines", {"mode_of_payment": ["not in", ["Cheque", "Cheque de Terceros"]]}):
+        for line in self.get("lines", {"mode_of_payment": ["not in", ["Cheques propios", "Cheques de Terceros"]]}):
             self.generate_gl_party_line(line, gl_entries)
 
     def generate_gl_party_line(self, line, gl_entries):
@@ -622,7 +622,7 @@ class PaymentEntry(AccountsController):
         if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
             self.outgoing_bank_checks = None
         elif self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
-            self.validate_checks("outgoing_bank_checks", "Cheque")
+            self.validate_checks("outgoing_bank_checks", "Cheques propios")
         self.validate_third_party_bank_checks()
 
     def validate_checks(self, check_field, mode_of_payment):
@@ -661,12 +661,12 @@ class PaymentEntry(AccountsController):
 
     def validate_third_party_bank_checks(self):
         if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
-            self.validate_checks("third_party_bank_checks", "Cheque de Terceros")
+            self.validate_checks("third_party_bank_checks", "Cheques de Terceros")
         else:
             self.validate_selected_third_party_bank_checks()
 
     def validate_selected_third_party_bank_checks(self):
-        self.validate_checks("selected_third_party_bank_checks", "Cheque de Terceros")
+        self.validate_checks("selected_third_party_bank_checks", "Cheques de Terceros")
         for selected_check in self.get("selected_third_party_bank_checks"):
             docs = frappe.get_all("Bank Check", {"internal_number": selected_check.internal_number})
             # check must be unused
@@ -692,7 +692,7 @@ class PaymentEntry(AccountsController):
         self.generate_gl_entries_for_third_party_bank_checks(gl_entries)
 
     def generate_gl_entries_for_outgoing_bank_checks(self, gl_entries):
-        check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheque"]})
+        check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheques propios"]})
         if not check_lines:
             return
         # get dest account of check line. All lines has the same dest account
@@ -719,7 +719,7 @@ class PaymentEntry(AccountsController):
             )
 
     def generate_gl_entries_for_third_party_bank_checks(self, gl_entries):
-        third_party_check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheque de Terceros"], "paid_amount":
+        third_party_check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheques de Terceros"], "paid_amount":
         ["!=", 0]})
         for line in third_party_check_lines:
             self.generate_gl_bank_line(line, gl_entries)
@@ -739,7 +739,7 @@ class PaymentEntry(AccountsController):
 
         if self.get("documents_topay") != self.get("documents_acumulated"):
             frappe.throw(
-                _("Total Amount Paid with documents must be equal to amount assigned to mode of payment Documentos"))
+                _("Total Amount Paid with documents must be equal to amount assigned to mode of payment Documentos propios"))
 
     def validate_third_party_documents(self):
         if self.get("third_party_documents_topay") != self.get("third_party_documents_acumulated"):
@@ -1072,6 +1072,6 @@ def get_mod_of_payments(company, payment_type):
                          {"parenttype": "Mode of Payment", "company": company}, as_dict=1)
 
     if payment_type == "income":
-        return filter(lambda x: x.name != "Cheque", mode_of_payments)
+        return filter(lambda x: (x.name != "Cheques propios") and (x.name != "Documentos propios"), mode_of_payments)
 
     return mode_of_payments
