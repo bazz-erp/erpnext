@@ -1145,6 +1145,7 @@ frappe.ui.form.on('Document', {
 		row.company = frm.doc.company;
 		if (is_income(frm)) {
             set_doc_internal_number(row, frm);
+            row.client_detail = frm.doc.concept;
         }
     },
     amount: function (frm) {
