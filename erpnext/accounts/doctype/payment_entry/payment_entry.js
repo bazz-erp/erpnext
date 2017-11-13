@@ -6,6 +6,8 @@ var event_bound = false;
 frappe.ui.form.on('Payment Entry', {
 
     onload: function (frm) {
+
+
         if (frm.doc.__islocal) {
             if (!frm.doc.paid_from) frm.set_value("paid_from_account_currency", null);
             if (!frm.doc.paid_to) frm.set_value("paid_to_account_currency", null);
@@ -49,12 +51,8 @@ frappe.ui.form.on('Payment Entry', {
             frm.set_df_property("documents", "hidden", false);
         }
 
-	    if (frm.doc.selected_third_party_bank_checks &&
-			frm.doc.selected_third_party_bank_checks != 0) {
-	    	frm.set_df_property("third_party_bank_checks_section", "hidden", false);
-	    	frm.set_df_property("selected_third_party_bank_checks", "hidden", false);
-		}
-	    frm.refresh_fields();
+
+	    frm.refresh();
 
     },
 
@@ -162,6 +160,21 @@ frappe.ui.form.on('Payment Entry', {
     },
 
     refresh: function (frm) {
+        if (frm.doc.selected_third_party_bank_checks &&
+			frm.doc.selected_third_party_bank_checks != 0) {
+	    	frm.set_df_property("third_party_bank_checks_section", "hidden", false);
+	    	frm.set_df_property("third_party_bank_checks", "hidden", true);
+	    	frm.set_df_property("third_party_checks_amounts_section", "hidden", true);
+	    	frm.set_df_property("selected_third_party_bank_checks", "hidden", false);
+		}
+		if (frm.doc.selected_third_party_documents &&
+			frm.doc.selected_third_party_documents != 0) {
+	    	frm.set_df_property("third_party_documents_section", "hidden", false);
+	    	frm.set_df_property("third_party_documents", "hidden", true);
+	    	frm.set_df_property("third_party_documents_amounts_section", "hidden", true);
+	    	frm.set_df_property("selected_third_party_documents", "hidden", false);
+		}
+
         erpnext.hide_company();
         frm.events.hide_unhide_fields(frm);
         frm.events.set_dynamic_labels(frm);
@@ -301,9 +314,7 @@ frappe.ui.form.on('Payment Entry', {
         frm.set_value("allocated_to_mode_of_payment_amount", null);
 
         //clear bank checks
-        frm.set_value("third_party_bank_checks", null);
         frm.set_value("outgoing_bank_checks", null);
-        frm.set_value("third_party_documents", null);
         frm.set_value("documents", null);
 
         frm.toggle_display("third_party_bank_checks", false);
@@ -318,6 +329,11 @@ frappe.ui.form.on('Payment Entry', {
         frm.toggle_display("checks_amounts_section", false);
         frm.toggle_display("third_party_documents_amounts_section", false);
         frm.toggle_display("third_party_checks_amounts_section", false);
+
+        frm.set_df_property("third_party_bank_checks", "read_only", is_expenditure(frm));
+        frm.refresh_field("third_party_bank_checks");
+        frm.set_df_property("third_party_documents", "read_only", is_expenditure(frm));
+        frm.refresh_field("third_party_documents");
 
         set_up_payment_lines(frm);
         frm.refresh();
@@ -1032,13 +1048,10 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.toggle_display("third_party_bank_checks", display);
                 frm.toggle_display("third_party_checks_amounts_section", display);
 
-                //Display all unused third party checks to paid with them
-                if (is_expenditure(frm) && !frm.doc.third_party_bank_checks) {
-
-                    frm.set_df_property("third_party_bank_checks", "read_only", true);
-                    frm.refresh_field("third_party_bank_checks");
+                if (is_expenditure(frm)) {
+                    /* cleanup the table */
+                    frm.set_value("third_party_bank_checks", []);
                     show_third_party_checks(frm);
-
                 }
 
 			    frm.set_value("third_party_bank_checks_topay", line.paid_amount);
@@ -1050,12 +1063,10 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.toggle_display("third_party_documents", display);
                 frm.toggle_display("third_party_documents_amounts_section", display);
 
-                if (is_expenditure(frm) && !frm.doc.third_party_documents) {
-
-                    frm.set_df_property("third_party_documents", "read_only", true);
-                    frm.refresh_field("third_party_documents");
+                if (is_expenditure(frm)) {
+                    /* cleanup the table */
+                    frm.set_value("third_party_documents", []);
                     show_third_party_documents(frm);
-
                 }
 
 			    frm.set_value("third_party_documents_topay", line.paid_amount);
@@ -1304,27 +1315,27 @@ var update_selected_third_party_bank_checks = function (frm, changed_row) {
 
 	//calculate number of row checked to retrieve the element
 	var row_index = $(changed_row).next().text();
+	if(!isNaN(parseInt(row_index))) {
+        var bank_checks = $(frm.doc.third_party_bank_checks).filter(function (i, element) {
+            return element.idx == row_index;
+        });
 
-	var bank_checks = $(frm.doc.third_party_bank_checks).filter(function (i, element) {
-		return element.idx == row_index;
-    });
+        changed_bank_check = bank_checks[0];
 
-	changed_bank_check = bank_checks[0];
-
-	//Check was selected
-	if ( $(changed_row).is(':checked') ) {
-		var child = frm.add_child("selected_third_party_bank_checks");
-		child.amount = changed_bank_check.amount;
-		child.internal_number = changed_bank_check.internal_number;
-		child.payment_date = changed_bank_check.payment_date;
-		child.idx = changed_bank_check.idx;
-	}
-	// Removes check from selected check list
-	else {
-		remove_bank_check(frm, changed_bank_check);
-	}
-	frm.events.refresh_amounts(frm, "third_party_bank_checks", frm.doc.third_party_bank_checks);
-
+        //Check was selected
+        if ($(changed_row).is(':checked')) {
+            var child = frm.add_child("selected_third_party_bank_checks");
+            child.amount = changed_bank_check.amount;
+            child.internal_number = changed_bank_check.internal_number;
+            child.payment_date = changed_bank_check.payment_date;
+            child.idx = changed_bank_check.idx;
+        }
+        // Removes check from selected check list
+        else {
+            remove_bank_check(frm, changed_bank_check);
+        }
+        frm.events.refresh_amounts(frm, "third_party_bank_checks", frm.doc.selected_third_party_bank_checks);
+    }
 }
 
 /**
@@ -1379,26 +1390,25 @@ var update_selected_third_party_documents = function (frm, changed_row) {
 	//calculate number of row checked to retrieve the element
 	var row_index = $(changed_row).next().text();
 
-	var documents = $(frm.doc.third_party_documents).filter(function (i, element) {
-		return element.idx == row_index;
-    });
+	if(!isNaN(parseInt(row_index))) {
+        var changed_document = $(frm.doc.third_party_documents).filter(function (i, element) {
+            return element.idx == row_index;
+        })[0];
 
-	var changed_document = documents[0];
 
-	//Document was selected
-	if ( $(changed_row).is(':checked') ) {
-		var child = frm.add_child("selected_third_party_documents");
-		child.amount = changed_document.amount;
-		child.internal_number = changed_document.internal_number;
-		child.date = changed_document.date;
-		child.client_detail = changed_document.client_detail;
-		child.idx = changed_document.idx;
-	}
-	// Removes document from selected documents list
-	else {
-		remove_document(frm, changed_document);
-	}
-    frm.events.refresh_amounts(frm, "third_party_documents", frm.doc.third_party_documents);
+        if ( $(changed_row).is(':checked') ) {
+            var child = frm.add_child("selected_third_party_documents");
+            child.amount = changed_document.amount;
+            child.internal_number = changed_document.internal_number;
+            child.date = changed_document.date;
+            child.client_detail = changed_document.client_detail;
+            child.idx = changed_document.idx;
+        }
+        else {
+            remove_document(frm, changed_document);
+        }
+        frm.events.refresh_amounts(frm, "third_party_documents", frm.doc.selected_third_party_documents);
+    }
 
 }
 
@@ -1412,7 +1422,7 @@ var remove_document = function (frm, changed_document) {
 	var delete_index;
 	// find the index of the check that must be removed
 	$.each(frm.doc.selected_third_party_documents, function (pos, doc) {
-		if (doc.idx == changed_document.idx) {
+		if (doc.idx !== undefined && doc.idx == changed_document.idx) {
 			delete_index = pos;
 		}
     });

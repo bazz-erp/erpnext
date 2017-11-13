@@ -616,28 +616,18 @@ class PaymentEntry(AccountsController):
         gl_entries.append(gl_dict)
 
     def save_bank_checks(self):
-        if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
-            self.outgoing_bank_checks = None
-        elif self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
-            self.validate_checks("outgoing_bank_checks", "Cheques propios")
+        if self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
+            self.validate_outgoing_checks()
         self.validate_third_party_bank_checks()
 
-    def validate_checks(self, check_field, mode_of_payment):
-        for check in self.get(check_field):
+    def validate_outgoing_checks(self):
+        for check in self.get("outgoing_bank_checks"):
             self.validate_check(check)
-            # set concept of payment entry to check
-            if check_field == "outgoing_bank_checks" and not check.concept:
+            if not check.concept:
                 check.concept = self.concept
                 check.third_party_check = False
-
-            # mark check as third party
-            elif check_field == "third_party_bank_checks":
-                check.third_party_check = True
-
-
-
         if self.get("checks_topay") != self.get("checks_acumulated"):
-            frappe.throw(_("Total Amount Paid with checks must be equal to amount assigned to mode of payment") + " " + mode_of_payment)
+            frappe.throw(_("Total Amount Paid with checks must be equal to amount assigned to mode of payment Cheques propios"))
 
     def validate_check(self, check):
         for field in ["payment_date", "amount"]:
@@ -645,25 +635,22 @@ class PaymentEntry(AccountsController):
                 label = frappe.get_meta("Bank Check").get_label(field)
                 frappe.throw(_("{0} in Bank Check is mandatory").format(label))
 
-
-    def get_amount_assigned_to(self, mode):
-        lines_assigned = self.get("lines", {"paid_amount": ["not in", [0, None, ""]],
-                                                          "mode_of_payment": mode})
-        total_amount_assigned = 0
-        for line in lines_assigned:
-            total_amount_assigned+= line.paid_amount
-
-        return total_amount_assigned
-
-
     def validate_third_party_bank_checks(self):
+        if self.get("third_party_bank_checks_topay") != self.get("third_party_bank_checks_acumulated"):
+            frappe.throw(
+                _("Total Amount Paid with documents must be equal to amount assigned to mode of payment Cheques de Terceros"))
+
         if self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income":
-            self.validate_checks("third_party_bank_checks", "Cheques de Terceros")
+            self.validate_new_third_party_bank_checks()
         else:
             self.validate_selected_third_party_bank_checks()
 
+    def validate_new_third_party_bank_checks(self):
+        for check in self.get("third_party_bank_checks"):
+            self.validate_check(check)
+            check.third_party_check = True
+
     def validate_selected_third_party_bank_checks(self):
-        self.validate_checks("selected_third_party_bank_checks", "Cheques de Terceros")
         for selected_check in self.get("selected_third_party_bank_checks"):
             docs = frappe.get_all("Bank Check", {"internal_number": selected_check.internal_number})
             # check must be unused
