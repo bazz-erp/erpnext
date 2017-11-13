@@ -1227,6 +1227,8 @@ var set_up_payment_lines = function (frm) {
                         child.mode_of_payment = value.name;
                         child.paid_amount = 0
                     });
+                    var df1 = frappe.meta.get_docfield("Payment Entry Line","mode_of_payment", frm.doc.name);
+                    df1.read_only = 1;
                     frm.refresh();
 
                 }
