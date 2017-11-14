@@ -957,7 +957,29 @@ frappe.ui.form.on('Payment Entry', {
 			var changed_row = event.target;
 			update_selected_third_party_documents(frm, changed_row);
 		});
-	}
+	},
+
+    /**
+     * Updates concept of documents when the concept of payment entry changes.
+     * @param frm
+     */
+    concept: function (frm) {
+        if (frm.doc.concept) {
+            if (is_income(frm)) {
+                $.each(frm.doc.third_party_documents, function (index, d) {
+                    frappe.model.set_value(d.doctype, d.name, "client_detail", frm.doc.concept);
+                });
+                frm.refresh_field("third_party_documents");
+            }
+            else {
+               $.each(frm.doc.documents, function (index, d) {
+                    frappe.model.set_value(d.doctype, d.name, "client_detail", frm.doc.concept);
+               });
+               frm.refresh_field("documents");
+            }
+        }
+
+    }
 
 });
 
