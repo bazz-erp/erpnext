@@ -152,31 +152,36 @@ def get_data_with_opening_closing(filters, account_details, gl_entries):
         total_credit_in_account_currency, gle_map = get_accountwise_gle(filters, gl_entries, gle_map)
 
     for acc, acc_dict in gle_map.items():
+
+        # in account 'Cheques Diferidos' balance is not showed
         data.append({"concept": acc})
-        data.append(get_balance_row(_("Balance"), acc_dict.opening_credit, acc_dict.opening_debit,
+        if acc != "Cheques Diferidos - B":
+            data.append(get_balance_row(_("Balance"), acc_dict.opening_credit, acc_dict.opening_debit,
                                     acc_dict.opening_credit_in_account_currency,
                                     acc_dict.opening_debit_in_account_currency, False))
 
+        # Totals and closing for individual ledger, if grouped by account
+        account_closing_credit = acc_dict.opening_credit + acc_dict.total_credit
+        account_closing_debit = acc_dict.opening_debit + acc_dict.total_debit
+
+        account_closing_credit_in_account_currency = acc_dict.opening_credit_in_account_currency + acc_dict.total_credit_in_account_currency
+        account_closing_debit_in_account_currency = acc_dict.opening_debit_in_account_currency + acc_dict.total_debit_in_account_currency
+
+
+
         if acc_dict.entries:
             # Opening for individual ledger, if grouped by account
-
             data += acc_dict.entries
 
-            # Totals and closing for individual ledger, if grouped by account
-            account_closing_credit = acc_dict.opening_credit + acc_dict.total_credit
-            account_closing_debit = acc_dict.opening_debit + acc_dict.total_debit
-
-            account_closing_credit_in_account_currency = acc_dict.opening_credit_in_account_currency + acc_dict.total_credit_in_account_currency
-            account_closing_debit_in_account_currency = acc_dict.opening_debit_in_account_currency + acc_dict.total_debit_in_account_currency
-
-            data += [get_balance_row(_("Saldo") + " " + acc, account_closing_credit, account_closing_debit,
-                                     account_closing_credit_in_account_currency,
-                                     account_closing_debit_in_account_currency), {}]
-
+        # balance of account Cheques Diferidos -B not includes opening balance:
+        if acc == "Cheques Diferidos - B":
+            data += [get_balance_row(_("Saldo") + " " + acc, acc_dict.total_credit, acc_dict.total_debit,
+                                     acc_dict.total_credit_in_account_currency,
+                                     acc_dict.total_debit_in_account_currency), {}]
         else:
-            data += [get_balance_row(_("Saldo") + " " + acc, acc_dict.opening_credit, acc_dict.opening_debit,
-                                 acc_dict.opening_credit_in_account_currency,
-                                 acc_dict.opening_debit_in_account_currency), {}]
+            data += [get_balance_row(_("Saldo") + " " + acc, account_closing_credit, account_closing_debit,
+                                 account_closing_credit_in_account_currency,
+                                 account_closing_debit_in_account_currency), {}]
 
     # Total debit and credit between from and to date
     if total_debit or total_credit:
@@ -249,7 +254,8 @@ def get_accountwise_gle(filters, gl_entries, gle_map):
                 total_debit_in_account_currency += flt(gle.debit_in_account_currency, 3)
                 total_credit_in_account_currency += flt(gle.credit_in_account_currency, 3)
 
-        if gle.posting_date <= to_date:
+        # gl_entries of 'Cheques Diferidos - B' are not considered when calculating the total balance
+        if gle.posting_date <= to_date and gle.account != "Cheques Diferidos -B":
             total_debit += flt(gle.debit, 3)
             total_credit += flt(gle.credit, 3)
 
