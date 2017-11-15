@@ -53,6 +53,8 @@ frappe.ui.form.on('Payment Entry', {
 
 	    frm.refresh_fields();
 
+	    $( 'div[data-fieldname="lines"] .grid-add-row').hide();
+
     },
 
     setup: function (frm) {
@@ -1361,18 +1363,33 @@ var update_selected_third_party_bank_checks = function (frm, changed_row) {
 
         //Check was selected
         if ($(changed_row).is(':checked')) {
-            var child = frm.add_child("selected_third_party_bank_checks");
-            child.amount = changed_bank_check.amount;
-            child.internal_number = changed_bank_check.internal_number;
-            child.payment_date = changed_bank_check.payment_date;
-            child.idx = changed_bank_check.idx;
+            add_selected_bank_check(frm, changed_bank_check);
         }
         // Removes check from selected check list
         else {
             remove_bank_check(frm, changed_bank_check);
         }
-        frm.events.refresh_amounts(frm, "third_party_bank_checks", frm.doc.selected_third_party_bank_checks);
     }
+    else {
+	    frm.set_value("selected_third_party_bank_checks", null);
+
+	    if ($(changed_row).is(':checked')) {
+	        $.each(frm.doc.third_party_bank_checks, function (index, check) {
+	            add_selected_bank_check(frm, check);
+            });
+        }
+        frm.refresh_field("selected_third_party_bank_checks");
+    }
+    frm.events.refresh_amounts(frm, "third_party_bank_checks", frm.doc.selected_third_party_bank_checks);
+}
+
+var add_selected_bank_check = function (frm, changed_bank_check) {
+  var child = frm.add_child("selected_third_party_bank_checks");
+    child.amount = changed_bank_check.amount;
+    child.internal_number = changed_bank_check.internal_number;
+    child.payment_date = changed_bank_check.payment_date;
+    child.idx = changed_bank_check.idx;
+
 }
 
 /**
@@ -1434,19 +1451,31 @@ var update_selected_third_party_documents = function (frm, changed_row) {
 
 
         if ( $(changed_row).is(':checked') ) {
-            var child = frm.add_child("selected_third_party_documents");
-            child.amount = changed_document.amount;
-            child.internal_number = changed_document.internal_number;
-            child.date = changed_document.date;
-            child.client_detail = changed_document.client_detail;
-            child.idx = changed_document.idx;
+            add_selected_document(frm, changed_document);
         }
         else {
             remove_document(frm, changed_document);
         }
-        frm.events.refresh_amounts(frm, "third_party_documents", frm.doc.selected_third_party_documents);
     }
+    else {
+	    frm.set_value("selected_third_party_documents", null);
+        if ( $(changed_row).is(':checked') ) {
+            $.each(frm.doc.third_party_documents, function (index, d) {
+                add_selected_document(frm, d);
+            });
+        }
+	}
+	frm.events.refresh_amounts(frm, "third_party_documents", frm.doc.selected_third_party_documents);
 
+}
+
+var add_selected_document = function (frm, changed_document) {
+   var child = frm.add_child("selected_third_party_documents");
+    child.amount = changed_document.amount;
+    child.internal_number = changed_document.internal_number;
+    child.date = changed_document.date;
+    child.client_detail = changed_document.client_detail;
+    child.idx = changed_document.idx;
 }
 
 /**
