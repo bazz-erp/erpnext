@@ -68,6 +68,9 @@ class PaymentEntry(AccountsController):
         self.update_advance_paid()
         self.update_expense_claim()
 
+        self.update_selected_third_party_bank_checks()
+        self.update_selected_third_party_documents()
+
     def on_cancel(self):
         self.setup_party_account_field()
         self.make_gl_entries(cancel=1)
@@ -657,8 +660,6 @@ class PaymentEntry(AccountsController):
             if not docs or docs[0].used:
                 frappe.throw(_("Check with Internal Number {0} was already used").format(selected_check.internal_number))
 
-        self.update_selected_third_party_bank_checks()
-
         # clear availables third party checks table
         self.set("third_party_bank_checks", None)
 
@@ -756,7 +757,7 @@ class PaymentEntry(AccountsController):
             if not docs or docs[0].used:
                 frappe.throw(
                     _("Document with Internal Number {0} was already used").format(document.internal_number))
-        self.update_selected_third_party_documents()
+
 
     def update_selected_third_party_documents(self):
         for document in self.get("selected_third_party_documents"):
