@@ -1088,11 +1088,13 @@ frappe.ui.form.on('Payment Entry Line', {
                 if (is_expenditure(frm)) {
                     /* cleanup the table */
                     frm.set_value("third_party_bank_checks", []);
+
                     show_third_party_checks(frm);
                 }
 
 			    frm.set_value("third_party_bank_checks_topay", line.paid_amount);
                 frm.events.refresh_amounts(frm, "third_party_bank_checks", frm.doc.third_party_bank_checks);
+                frm.refresh_fields();
                 break;
 
             case "Documentos de Terceros":
@@ -1103,11 +1105,14 @@ frappe.ui.form.on('Payment Entry Line', {
                 if (is_expenditure(frm)) {
                     /* cleanup the table */
                     frm.set_value("third_party_documents", []);
+
                     show_third_party_documents(frm);
                 }
 
+
 			    frm.set_value("third_party_documents_topay", line.paid_amount);
                 frm.events.refresh_amounts(frm, "third_party_documents", frm.doc.third_party_documents);
+                frm.refresh_fields();
                 break;
 
             default:
@@ -1140,6 +1145,7 @@ frappe.ui.form.on('Bank Check', {
     third_party_bank_checks_add: function (frm, cdt, cdn) {
         check = locals[cdt][cdn]
 		check.company = frm.doc.company;
+        check.concept = frm.doc.concept;
 		if (is_income(frm)) {
             set_check_internal_number(check, frm);
         }
@@ -1347,7 +1353,7 @@ var show_third_party_checks = function (frm) {
 				row.payment_date = check.payment_date;
 				row.amount = check.amount;
             });
-			frm.refresh_field("third_party_bank_checks");
+			frm.refresh_fields();
 			frm.events.on_select_third_party_bank_checks_row(frm);
         }
 	});
