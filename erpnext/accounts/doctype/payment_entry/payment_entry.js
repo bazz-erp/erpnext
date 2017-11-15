@@ -1336,7 +1336,10 @@ var show_third_party_checks = function (frm) {
 			"company": frm.doc.company,
 		},
 		callback: function (r) {
-			$.each(r.message, function (index, check) {
+			if (!r.message) {
+		        frappe.msgprint(__("There are no third-party checks in the wallet"));
+            }
+		    $.each(r.message, function (index, check) {
 				var row = frm.add_child("third_party_bank_checks");
 				row.bank = check.bank;
 				row.number = check.number;
@@ -1426,6 +1429,9 @@ var show_third_party_documents = function (frm) {
 			"company": frm.doc.company,
 		},
 		callback: function (r) {
+		    if (!r.message) {
+		        frappe.msgprint(__("There are no third-party documents in the wallet"));
+            }
 			$.each(r.message, function (index, doc) {
 				var row = frm.add_child("third_party_documents");
 				row.date = doc.date;
