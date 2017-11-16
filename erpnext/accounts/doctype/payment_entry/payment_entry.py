@@ -652,6 +652,8 @@ class PaymentEntry(AccountsController):
         for check in self.get("third_party_bank_checks"):
             self.validate_check(check)
             check.third_party_check = True
+            if not check.concept:
+                check.concept = self.concept
 
     def validate_selected_third_party_bank_checks(self):
         for selected_check in self.get("selected_third_party_bank_checks"):
