@@ -3,6 +3,9 @@
 {% include "erpnext/public/js/controllers/accounts.js" %}
 
 var event_bound = false;
+var doc_counter;
+var check_counter;
+
 frappe.ui.form.on('Payment Entry', {
 
     onload: function (frm) {
@@ -16,30 +19,30 @@ frappe.ui.form.on('Payment Entry', {
 
         frm.get_field('third_party_bank_checks').grid.editable_fields = [
             {fieldname: 'payment_date', columns: 2},
-            {fieldname: 'bank', columns: 2},
             {fieldname: 'amount', columns: 2},
+            {fieldname: 'bank', columns: 2},
             {fieldname: 'number', columns: 2},
             {fieldname: 'internal_number', columns: 2}
         ];
 
         frm.get_field('outgoing_bank_checks').grid.editable_fields = [
             {fieldname: 'payment_date', columns: 2},
-            {fieldname: 'account', columns: 2},
             {fieldname: 'amount', columns: 2},
-            {fieldname: 'number', columns: 2},
+            {fieldname: 'account', columns: 2},
+            {fieldname: 'number', columns: 2}
         ];
 
         frm.get_field('third_party_documents').grid.editable_fields = [
-            {fieldname: 'internal_number', columns: 2},
             {fieldname: 'date', columns: 2},
             {fieldname: 'amount', columns: 2},
-            {fieldname: 'client_detail', columns: 2}
+            {fieldname: 'client_detail', columns: 2},
+            {fieldname: 'internal_number', columns: 2}
         ];
 
         frm.get_field('documents').grid.editable_fields = [
-            {fieldname: 'internal_number', columns: 2},
             {fieldname: 'date', columns: 2},
-            {fieldname: 'amount', columns: 2}
+            {fieldname: 'amount', columns: 2},
+            {fieldname: 'internal_number', columns: 2}
         ];
 
 	    if (frm.doc.outgoing_bank_checks && frm.doc.outgoing_bank_checks.length != 0) {
@@ -50,11 +53,14 @@ frappe.ui.form.on('Payment Entry', {
             frm.set_df_property("documents", "hidden", false);
         }
 
-
 	    frm.refresh_fields();
 
+	    /* Hide add button on modes of payment table */
 	    $( 'div[data-fieldname="lines"] .grid-add-row').hide();
 
+        /* Reset the checks and documents autoincremental counter */
+        doc_counter = 0;
+        check_counter = 0;
     },
 
     setup: function (frm) {
@@ -324,20 +330,20 @@ frappe.ui.form.on('Payment Entry', {
         frm.set_value("references", null);
 
 
-        //clear payment lines
+        /* clear payment lines */
         frm.set_value("lines", null);
         frm.set_value("remaining_amount", null);
         frm.set_value("allocated_to_mode_of_payment_amount", null);
 
-        //clear bank checks
+        /* clear tables */
         frm.set_value("outgoing_bank_checks", null);
-        frm.set_value("third_party_bank_checks", null);
-
-        // clear documents
         frm.set_value("documents", null);
+        frm.set_value("third_party_bank_checks", null);
         frm.set_value("third_party_documents", null);
+        frm.set_value("selected_third_party_documents", null);
+        frm.set_value("selected_third_party_bank_checks", null);
 
-
+        /* hide tables */
         frm.toggle_display("third_party_bank_checks", false);
         frm.toggle_display("outgoing_bank_checks", false);
         frm.toggle_display("bank_checks_section", false);
@@ -351,6 +357,7 @@ frappe.ui.form.on('Payment Entry', {
         frm.toggle_display("third_party_documents_amounts_section", false);
         frm.toggle_display("third_party_checks_amounts_section", false);
 
+        /* set the wallets read only if the payment is an expenditure */
         frm.set_df_property("third_party_bank_checks", "read_only", is_expenditure(frm));
         frm.refresh_field("third_party_bank_checks");
         frm.set_df_property("third_party_documents", "read_only", is_expenditure(frm));
@@ -1069,7 +1076,9 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.toggle_display("checks_amounts_section", display);
                 frm.toggle_display("outgoing_bank_checks", display);
 
+                if(!display) frm.set_value("outgoing_bank_checks", null);
                 frm.set_value("checks_topay", line.paid_amount);
+
                 frm.events.refresh_amounts(frm, "checks", frm.doc.outgoing_bank_checks);
                 frm.refresh_fields();
                 break;
@@ -1079,6 +1088,7 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.toggle_display("documents_amounts_section", display);
                 frm.toggle_display("documents", display);
 
+                if(!display) frm.set_value("documents", null);
                 frm.set_value("documents_topay", line.paid_amount);
 
                 frm.events.refresh_amounts(frm, "documents", frm.doc.documents);
@@ -1090,11 +1100,12 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.toggle_display("third_party_bank_checks", display);
                 frm.toggle_display("third_party_checks_amounts_section", display);
 
+                /* cleanup the table */
                 if (is_expenditure(frm)) {
-                    /* cleanup the table */
                     frm.set_value("third_party_bank_checks", []);
-
                     show_third_party_checks(frm);
+                } else if(!display){
+                    frm.set_value("third_party_bank_checks", null);
                 }
 
 			    frm.set_value("third_party_bank_checks_topay", line.paid_amount);
@@ -1107,11 +1118,12 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.toggle_display("third_party_documents", display);
                 frm.toggle_display("third_party_documents_amounts_section", display);
 
+                /* cleanup the table */
                 if (is_expenditure(frm)) {
-                    /* cleanup the table */
                     frm.set_value("third_party_documents", []);
-
                     show_third_party_documents(frm);
+                }else if(!display){
+                    frm.set_value("third_party_documents", null);
                 }
 
 
@@ -1285,7 +1297,6 @@ var set_up_payment_lines = function (frm) {
     }
 }
 
-var check_counter = 0;
 /**
  * @description Gets the last internal number registered on the database and sets the given object internal number.
  * @param obj to set the internal number
@@ -1303,7 +1314,6 @@ var set_check_internal_number = function (obj, frm) {
     });
 }
 
-var doc_counter = 0;
 /**
  * @description Gets the last internal number registered on the database and sets the given object internal number.
  * @param obj to set the internal number
