@@ -331,7 +331,12 @@ frappe.ui.form.on('Payment Entry', {
 
         //clear bank checks
         frm.set_value("outgoing_bank_checks", null);
+        frm.set_value("third_party_bank_checks", null);
+
+        // clear documents
         frm.set_value("documents", null);
+        frm.set_value("third_party_documents", null);
+
 
         frm.toggle_display("third_party_bank_checks", false);
         frm.toggle_display("outgoing_bank_checks", false);
@@ -1445,7 +1450,7 @@ var show_third_party_documents = function (frm) {
 				row.internal_number = doc.internal_number;
 				row.amount = doc.amount;
             });
-			frm.refresh_field("third_party_documents");
+            frm.refresh_fields();
 			frm.events.on_select_third_party_documents_row(frm);
         }
 	});
