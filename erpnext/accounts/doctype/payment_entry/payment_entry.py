@@ -685,25 +685,49 @@ class PaymentEntry(AccountsController):
         # get dest account of check line. All lines has the same dest account
         dest_account = check_lines[0].paid_to
 
+        amount = self.get("checks_acumulated")
+        gl_entries.append(
+            self.get_gl_dict({
+                "account": "Cheques Diferidos - B",
+                "against": "Acreedores - B",
+                "credit": amount,
+                "credit_in_account_currency": amount,
+                "concept": self.concept
+            })
+        )
+
+        gl_entries.append(
+            self.get_gl_dict({
+                "account": "Acreedores - B",
+                "against": "Cheques Diferidos - B",
+                "debit": amount,
+                "debit_in_account_currency": amount,
+                "concept": self.concept
+            })
+        )
+
         for check in self.get("outgoing_bank_checks"):
             gl_entries.append(
                 self.get_gl_dict({
                     "account": check.account,
-                    "against": self.party if self.party else _("Miscellaneous Expenditure"),
+                    "against": "Cheques Diferidos - B",
                     "credit": check.amount,
                     "credit_in_account_currency": check.amount,
-                    "concept": self.concept
+                    "concept": self.concept,
+                    "posting_date" : check.payment_date
                 })
             )
             gl_entries.append(
                 self.get_gl_dict({
-                    "account": dest_account,
+                    "account": "Cheques Diferidos - B",
                     "against": check.account,
                     "debit": check.amount,
                     "debit_in_account_currency": check.amount,
-                    "concept": self.concept
-               })
+                    "concept": self.concept,
+                    "posting_date": check.payment_date
+                })
             )
+
 
     def generate_gl_entries_for_third_party_bank_checks(self, gl_entries):
         third_party_check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheques de Terceros"], "paid_amount":
