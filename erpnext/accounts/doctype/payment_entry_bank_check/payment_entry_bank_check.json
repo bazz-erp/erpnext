@@ -159,7 +159,7 @@
    "read_only": 0, 
    "remember_last_selected_value": 0, 
    "report_hide": 0, 
-   "reqd": 0, 
+   "reqd": 1,
    "search_index": 0, 
    "set_only_once": 0, 
    "unique": 0
@@ -205,7 +205,7 @@
  "issingle": 0, 
  "istable": 1, 
  "max_attachments": 0, 
- "modified": "2017-11-21 11:20:35.313658",
+ "modified": "2017-11-21 11:25:35.313658",
  "modified_by": "Administrator", 
  "module": "Accounts", 
  "name": "Payment Entry Bank Check", 

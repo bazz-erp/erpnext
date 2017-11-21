@@ -75,7 +75,7 @@
   {
    "allow_bulk_edit": 0,
    "allow_on_submit": 0,
-   "bold": 0,
+   "bold": 1,
    "collapsible": 0,
    "columns": 0,
    "fieldname": "amount",
@@ -358,7 +358,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2017-11-06 22:05:55.433495",
+ "modified": "2017-11-06 22:20:58.433495",
  "modified_by": "Administrator", 
  "module": "Accounts", 
  "name": "Bank Check", 
@@ -410,8 +410,8 @@
  "read_only": 0,
  "read_only_onload": 0, 
  "show_name_in_global_search": 0, 
- "sort_field": "modified", 
- "sort_order": "DESC", 
+ "sort_field": "payment_date",
+ "sort_order": "ASC",
  "track_changes": 1, 
  "track_seen": 0,
  "title_field": "payment_date"
