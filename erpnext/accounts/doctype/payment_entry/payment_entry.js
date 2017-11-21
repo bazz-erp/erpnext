@@ -324,6 +324,9 @@ frappe.ui.form.on('Payment Entry', {
             if (frm.doc.mode_of_payment)
                 frm.events.mode_of_payment(frm);
         }
+        /* resets the internal number counters */
+        check_counter = 0;
+        doc_counter = 0;
 
         frm.set_value("party_type", null);
         frm.set_value("party", null);
@@ -1105,6 +1108,7 @@ frappe.ui.form.on('Payment Entry Line', {
                     frm.set_value("third_party_bank_checks", []);
                     show_third_party_checks(frm);
                 } else if(!display){
+                    check_counter = 0;
                     frm.set_value("third_party_bank_checks", null);
                 }
 
@@ -1123,6 +1127,7 @@ frappe.ui.form.on('Payment Entry Line', {
                     frm.set_value("third_party_documents", []);
                     show_third_party_documents(frm);
                 }else if(!display){
+                    doc_counter = 0;
                     frm.set_value("third_party_documents", null);
                 }
 
@@ -1326,6 +1331,7 @@ var set_doc_internal_number = function (obj, frm) {
             doc_counter++;
             obj.internal_number = parseInt(r.message[0]) + doc_counter;
 
+            frm.refresh_field("documents");
             frm.refresh_field("third_party_documents");
         }
     });
