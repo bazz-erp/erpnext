@@ -17,4 +17,4 @@ def get_last_internal_number():
 @frappe.whitelist()
 def get_unused_third_party_documents(company):
     return frappe.db.sql("""SELECT name, date, internal_number, amount, client_detail FROM
-    `tabDocument` WHERE company=%(company)s and third_party and used=FALSE ORDER BY date DESC""", {"company": company}, as_dict=1)
+    `tabDocument` WHERE company=%(company)s and third_party and used=FALSE ORDER BY date ASC""", {"company": company}, as_dict=1)
