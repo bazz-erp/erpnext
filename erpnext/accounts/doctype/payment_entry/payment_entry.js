@@ -1149,7 +1149,7 @@ frappe.ui.form.on('Payment Entry Line', {
 /**
  * @description Bank Checks events handler
  */
-frappe.ui.form.on('Bank Check', {
+frappe.ui.form.on('Payment Entry Bank Check', {
     outgoing_bank_checks_add: function (frm, cdt, cdn) {
         check = locals[cdt][cdn];
         check.concept = frm.doc.concept;

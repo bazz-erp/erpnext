@@ -9,7 +9,7 @@
  "docstatus": 0, 
  "doctype": "DocType", 
  "document_type": "", 
- "editable_grid": 1, 
+ "editable_grid": 0,
  "engine": "InnoDB", 
  "fields": [
   {
@@ -358,7 +358,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2017-11-06 22:59:55.433495",
+ "modified": "2017-11-06 22:05:55.433495",
  "modified_by": "Administrator", 
  "module": "Accounts", 
  "name": "Bank Check", 
@@ -407,7 +407,7 @@
   }
  ], 
  "quick_entry": 1, 
- "read_only": 0, 
+ "read_only": 0,
  "read_only_onload": 0, 
  "show_name_in_global_search": 0, 
  "sort_field": "modified", 
