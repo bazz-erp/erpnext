@@ -58,7 +58,7 @@ class PaymentEntry(AccountsController):
         self.set_concept()
         self.validate_payment_lines()
         self.validate_bank_checks()
-        self.save_documents()
+        self.validate_documents()
 
     def on_submit(self):
         self.setup_party_account_field()
@@ -73,6 +73,7 @@ class PaymentEntry(AccountsController):
 
         self.save_outgoing_bank_checks()
         self.save_new_third_party_bank_checks()
+        self.save_documents()
 
     def on_cancel(self):
         self.setup_party_account_field()
@@ -710,7 +711,7 @@ class PaymentEntry(AccountsController):
             self.generate_gl_party_line(line, gl_entries)
 
 
-    def save_documents(self):
+    def validate_documents(self):
         if self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
             self.validate_outgoing_documents()
         self.validate_third_party_documents()
@@ -718,8 +719,6 @@ class PaymentEntry(AccountsController):
     def validate_outgoing_documents(self):
         for doc in self.get("documents"):
             self.validate_document(["date", "amount"], doc)
-            doc.company = self.company
-            doc.third_party = False
 
         if self.get("documents_topay") != self.get("documents_acumulated"):
             frappe.throw(
@@ -738,9 +737,6 @@ class PaymentEntry(AccountsController):
     def validate_new_third_party_documents(self):
         for doc in self.get("third_party_documents"):
             self.validate_document(["date", "amount", "internal_number"], doc)
-            doc.company
-            doc.third_party = True
-            doc.client_detail = self.concept
 
     def validate_document(self, mandatory_fields, doc):
         for field in mandatory_fields:
@@ -792,6 +788,30 @@ class PaymentEntry(AccountsController):
         bank_check.amount = check.amount
         bank_check.payment_date = check.payment_date
         bank_check.company = self.company
+
+    def save_documents(self):
+        if self.payment_type in ["Miscellaneous Expenditure", "Pay"]:
+            for doc in self.get("documents"):
+                new_document = frappe.new_doc("Document")
+                new_document.third_party = False
+                self.copy_doc_info(new_document, doc)
+                new_document.save()
+
+        if self.payment_type in ["Miscellaneous Income", "Receive"]:
+            for doc in self.get("third_party_documents"):
+                new_document = frappe.new_doc("Document")
+                new_document.third_party = True
+                new_document.used = False
+                self.copy_doc_info(new_document, doc)
+                new_document.save()
+
+    def copy_doc_info(self, new_document, doc):
+        new_document.company = self.company
+        new_document.amount = doc.amount
+        new_document.client_detail = doc.client_detail
+        new_document.date = doc.date
+        new_document.internal_number = doc.internal_number
+
 
 @frappe.whitelist()
 def get_outstanding_reference_documents(args):

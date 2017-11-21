@@ -1180,7 +1180,7 @@ frappe.ui.form.on('Payment Entry Bank Check', {
 /**
  * @description Documents events handler
  */
-frappe.ui.form.on('Document', {
+frappe.ui.form.on('Payment Entry Document', {
     documents_remove: function (frm) {
         frm.events.refresh_amounts(frm, "documents", frm.doc.documents);
     },

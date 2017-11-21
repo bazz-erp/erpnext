@@ -10,7 +10,7 @@
  "docstatus": 0, 
  "doctype": "DocType", 
  "document_type": "", 
- "editable_grid": 1, 
+ "editable_grid": 0,
  "engine": "InnoDB", 
  "fields": [
   {
@@ -46,7 +46,7 @@
   {
    "allow_bulk_edit": 0,
    "allow_on_submit": 0,
-   "bold": 0,
+   "bold": 1,
    "collapsible": 0,
    "columns": 0,
    "fieldname": "amount",
@@ -236,7 +236,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2017-11-12 19:46:28.924904",
+ "modified": "2017-11-12 19:54:28.924904",
  "modified_by": "admin@example.org", 
  "module": "Accounts", 
  "name": "Document", 
@@ -288,8 +288,8 @@
  "read_only": 0, 
  "read_only_onload": 0, 
  "show_name_in_global_search": 0, 
- "sort_field": "modified", 
- "sort_order": "DESC", 
+ "sort_field": "date",
+ "sort_order": "ASC",
  "track_changes": 1, 
  "track_seen": 0,
   "title_field": "date"
