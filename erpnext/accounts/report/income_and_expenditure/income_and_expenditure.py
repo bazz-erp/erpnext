@@ -255,7 +255,7 @@ def get_accountwise_gle(filters, gl_entries, gle_map):
                 total_credit_in_account_currency += flt(gle.credit_in_account_currency, 3)
 
         # gl_entries of 'Cheques Diferidos - B' are not considered when calculating the total balance
-        if gle.posting_date <= to_date and gle.account != "Cheques Diferidos -B":
+        if gle.posting_date <= to_date and gle.account != "Cheques Diferidos - B":
             total_debit += flt(gle.debit, 3)
             total_credit += flt(gle.credit, 3)
 
