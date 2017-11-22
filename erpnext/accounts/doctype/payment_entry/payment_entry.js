@@ -1079,7 +1079,14 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.toggle_display("checks_amounts_section", display);
                 frm.toggle_display("outgoing_bank_checks", display);
 
-                if(!display) frm.set_value("outgoing_bank_checks", null);
+                if(!display) {
+                    frm.set_value("outgoing_bank_checks", null);
+                } else {
+                    row = frm.add_child("outgoing_bank_checks");
+                    row.concept = frm.doc.concept;
+                    row.company = frm.doc.company;
+                }
+
                 frm.set_value("checks_topay", line.paid_amount);
 
                 frm.events.refresh_amounts(frm, "checks", frm.doc.outgoing_bank_checks);
@@ -1091,7 +1098,13 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.toggle_display("documents_amounts_section", display);
                 frm.toggle_display("documents", display);
 
-                if(!display) frm.set_value("documents", null);
+                if(!display) {
+                    frm.set_value("documents", null);
+                } else {
+                    row = frm.add_child("documents");
+                    set_doc_internal_number(row, frm);
+                }
+
                 frm.set_value("documents_topay", line.paid_amount);
 
                 frm.events.refresh_amounts(frm, "documents", frm.doc.documents);
@@ -1110,6 +1123,11 @@ frappe.ui.form.on('Payment Entry Line', {
                 } else if(!display){
                     check_counter = 0;
                     frm.set_value("third_party_bank_checks", null);
+                } else {
+                    row = frm.add_child("third_party_bank_checks");
+                    row.concept = frm.doc.concept;
+                    row.company = frm.doc.company;
+                    set_check_internal_number(row, frm);
                 }
 
 			    frm.set_value("third_party_bank_checks_topay", line.paid_amount);
@@ -1129,8 +1147,12 @@ frappe.ui.form.on('Payment Entry Line', {
                 }else if(!display){
                     doc_counter = 0;
                     frm.set_value("third_party_documents", null);
+                } else {
+                    row = frm.add_child("third_party_documents");
+                    row.company = frm.doc.company;
+                    row.client_detail = frm.doc.concept;
+                    set_doc_internal_number(row, frm);
                 }
-
 
 			    frm.set_value("third_party_documents_topay", line.paid_amount);
                 frm.events.refresh_amounts(frm, "third_party_documents", frm.doc.third_party_documents);
