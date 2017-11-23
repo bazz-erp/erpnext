@@ -151,8 +151,8 @@ def get_data_with_opening_closing(filters, account_details, gl_entries):
     opening_credit, opening_debit, total_debit, total_credit, opening_debit_in_account_currency, opening_credit_in_account_currency, total_debit_in_account_currency, \
         total_credit_in_account_currency, gle_map = get_accountwise_gle(filters, gl_entries, gle_map)
 
-    for acc, acc_dict in gle_map.items():
-
+    for acc in sorted(gle_map.iterkeys()):
+        acc_dict = gle_map[acc]
         # in account 'Cheques Diferidos' balance is not showed
         data.append({"concept": acc})
         if acc != "Cheques Diferidos - B":
