@@ -239,9 +239,15 @@ def get_accountwise_gle(filters, gl_entries, gle_map):
             gle_map[gle.account].total_credit += flt(gle.credit, 3)
 
             # calculates current balance of the account
-            balance = (gle_map[gle.account].total_debit + gle_map[gle.account].opening_debit) - (gle_map[gle.account].total_credit + gle_map[gle.account].opening_credit)
-            balance_in_account_currency = (gle_map[gle.account].total_debit_in_account_currency + gle_map[gle.account].opening_debit_in_account_currency) \
-                                          - (gle_map[gle.account].total_credit_in_account_currency + gle_map[gle.account].opening_credit_in_account_currency)
+            balance = gle_map[gle.account].total_debit - gle_map[gle.account].total_credit
+            balance_in_account_currency = gle_map[gle.account].total_debit_in_account_currency \
+                                          - gle_map[gle.account].total_credit_in_account_currency
+
+            # opening balance is not considered when calculating final balance of 'Cheques Diferidos'
+            if gle.account != "Cheques Diferidos - B":
+                balance = balance + gle_map[gle.account].opening_debit - gle_map[gle.account].opening_credit
+                balance_in_account_currency = balance_in_account_currency + \
+                                              gle_map[gle.account].opening_debit_in_account_currency - gle_map[gle.account].opening_credit_in_account_currency
 
             gle.update({"balance": balance, "balance_in_account_currency": balance_in_account_currency})
             gle_map[gle.account].entries.append(gle)
