@@ -4757,7 +4757,7 @@ DocType: Lead,Upper Income,Ingresos superior
 DocType: Task,Urgent,Urgente
 DocType: Production Order,Use Multi-Level BOM,Utilizar Lista de Materiales (LdM)  Multi-Nivel
 DocType: Tax Rule,Use for Shopping Cart,Utilizar para carrito de compras
-DocType: Bank Check,Used,Used
+DocType: Bank Check,Used, Usado
 DocType: Used Third Party Check,Used Third Party Check,Cheque de Tercero utilizado
 DocType: Used Third Party Document,Used Third Party Document,Documento de Tercero utilizado
 DocType: Sales Order Item,Used for Production Plan,Se utiliza para el plan de producción
