@@ -306,6 +306,8 @@ frappe.ui.form.on('Payment Entry', {
     },
 
     payment_type: function (frm) {
+        frm.toggle_reqd(["paid_to", "paid_from"], frm.doc.payment_type == "Internal Transfer");
+
         if (frm.doc.payment_type == "Internal Transfer") {
             $.each(["party", "party_balance", "paid_from", "paid_to",
                 "references", "total_allocated_amount"], function (i, field) {
