@@ -134,9 +134,10 @@ def get_conditions(filters):
     if filters.get("account"):
         conditions.append("""account=%(account)s""")
     else:
-        # filter accounts whose type is Bank or Cash
+        # filter accounts whose type is Bank, Cash Wallet and Deferred checks
         conditions.append("""account in (select name from tabAccount
-            where account_type='Bank' or account_type='Cash')""")
+            where account_type='Bank' or account_type='Cash' 
+            or account_type = 'Wallet' or account_type = 'Deferred checks')""")
 
     from frappe.desk.reportview import build_match_conditions
     match_conditions = build_match_conditions("GL Entry")
