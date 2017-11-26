@@ -9,7 +9,19 @@ frappe.query_reports["Income and Expenditure"] = {
 			"fieldtype": "Link",
 			"options": "Company",
 			"default": frappe.defaults.get_user_default("Company"),
-			"reqd": 1
+			"reqd": 1,
+			"get_query": function () {
+				var types = ["A"];
+				if(frappe.user_roles.includes("System Manager")){
+					types.push("B", "A+B");
+                }
+                return {
+                    "doctype": "Company",
+                    "filters": {
+                        "type": ["in", types]
+                    }
+                }
+            }
 		},
 		{
 			"fieldname":"from_date",

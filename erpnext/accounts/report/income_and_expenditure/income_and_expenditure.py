@@ -6,6 +6,7 @@ import frappe
 from frappe.utils import flt, getdate, cstr
 from frappe import _
 from erpnext.accounts.utils import get_account_currency
+from frappe.permissions import check_admin_or_system_manager
 
 
 def execute(filters=None):
@@ -142,6 +143,8 @@ def get_conditions(filters, company_type):
 
     if company_type == 'A' or company_type == 'B':
         conditions.append("""company=%(company)s""")
+    else:
+        check_admin_or_system_manager()
 
     from frappe.desk.reportview import build_match_conditions
     match_conditions = build_match_conditions("GL Entry")
