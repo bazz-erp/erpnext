@@ -49,7 +49,7 @@ class PaymentEntry(AccountsController):
         self.set_amounts()
         self.clear_unallocated_reference_document_rows()
         self.validate_payment_against_negative_invoice()
-        self.validate_transaction_reference()
+
         self.set_title()
         self.set_remarks()
         self.validate_duplicate_entry()
@@ -364,14 +364,6 @@ class PaymentEntry(AccountsController):
         else:
             self.title = self.paid_from + " " + self.paid_to
 
-    def validate_transaction_reference(self):
-        bank_account = self.paid_to if self.payment_type == "Receive" else self.paid_from
-        bank_account_type = frappe.db.get_value("Account", bank_account, "account_type")
-
-        if bank_account_type == "Bank":
-            if not self.reference_no or not self.reference_date:
-                frappe.throw(_("Reference No and Reference Date is mandatory for Bank transaction"))
-
     def set_remarks(self):
         if self.remarks: return
 
@@ -478,7 +470,8 @@ class PaymentEntry(AccountsController):
                     "account_currency": self.paid_from_account_currency,
                     "against": self.party if self.payment_type == "Pay" else self.paid_to,
                     "credit_in_account_currency": self.paid_amount,
-                    "credit": self.base_paid_amount
+                    "credit": self.base_paid_amount,
+                    "concept": self.concept
                 })
             )
             gl_entries.append(
@@ -487,7 +480,8 @@ class PaymentEntry(AccountsController):
                     "account_currency": self.paid_to_account_currency,
                     "against": self.party if self.payment_type == "Receive" else self.paid_from,
                     "debit_in_account_currency": self.received_amount,
-                    "debit": self.base_received_amount
+                    "debit": self.base_received_amount,
+                    "concept": self.concept
                 })
             )
 

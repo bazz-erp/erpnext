@@ -50,7 +50,7 @@ frappe.query_reports["Income and Expenditure"] = {
 					"doctype": "Account",
 					"filters": {
 						"company": company,
-						"account_type": ["in", ["Bank", "Cash"]],
+						"account_type": ["in", ["Bank", "Cash", "Wallet", "Deferred checks"]],
 						"is_group": 0
 					}
 				}
