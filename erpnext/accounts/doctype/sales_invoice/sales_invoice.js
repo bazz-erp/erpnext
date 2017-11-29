@@ -566,7 +566,7 @@ var calculate_total_billing_amount =  function(frm) {
 }
 
 $(document).on('save', function (event, doc) {
-	if(doc.status !== "Cancelled" && cint(frappe.boot.notification_settings.sales_invoice)){
+	if(doc.doctype === "Sales Invoice" && doc.status !== "Cancelled" && cint(frappe.boot.notification_settings.sales_invoice)){
 		cur_frm.email_doc(frappe.boot.notification_settings.sales_invoice_message);
 	}
 });
