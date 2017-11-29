@@ -137,10 +137,10 @@ def get_conditions(filters, company_type):
     if filters.get("account"):
         conditions.append("""account=%(account)s""")
     else:
-        # filter accounts whose type is Bank, Cash Wallet and Deferred checks
+        # filter accounts whose type is Bank, Cash, Check Wallet, Document Wallet and Deferred checks
         conditions.append("""account in (select name from tabAccount
             where account_type='Bank' or account_type='Cash' 
-            or account_type = 'Wallet' or account_type = 'Deferred checks')""")
+            or account_type = 'Check Wallet' or account_type = 'Document Wallet' or account_type = 'Deferred checks')""")
 
     if company_type == 'A' or company_type == 'B':
         conditions.append("""company=%(company)s""")
