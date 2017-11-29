@@ -60,6 +60,9 @@ class PaymentEntry(AccountsController):
         self.validate_bank_checks()
         self.validate_documents()
 
+        if self.payment_type == "Internal Transfer":
+            self.validate_internal_transfer()
+
     def on_submit(self):
         self.setup_party_account_field()
         if self.difference_amount:
@@ -176,7 +179,7 @@ class PaymentEntry(AccountsController):
     # Accounts are required only in Internal Transfer
     def validate_bank_accounts(self):
         if self.payment_type == "Internal Transfer":
-            self.validate_account_type(self.paid_from, ["Bank", "Cash"])
+            self.validate_account_type(self.paid_from, ["Bank", "Cash", "Check Wallet", "Document Wallet"])
             self.validate_account_type(self.paid_to, ["Bank", "Cash"])
 
     def validate_account_type(self, account, account_types):
@@ -401,9 +404,8 @@ class PaymentEntry(AccountsController):
             self.setup_party_account_field()
 
         gl_entries = []
-        # self.add_party_gl_entries(gl_entries)
 
-        self.add_bank_gl_entries(gl_entries)
+        self.add_internal_transfer_bank_gl_entries(gl_entries)
 
         self.add_lines_party_gl_entries(gl_entries)
         self.add_lines_bank_gl_entries(gl_entries)
@@ -461,8 +463,8 @@ class PaymentEntry(AccountsController):
 
                 gl_entries.append(gle)
 
-    # Only adds gl entries of Internal Transfers
-    def add_bank_gl_entries(self, gl_entries):
+
+    def add_internal_transfer_bank_gl_entries(self, gl_entries):
         if self.payment_type == "Internal Transfer":
             gl_entries.append(
                 self.get_gl_dict({
@@ -619,7 +621,9 @@ class PaymentEntry(AccountsController):
     def validate_bank_checks(self):
         if self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
             self.validate_outgoing_checks()
-        self.validate_third_party_bank_checks()
+
+        if self.payment_type != "Internal Transfer":
+            self.validate_third_party_bank_checks()
 
     def validate_outgoing_checks(self):
         if self.get("checks_topay") != self.get("checks_acumulated"):
@@ -668,7 +672,8 @@ class PaymentEntry(AccountsController):
         if self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
             self.generate_gl_entries_for_outgoing_bank_checks(gl_entries)
 
-        self.generate_gl_entries_for_third_party_bank_checks(gl_entries)
+        if self.payment_type != "Internal Transfer":
+            self.generate_gl_entries_for_third_party_bank_checks(gl_entries)
 
     def generate_gl_entries_for_outgoing_bank_checks(self, gl_entries):
         check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheques propios"]})
@@ -732,7 +737,9 @@ class PaymentEntry(AccountsController):
     def validate_documents(self):
         if self.payment_type == "Pay" or self.payment_type == "Miscellaneous Expenditure":
             self.validate_outgoing_documents()
-        self.validate_third_party_documents()
+
+        if self.payment_type != "Internal Transfer":
+            self.validate_third_party_documents()
 
     def validate_outgoing_documents(self):
         for doc in self.get("documents"):
@@ -829,6 +836,24 @@ class PaymentEntry(AccountsController):
         new_document.client_detail = doc.client_detail
         new_document.date = doc.date
         new_document.internal_number = doc.internal_number
+
+
+    def validate_internal_transfer(self):
+        if not self.paid_from or not self.paid_to:
+            frappe.throw(_("Paid From account and Paid To account are mandatory in Internal Transfer"))
+
+        account_details = get_account_details(self.paid_from, self.posting_date)
+        if account_details.account_type == "Check Wallet":
+            if self.paid_amount != self.third_party_bank_checks_acumulated:
+                frappe.throw(_("Total amount of selected checks must be equal to paid amount"))
+            self.validate_selected_third_party_bank_checks()
+
+        if account_details.account_type == "Document Wallet":
+            if self.paid_amount != self.third_party_documents_acumulated:
+                frappe.throw(_("Total amount of selected documents must be equal to paid amount"))
+            self.validate_selected_third_party_documents()
+
+
 
 
 @frappe.whitelist()
