@@ -548,10 +548,10 @@ class PaymentEntry(AccountsController):
 
     def validate_line_accounts(self, line):
         paid_from_type = ["Receivable"] if (self.payment_type == "Receive" or
-                                            self.payment_type == "Miscellaneous Income") else ["Bank", "Cash"]
+                                            self.payment_type == "Miscellaneous Income") else ["Bank", "Cash", "Check Wallet", "Document Wallet"]
 
         paid_to_type = ["Payable"] if (self.payment_type == "Pay" or
-                                       self.payment_type == "Miscellaneous Expenditure") else ["Bank", "Cash"]
+                                       self.payment_type == "Miscellaneous Expenditure") else ["Bank", "Cash", "Check Wallet", "Document Wallet"]
         if not line.paid_from:
             frappe.throw(_("{0} in Payment Line is mandatory").format("Paid From Account"))
         if not line.paid_to:
