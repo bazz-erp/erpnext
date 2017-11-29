@@ -6,6 +6,7 @@ import frappe
 from frappe.utils import flt, getdate, cstr
 from frappe import _
 from erpnext.accounts.utils import get_account_currency
+from frappe.permissions import check_admin_or_system_manager
 
 
 def execute(filters=None):
@@ -15,13 +16,15 @@ def execute(filters=None):
 
     validate_filters(filters, account_details)
 
+    company_type = frappe.db.sql("""select * from `tabCompany` where name=%(company)s""", filters, as_dict=1)[0].type
+
     validate_party(filters)
 
     filters = set_account_currency(filters)
 
     columns = get_columns(filters)
 
-    res = get_result(filters, account_details)
+    res = get_result(filters, account_details, company_type)
 
     return columns, res
 
@@ -96,8 +99,8 @@ def get_columns(filters):
     return columns
 
 
-def get_result(filters, account_details):
-    gl_entries = get_gl_entries(filters)
+def get_result(filters, account_details, company_type):
+    gl_entries = get_gl_entries(filters, company_type)
 
     data = get_data_with_opening_closing(filters, account_details, gl_entries)
 
@@ -106,7 +109,7 @@ def get_result(filters, account_details):
     return result
 
 
-def get_gl_entries(filters):
+def get_gl_entries(filters, company_type):
     select_fields = """, sum(debit_in_account_currency) as debit_in_account_currency,
         sum(credit_in_account_currency) as credit_in_account_currency""" \
         if filters.get("show_in_account_currency") else ""
@@ -121,15 +124,15 @@ def get_gl_entries(filters):
             against_voucher_type, against_voucher,concept,
             remarks, against, is_opening {select_fields}
         from `tabGL Entry`
-        where company=%(company)s {conditions}
+        where {conditions}
         {group_by_condition}
         order by posting_date, account"""\
-        .format(select_fields=select_fields, conditions=get_conditions(filters),
+        .format(select_fields=select_fields, conditions=get_conditions(filters, company_type),
             group_by_condition=group_by_condition), filters, as_dict=1)
 
     return gl_entries
 
-def get_conditions(filters):
+def get_conditions(filters, company_type):
     conditions = []
     if filters.get("account"):
         conditions.append("""account=%(account)s""")
@@ -139,11 +142,16 @@ def get_conditions(filters):
             where account_type='Bank' or account_type='Cash' 
             or account_type = 'Check Wallet' or account_type = 'Document Wallet' or account_type = 'Deferred checks')""")
 
+    if company_type == 'A' or company_type == 'B':
+        conditions.append("""company=%(company)s""")
+    else:
+        check_admin_or_system_manager()
+
     from frappe.desk.reportview import build_match_conditions
     match_conditions = build_match_conditions("GL Entry")
     if match_conditions: conditions.append(match_conditions)
 
-    return "and {}".format(" and ".join(conditions)) if conditions else ""
+    return "{}".format(" and ".join(conditions)) if conditions else ""
 
 def get_data_with_opening_closing(filters, account_details, gl_entries):
     data = []
