@@ -3896,8 +3896,8 @@ DocType: Payment Entry,Selected Third Party Bank Checks,Cheques de Terceros sele
 DocType: Payment Entry,Selected Third Party Documents,Documentos de Terceros seleccionados
 DocType: Program Enrollment,Self-Driving Vehicle,Vehículo auto-manejado
 apps/erpnext/erpnext/stock/doctype/item/item_dashboard.py +25,Sell,Vender
-DocType: Customer,Sell Condition,Sell Condition
-DocType: Sales Invoice,Seller,Seller
+DocType: Customer,Sell Condition,Condicion de Venta
+DocType: Sales Invoice,Seller,Vendedor
 DocType: Hub Settings,Seller City,Ciudad de vendedor
 DocType: Hub Settings,Seller Country,País de vendedor
 DocType: Hub Settings,Seller Description,Descripción del vendedor
