@@ -53,6 +53,7 @@ class Customer(TransactionBase):
 		self.flags.old_lead = self.lead_name
 		validate_party_accounts(self)
 		self.validate_credit_limit_on_change()
+		self.validate_code()
 
 	def on_update(self):
 		self.validate_name_with_customer_group()
@@ -125,6 +126,11 @@ class Customer(TransactionBase):
 			outstanding_amt = get_customer_outstanding(self.name, company.name)
 			if flt(self.credit_limit) < outstanding_amt:
 				frappe.throw(_("""New credit limit is less than current outstanding amount for the customer. Credit limit has to be atleast {0}""").format(outstanding_amt))
+
+	def validate_code(self):
+		dict = frappe.db.sql("""SELECT * FROM `tabCustomer` WHERE code=%s""", self.code, as_dict=1)
+		if len(dict) != 0:
+			frappe.throw(_("""Code is already taken. Please choose a new one"""))
 
 	def on_trash(self):
 		delete_contact_and_address('Customer', self.name)
@@ -224,3 +230,8 @@ def get_credit_limit(customer, company):
 		credit_limit = frappe.db.get_value("Company", company, "credit_limit")
 
 	return flt(credit_limit)
+
+
+@frappe.whitelist()
+def get_customer_code():
+	return frappe.db.sql("""SELECT COUNT(*) as code FROM `tabCustomer`""", as_dict=1)

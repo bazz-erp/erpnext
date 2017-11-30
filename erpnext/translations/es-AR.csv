@@ -505,7 +505,7 @@ DocType: Sales Invoice Item,Available Qty at Warehouse,Cantidad Disponible en Al
 apps/erpnext/erpnext/stock/doctype/stock_entry/stock_entry.py +234,"Available qty is {0}, you need {1}","Cantidad disponible es {0}, necesita {1}"
 apps/erpnext/erpnext/stock/dashboard/item_dashboard.js +114,Available {0},Disponible {0}
 apps/erpnext/erpnext/stock/report/stock_ageing/stock_ageing.py +40,Average Age,Edad Promedio
-,Average Commission Rate,Tasa de comisión promedio
+,Average Commission Rate,Tasa de comisión promedio (%)
 DocType: Authorization Rule,Average Discount,Descuento Promedio
 DocType: Item,Average time taken by the supplier to deliver,Tiempo estimado por el proveedor para el envío
 apps/erpnext/erpnext/stock/report/itemwise_recommended_reorder_level/itemwise_recommended_reorder_level.py +42,Avg Daily Outgoing,Promedio diario saliente

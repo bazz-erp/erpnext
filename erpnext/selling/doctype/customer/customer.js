@@ -2,6 +2,9 @@
 // License: GNU General Public License v3. See license.txt
 
 frappe.ui.form.on("Customer", {
+	onload: function(frm) {
+		set_customer_code();
+    },
 	setup: function(frm) {
 		frm.add_fetch('lead_name', 'company_name', 'customer_name');
 		frm.add_fetch('default_sales_partner','commission_rate','default_commission_rate');
@@ -64,3 +67,16 @@ frappe.ui.form.on("Customer", {
 		if(frm.doc.lead_name) frappe.model.clear_doc("Lead", frm.doc.lead_name);
 	},
 });
+
+var set_customer_code = function () {
+	frappe.call({
+        method: "erpnext.selling.doctype.customer.customer.get_customer_code",
+        args: {},
+        callback: function (r, rt) {
+            if(r.message){
+                me.frm.set_value("code", r.message[0].code)
+			    me.frm.refresh_fields();
+            }
+        }
+	});
+}
