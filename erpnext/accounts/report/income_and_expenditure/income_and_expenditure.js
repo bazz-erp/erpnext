@@ -12,7 +12,7 @@ frappe.query_reports["Income and Expenditure"] = {
 			"reqd": 1,
 			"get_query": function () {
 				var types = ["A"];
-				if(frappe.user_roles.includes("System Manager")){
+				if(frappe.user_roles.includes("Global Vision")){
 					types.push("B", "A+B");
                 }
                 return {

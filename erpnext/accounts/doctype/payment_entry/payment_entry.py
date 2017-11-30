@@ -676,6 +676,9 @@ class PaymentEntry(AccountsController):
             self.generate_gl_entries_for_third_party_bank_checks(gl_entries)
 
     def generate_gl_entries_for_outgoing_bank_checks(self, gl_entries):
+        def_checks = "Cheques Diferidos - " + self.company_abbr
+        acr = "Acreedores - " + self.company_abbr
+
         check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheques propios"]})
         if not check_lines:
             return
@@ -685,8 +688,8 @@ class PaymentEntry(AccountsController):
         amount = self.get("checks_acumulated")
         gl_entries.append(
             self.get_gl_dict({
-                "account": "Cheques Diferidos - B",
-                "against": "Acreedores - B",
+                "account": def_checks,
+                "against": acr,
                 "credit": amount,
                 "credit_in_account_currency": amount,
                 "concept": self.concept
@@ -695,8 +698,8 @@ class PaymentEntry(AccountsController):
 
         gl_entries.append(
             self.get_gl_dict({
-                "account": "Acreedores - B",
-                "against": "Cheques Diferidos - B",
+                "account": acr,
+                "against": def_checks,
                 "debit": amount,
                 "debit_in_account_currency": amount,
                 "concept": self.concept
@@ -707,7 +710,7 @@ class PaymentEntry(AccountsController):
             gl_entries.append(
                 self.get_gl_dict({
                     "account": check.account,
-                    "against": "Cheques Diferidos - B",
+                    "against": def_checks,
                     "credit": check.amount,
                     "credit_in_account_currency": check.amount,
                     "concept": self.concept,
@@ -716,7 +719,7 @@ class PaymentEntry(AccountsController):
             )
             gl_entries.append(
                 self.get_gl_dict({
-                    "account": "Cheques Diferidos - B",
+                    "account": def_checks,
                     "against": check.account,
                     "debit": check.amount,
                     "debit_in_account_currency": check.amount,
@@ -1142,7 +1145,7 @@ def get_payment_entry(dt, dn, party_amount=None, bank_account=None, bank_amount=
 @frappe.whitelist()
 def get_mod_of_payments(company, payment_type):
     mode_of_payments = frappe.db.sql("""select parent as name from `tabMode of Payment Account` 
-    where parenttype=%(parenttype)s and company=%(company)s order by name""",
+    where parenttype=%(parenttype)s and company=%(company)s""",
                          {"parenttype": "Mode of Payment", "company": company}, as_dict=1)
 
     if payment_type == "income":
