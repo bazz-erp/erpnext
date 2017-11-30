@@ -316,16 +316,16 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 		this.write_off_outstanding_amount_automatically()
 	},
 
-	change_amount: function(){
-		if(this.frm.doc.paid_amount > this.frm.doc.grand_total){
-			this.calculate_write_off_amount()
-		}else {
-			this.frm.set_value("change_amount", 0.0)
-			this.frm.set_value("base_change_amount", 0.0)
-		}
+	change_amount: function() {
+        if (this.frm.doc.paid_amount > this.frm.doc.grand_total) {
+            this.calculate_write_off_amount()
+        } else {
+            this.frm.set_value("change_amount", 0.0)
+            this.frm.set_value("base_change_amount", 0.0)
+        }
 
-		this.frm.refresh_fields();
-	}
+        this.frm.refresh_fields();
+    }
 });
 
 // for backward compatibility: combine new and previous states
@@ -527,11 +527,33 @@ frappe.ui.form.on('Sales Invoice', {
 		})
 	},
 
+	/**
+	 * Check company type to hide/unhide taxes_and_charges section
+     * @param doc
+     */
+	company: function (frm) {
+
+		frappe.call({
+			method: "erpnext.setup.doctype.company.company.get_company_details",
+			args: {
+				company_name: frm.doc.company
+			},
+			callback: function (r, rt) {
+				if (r.message) {
+					frm.toggle_display("taxes_section", r.message[0] == "A");
+					frm.toggle_display("section_break_40", r.message[0] == "A");
+					frm.toggle_display("taxes_and_charges_amounts_section", r.message[0] == "A");
+				}
+            }
+		});
+    }
+	},
+
 	refresh: function (frm) {
 		hide_field("rounded_total")
 		hide_field("base_rounded_total")
     },
-	
+
 	customer: function (frm) {
 		if(frm.doc.customer) {
             frappe.call({
