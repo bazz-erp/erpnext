@@ -417,7 +417,6 @@ cur_frm.set_query("income_account", "items", function(doc) {
 	}
 });
 
-
 // Cost Center in Details Table
 // -----------------------------
 cur_frm.fields_dict["items"].grid.get_field("cost_center").get_query = function(doc) {
@@ -428,6 +427,19 @@ cur_frm.fields_dict["items"].grid.get_field("cost_center").get_query = function(
 		}
 	}
 }
+
+cur_frm.set_query("company", function () {
+	var types = ["A"];
+	if(frappe.user_roles.includes("Global Vision")){
+		types.push("B", "A+B");
+	}
+	return {
+		"doctype": "Company",
+		"filters": {
+			"type": ["in", types]
+		}
+	}
+});
 
 cur_frm.cscript.income_account = function(doc, cdt, cdn) {
 	erpnext.utils.copy_value_in_all_row(doc, cdt, cdn, "items", "income_account");
@@ -532,21 +544,22 @@ frappe.ui.form.on('Sales Invoice', {
      * @param doc
      */
 	company: function (frm) {
-
-		frappe.call({
-			method: "erpnext.setup.doctype.company.company.get_company_details",
-			args: {
-				company_name: frm.doc.company
-			},
-			callback: function (r, rt) {
-				if (r.message) {
-					frm.toggle_display("taxes_section", r.message[0] == "A");
-					frm.toggle_display("section_break_40", r.message[0] == "A");
-					frm.toggle_display("taxes_and_charges_amounts_section", r.message[0] == "A");
+		if(frm.doc.company){
+			frappe.call({
+				method: "erpnext.setup.doctype.company.company.get_company_details",
+				args: {
+					company_name: frm.doc.company
+				},
+				callback: function (r, rt) {
+					if (r.message) {
+						frm.toggle_display("taxes_section", r.message[0] == "A");
+						frm.toggle_display("section_break_40", r.message[0] == "A");
+						frm.toggle_display("taxes_and_charges_amounts_section", r.message[0] == "A");
+					}
 				}
-            }
-		});
-    }
+			});
+		}
+
 	},
 
 	refresh: function (frm) {
@@ -563,7 +576,8 @@ frappe.ui.form.on('Sales Invoice', {
 					if(r.message){
                     	customer = r.message;
                     	frm.set_value("sales_partner", customer.default_sales_partner);
-						if(customer.credit_days_based_on === "Fixed Days"){
+						frm.set_value("additional_discount_percentage", customer.bonification);
+                    	if(customer.credit_days_based_on === "Fixed Days"){
 							frm.set_value("due_date", frm.doc.due_date + customer.credit_days);
 						}
 						frm.refresh_fields()
