@@ -1831,7 +1831,7 @@ DocType: Instructor,INS/,INS /
 DocType: Issue,ISS-,ISS
 DocType: Item,ITEM-,ITEM-
 DocType: C-Form,IV,IV
-DocType: Customer,IVA Type,IVA Type
+DocType: Customer,IVA Type,Tipo de IVA
 DocType: Packing Slip,Identification of the package for the delivery (for print),La identificación del paquete para la entrega (para impresión)
 DocType: Journal Entry Account,If Income or Expense,Indique si es un ingreso o egreso
 DocType: HR Settings,"If checked, Total no. of Working Days will include holidays, and this will reduce the value of Salary Per Day","Si se marca, el número total de días trabajados incluirá las vacaciones, y este reducirá el salario por día."
