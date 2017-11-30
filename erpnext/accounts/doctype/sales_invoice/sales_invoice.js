@@ -56,10 +56,10 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 				return item.is_delivered_by_supplier ? true : false;
 			})
 
-			if(doc.outstanding_amount >= 0 || Math.abs(flt(doc.outstanding_amount)) < flt(doc.grand_total)) {
+			if ((doc.outstanding_amount >= 0 || Math.abs(flt(doc.outstanding_amount)) < flt(doc.grand_total))
+				&& !cur_frm.custom_buttons[__('Return / Credit Note')] ) {
 				cur_frm.add_custom_button(__('Return / Credit Note'),
-					this.make_sales_return, __("Make"));
-				cur_frm.page.set_inner_btn_group_as_primary(__("Make"));
+					this.make_sales_return);
 			}
 
 			if(cint(doc.update_stock)!=1) {
@@ -70,20 +70,20 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 						return item.delivery_note ? true : false;
 					});
 
-				if(!from_delivery_note && !is_delivered_by_supplier) {
+				if(!from_delivery_note && !is_delivered_by_supplier && !cur_frm.custom_buttons[__('Delivery')]) {
 					cur_frm.add_custom_button(__('Delivery'),
-						cur_frm.cscript['Make Delivery Note'], __("Make"));
+						cur_frm.cscript['Make Delivery Note']);
 				}
 			}
 
-			if(doc.outstanding_amount!=0 && !cint(doc.is_return)) {
+			if(doc.outstanding_amount!=0 && !cint(doc.is_return) && !cur_frm.custom_buttons[__('Payment')]) {
 				cur_frm.add_custom_button(__('Payment'),
-					this.make_payment_entry, __("Make"));
+					this.make_payment_entry);
 			}
 
-			if(doc.outstanding_amount>0 && !cint(doc.is_return)) {
+			if(doc.outstanding_amount>0 && !cint(doc.is_return) && !cur_frm.custom_buttons[__('Payment Request')]) {
 				cur_frm.add_custom_button(__('Payment Request'),
-					this.make_payment_request, __("Make"));
+					this.make_payment_request);
 			}
 
 
