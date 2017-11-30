@@ -1948,7 +1948,7 @@ DocType: Lead,Interested,Interesado
 DocType: Guardian,Interests,Intereses
 apps/erpnext/erpnext/setup/setup_wizard/install_fixtures.py +73,Intern,Interno
 DocType: Bank Check,Internal Number,Numero Interno
-DocType: Payment Entry,Internal Transfer,Transferencia interna
+DocType: Payment Entry,Internal Transfer,Transferencias Internas
 DocType: Employee,Internal Work History,Historial de trabajo interno
 DocType: Training Event,Internet,Internet
 apps/erpnext/erpnext/setup/setup_wizard/industry_type.py +32,Internet Publishing,Publicación por internet

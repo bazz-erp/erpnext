@@ -263,8 +263,12 @@ frappe.ui.form.on('Payment Entry', {
         frm.set_currency_labels(["base_paid_amount", "base_received_amount", "base_total_allocated_amount",
             "difference_amount"], company_currency);
 
-        // Paid amount always is in company currency
-        frm.set_currency_labels(["paid_amount"], company_currency);
+        // Paid amount always is in company currency. Internal Transfer has other label to paid_amount field
+        if (frm.doc.payment_type != "Internal Transfer") {
+            frm.set_currency_labels(["paid_amount"], company_currency);
+        }
+
+
         frm.set_currency_labels(["received_amount"], company_currency);
 
         var party_account_currency = frm.doc.payment_type == "Receive" ?
