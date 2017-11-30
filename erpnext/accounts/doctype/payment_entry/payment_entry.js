@@ -319,7 +319,13 @@ frappe.ui.form.on('Payment Entry', {
                 "references", "total_allocated_amount"], function (i, field) {
                 frm.set_value(field, null);
             });
+
+            // change paid amount label
+            frm.set_df_property("paid_amount", "label", __("Transferred Amount") + " (ARS)");
+
         } else {
+            frm.set_df_property("paid_amount", "label", __("Paid Amount"));
+            frm.set_currency_labels(["paid_amount"], get_company_currency(frm));
             if (!frm.doc.party) {
                 if (frm.doc.payment_type == "Receive") {
                     frm.set_value("party_type", "Customer");
@@ -1635,5 +1641,10 @@ var clear_table = function (frm, table_name) {
     frm.set_value(table_name + "_acumulated", 0);
     frm.set_value(table_name + "_balance", frm.get_field(table_name + "_topay").value);
 
+}
+
+
+var get_company_currency = function (frm) {
+    return frm.doc.company ? frappe.get_doc(":Company", frm.doc.company).default_currency : "";
 }
 
