@@ -2798,7 +2798,7 @@ DocType: Packing Slip Item,Packing Slip Item,Lista de embalaje del producto
 apps/erpnext/erpnext/stock/doctype/delivery_note/delivery_note.py +286,Packing Slip(s) cancelled,Lista(s) de embalaje cancelada(s)
 DocType: Purchase Invoice Item,Page Break,Salto de Página
 DocType: Payment Request,Paid,Pagado
-DocType: Payment Entry,Paid Amount,Cantidad Pagada
+DocType: Payment Entry,Paid Amount,Cantidad Cobrada
 DocType: Payment Entry,Paid Amount (Company Currency),Monto pagado (Divisa por defecto)
 apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1115,Paid Amount cannot be greater than total negative outstanding amount {0},La cantidad pagada no puede ser superior a cantidad pendiente negativa total de {0}
 DocType: Payment Entry Line,Paid From Account Currency,Paid From Account Currency
@@ -2843,7 +2843,7 @@ apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +122,Party 
 apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +125,Party is mandatory,Parte es obligatoria
 DocType: Employee,Passport Number,Número de pasaporte
 DocType: Supplier Scorecard Scoring Variable,Path,Page Missing or Moved
-DocType: Payment Entry,Pay,Pagar
+DocType: Payment Entry,Pay,Pago Proveedores
 DocType: Journal Entry,Pay To / Recd From,Pagar a / Recibido de
 apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1321,Pay to,Pago a
 DocType: Account,Payable,Pagadero
@@ -3429,7 +3429,7 @@ DocType: Account,Receivable,A cobrar
 DocType: Payment Reconciliation,Receivable / Payable Account,Cuenta por Cobrar / Pagar
 apps/erpnext/erpnext/accounts/report/item_wise_sales_register/item_wise_sales_register.py +80,Receivable Account,Cuenta por cobrar
 DocType: Email Digest,Receivables,Cuentas por cobrar
-DocType: Payment Entry,Receive,Cobro
+DocType: Payment Entry,Receive,Cobro Cliente
 apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1318,Receive from,Cobro de
 apps/erpnext/erpnext/buying/doctype/request_for_quotation/request_for_quotation.js +954,Received,Recibido
 DocType: Payment Entry,Received Amount,Cantidad recibida

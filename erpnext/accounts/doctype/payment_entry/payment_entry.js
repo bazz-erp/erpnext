@@ -9,7 +9,6 @@ var check_counter;
 frappe.ui.form.on('Payment Entry', {
 
     onload: function (frm) {
-
         if (frm.doc.__islocal) {
             if (!frm.doc.paid_from) frm.set_value("paid_from_account_currency", null);
             if (!frm.doc.paid_to) frm.set_value("paid_to_account_currency", null);
@@ -1338,7 +1337,7 @@ var set_mode_of_payment_account = function (frm, line) {
 };
 
 var set_up_payment_lines = function (frm) {
-    if (!frm.doc.lines) {
+    if (!frm.doc.lines || frm.doc.lines.length === 0) {
         /**Fill Payment Lines with All Modes Of Payment */
         frappe.call({
             method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_mod_of_payments",
@@ -1652,3 +1651,20 @@ var get_company_currency = function (frm) {
     return frm.doc.company ? frappe.get_doc(":Company", frm.doc.company).default_currency : "";
 }
 
+/**
+ * Filter Company type
+ */
+frappe.ui.form.on("Payment Entry", "refresh", function(frm) {
+    cur_frm.set_query("company", function () {
+        var types = ["A"];
+        if(frappe.user_roles.includes("Global Vision")){
+            types.push("B", "A+B");
+        }
+        return {
+            "doctype": "Company",
+            "filters": {
+                "type": ["in", types]
+            }
+        }
+    });
+});
