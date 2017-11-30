@@ -530,6 +530,25 @@ frappe.ui.form.on('Sales Invoice', {
 	refresh: function (frm) {
 		hide_field("rounded_total")
 		hide_field("base_rounded_total")
+    },
+	
+	customer: function (frm) {
+		if(frm.doc.customer) {
+            frappe.call({
+                method: "erpnext.accounts.doctype.sales_invoice.sales_invoice.get_customer",
+                args: {name: frm.doc.customer},
+                callback: function (r, rt) {
+					if(r.message){
+                    	customer = r.message;
+                    	frm.set_value("sales_partner", customer.default_sales_partner);
+						if(customer.credit_days_based_on === "Fixed Days"){
+							frm.set_value("due_date", frm.doc.due_date + customer.credit_days);
+						}
+						frm.refresh_fields()
+					}
+                }
+            });
+        }
     }
 })
 

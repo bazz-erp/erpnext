@@ -3698,8 +3698,6 @@ apps/erpnext/erpnext/config/buying.py +115,Rules for applying pricing and discou
 apps/erpnext/erpnext/config/accounts.py +323,Rules to calculate shipping amount for a sale,Reglas para calcular el importe de envío en una venta
 ,S.O. No.,OV No.
 DocType: Course Schedule,SH,SH
-DocType: Sales Invoice,SINV-,FACT-
-DocType: Sales Invoice,SINV-RET-,FACT-RET-
 apps/erpnext/erpnext/config/crm.py +132,SMS,SMS
 DocType: SMS Center,SMS Center,Centro SMS
 DocType: SMS Log,SMS Log,Registros SMS
