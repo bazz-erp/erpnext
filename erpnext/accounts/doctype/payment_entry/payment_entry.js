@@ -70,6 +70,7 @@ frappe.ui.form.on('Payment Entry', {
         frm.set_query("paid_from", function () {
 
             return {
+                query: "erpnext.controllers.queries.get_accounts_ordered",
                 filters: {
                     "account_type": ["in", ["Bank", "Cash", "Check Wallet", "Document Wallet"]],
                     "is_group": 0,
@@ -92,6 +93,7 @@ frappe.ui.form.on('Payment Entry', {
               */
 
             return {
+                "query": "erpnext.controllers.queries.get_accounts_ordered",
                 filters: {
                     "account_type": ["in", ["Bank", "Cash"]],
                     "is_group": 0,

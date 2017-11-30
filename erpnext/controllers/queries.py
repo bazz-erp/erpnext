@@ -408,3 +408,19 @@ def get_doctype_wise_filters(filters):
 	for row in filters:
 		filter_dict[row[0]].append(row)
 	return filter_dict
+
+
+@frappe.whitelist()
+def get_accounts_ordered(doctype, txt, searchfield, start, page_len, filters):
+    if filters.get("account_type"):
+		type_list = list(map(lambda str: "'" + str + "'", filters.get("account_type")[1]))
+		account_types = ",".join(type_list)
+
+    query = """select name from `tabAccount` where {key} like '{txt}' and account_type in ({account_types}) 
+        and company=%(company)s 
+        and is_group=%(is_group)s ORDER BY name ASC limit {start}, {page_len}""".format(account_types=account_types,
+																						start=start, page_len=page_len,
+																						key=frappe.db.escape(searchfield),
+																						txt=frappe.db.escape('%{0}%'.format(txt)))
+
+    return frappe.db.sql(query, filters)
