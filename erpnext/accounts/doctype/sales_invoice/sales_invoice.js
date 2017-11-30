@@ -525,7 +525,12 @@ frappe.ui.form.on('Sales Invoice', {
 				refresh_field(['timesheets'])
 			}
 		})
-	}
+	},
+
+	refresh: function (frm) {
+		hide_field("rounded_total")
+		hide_field("base_rounded_total")
+    }
 })
 
 frappe.ui.form.on('Sales Invoice Timesheet', {
