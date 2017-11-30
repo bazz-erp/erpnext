@@ -1625,5 +1625,13 @@ var show_new_third_party_documents =  function (frm) {
 var clear_table = function (frm, table_name) {
     frm.set_value(table_name, null);
     frm.toggle_display(table_name + "_section", false);
+
+    // clear selected items
+    frm.set_value("selected_" + table_name, null);
+
+    // clear amounts
+    frm.set_value(table_name + "_acumulated", 0);
+    frm.set_value(table_name + "_balance", frm.get_field(table_name + "_topay").value);
+
 }
 
