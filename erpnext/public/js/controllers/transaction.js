@@ -666,7 +666,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		// toggle fields
 		this.frm.toggle_display(["conversion_rate", "base_total", "base_net_total", "base_total_taxes_and_charges",
 			"base_taxes_and_charges_added", "base_taxes_and_charges_deducted",
-			"base_grand_total", "base_rounded_total", "base_in_words", "base_discount_amount",
+			"base_grand_total", "base_in_words", "base_discount_amount",
 			"base_paid_amount", "base_write_off_amount", "base_operating_cost",
 			"base_raw_material_cost", "base_total_cost", "base_scrap_material_cost"],
 			this.frm.doc.currency != company_currency);

@@ -1831,7 +1831,7 @@ DocType: Instructor,INS/,INS /
 DocType: Issue,ISS-,ISS
 DocType: Item,ITEM-,ITEM-
 DocType: C-Form,IV,IV
-DocType: Customer,IVA Type,IVA Type
+DocType: Customer,IVA Type,Tipo de IVA
 DocType: Packing Slip,Identification of the package for the delivery (for print),La identificación del paquete para la entrega (para impresión)
 DocType: Journal Entry Account,If Income or Expense,Indique si es un ingreso o egreso
 DocType: HR Settings,"If checked, Total no. of Working Days will include holidays, and this will reduce the value of Salary Per Day","Si se marca, el número total de días trabajados incluirá las vacaciones, y este reducirá el salario por día."
@@ -3698,8 +3698,6 @@ apps/erpnext/erpnext/config/buying.py +115,Rules for applying pricing and discou
 apps/erpnext/erpnext/config/accounts.py +323,Rules to calculate shipping amount for a sale,Reglas para calcular el importe de envío en una venta
 ,S.O. No.,OV No.
 DocType: Course Schedule,SH,SH
-DocType: Sales Invoice,SINV-,FACT-
-DocType: Sales Invoice,SINV-RET-,FACT-RET-
 apps/erpnext/erpnext/config/crm.py +132,SMS,SMS
 DocType: SMS Center,SMS Center,Centro SMS
 DocType: SMS Log,SMS Log,Registros SMS
@@ -3898,8 +3896,8 @@ DocType: Payment Entry,Selected Third Party Bank Checks,Cheques de Terceros sele
 DocType: Payment Entry,Selected Third Party Documents,Documentos de Terceros seleccionados
 DocType: Program Enrollment,Self-Driving Vehicle,Vehículo auto-manejado
 apps/erpnext/erpnext/stock/doctype/item/item_dashboard.py +25,Sell,Vender
-DocType: Customer,Sell Condition,Sell Condition
-DocType: Sales Invoice,Seller,Seller
+DocType: Customer,Sell Condition,Condicion de Venta
+DocType: Sales Invoice,Seller,Vendedor
 DocType: Hub Settings,Seller City,Ciudad de vendedor
 DocType: Hub Settings,Seller Country,País de vendedor
 DocType: Hub Settings,Seller Description,Descripción del vendedor

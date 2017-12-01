@@ -8,3 +8,8 @@ from frappe.model.document import Document
 
 class Freight(Document):
 	pass
+
+
+@frappe.whitelist()
+def get_address(name):
+	return frappe.db.sql("""SELECT address FROM `tabFreight` WHERE freight_name=%s """, name, as_dict=1)[0].address
