@@ -411,4 +411,10 @@ def get_dashboard_info(party_type, party):
     if party_type == "Supplier":
         info["total_unpaid"] = -1 * info["total_unpaid"]
 
+    # if party is Customer, get total amount of pending Bank Checks
+    if party_type == "Customer":
+        pending_checks_total_amount = frappe.db.sql("""select sum(amount) as total_amount from `tabBank Check` where 
+                  party=%(party)s and used=FALSE and payment_date > CURRENT_DATE""", {"party": party})
+        info["pending_checks_total_amount"] = pending_checks_total_amount
+
     return info
