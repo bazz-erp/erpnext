@@ -3439,8 +3439,8 @@ DocType: Email Digest,Receivables,Cuentas por cobrar
 DocType: Payment Entry,Receive,Cobro Cliente
 apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1323,Receive from,Cobro de
 apps/erpnext/erpnext/buying/doctype/request_for_quotation/request_for_quotation.js +954,Received,Recibido
-DocType: Payment Entry,Received Amount,Cantidad Recibida
-DocType: Payment Entry,Received Amount (Company Currency),Cantidad recibida (Divisa de Compañia)
+DocType: Payment Entry,Received Amount,Cantidad Cobrada
+DocType: Payment Entry,Received Amount (Company Currency),Cantidad Cobrada (Divisa de Compañia)
 DocType: C-Form,Received Date,Fecha de recepción
 apps/erpnext/erpnext/accounts/print_format/payment_receipt_voucher/payment_receipt_voucher.html +9,Received From,Recibido de
 ,Received Items To Be Billed,Recepciones por facturar
