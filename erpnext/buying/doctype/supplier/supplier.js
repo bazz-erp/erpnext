@@ -2,6 +2,11 @@
 // License: GNU General Public License v3. See license.txt
 
 frappe.ui.form.on("Supplier", {
+	onload: function (frm) {
+		if(!frm.doc.code){
+			set_supplier_code();
+		}
+    },
 	setup: function (frm) {
 		frm.set_query('default_price_list', { 'buying': 1 });
 		frm.set_query('account', 'accounts', function (doc, cdt, cdn) {
@@ -46,3 +51,16 @@ frappe.ui.form.on("Supplier", {
 		}
 	},
 });
+
+var set_supplier_code = function () {
+	frappe.call({
+        method: "erpnext.buying.doctype.supplier.supplier.get_supplier_code",
+        args: {},
+        callback: function (r, rt) {
+            if(r.message){
+                me.frm.set_value("code", r.message[0].code)
+			    me.frm.refresh_fields();
+            }
+        }
+	});
+}
