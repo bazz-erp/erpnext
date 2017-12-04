@@ -128,8 +128,9 @@ class Customer(TransactionBase):
 				frappe.throw(_("""New credit limit is less than current outstanding amount for the customer. Credit limit has to be atleast {0}""").format(outstanding_amt))
 
 	def validate_code(self):
-		dict = frappe.db.sql("""SELECT * FROM `tabCustomer` WHERE code=%s""", self.code, as_dict=1)
-		if len(dict) != 0:
+		result = frappe.db.sql("""SELECT code, name FROM `tabCustomer` WHERE code=%s""", self.code, as_dict=1)
+		match = [c for c in result if c.name == self.name]
+		if len(result) != 0 and len(match) == 0:
 			frappe.throw(_("""Code is already taken. Please choose a new one"""))
 
 	def on_trash(self):
