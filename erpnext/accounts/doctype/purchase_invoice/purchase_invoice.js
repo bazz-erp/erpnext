@@ -38,13 +38,13 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 
 		if(!doc.is_return && doc.docstatus==1) {
 			if(doc.outstanding_amount != 0) {
-				this.frm.add_custom_button(__('Payment'), this.make_payment_entry, __("Make"));
-				cur_frm.page.set_inner_btn_group_as_primary(__("Make"));
+				this.frm.add_custom_button(__('Payment'), this.make_payment_entry);
+
 			}
 
 			if(doc.outstanding_amount >= 0 || Math.abs(flt(doc.outstanding_amount)) < flt(doc.grand_total)) {
 				cur_frm.add_custom_button(__('Return / Debit Note'),
-					this.make_debit_note, __("Make"));
+					this.make_debit_note);
 			}
 		}
 
