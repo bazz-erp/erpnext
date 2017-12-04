@@ -3,7 +3,9 @@
 
 frappe.ui.form.on("Customer", {
 	onload: function(frm) {
-		set_customer_code();
+		if(!frm.doc.code){
+			set_customer_code();
+		}
     },
 	setup: function(frm) {
 		frm.add_fetch('lead_name', 'company_name', 'customer_name');
