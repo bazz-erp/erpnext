@@ -825,7 +825,7 @@ DocType: Task,Closing Date,Fecha de cierre
 DocType: Period Closing Voucher,Closing Fiscal Year,Cerrando el año fiscal
 DocType: Vehicle Service,Clutch Plate,Placa de embrague
 DocType: Customer,Code,Código
-apps/erpnext/erpnext/selling/doctype/customer/customer.py +133,Code is already taken. Please choose a new one,El código ya está en uso, por favor elije otro.
+apps/erpnext/erpnext/selling/doctype/customer/customer.py +133,Code is already taken. Please choose a new one,El codigo ya esta en uso, por favor elije otro.
 apps/erpnext/erpnext/schools/doctype/fees/fees.js +41,Collect,Recoger
 apps/erpnext/erpnext/schools/doctype/fees/fees.js +26,Collect Fees,Cobrar cuotas
 DocType: Supplier Scorecard Scoring Standing,Color,Color
