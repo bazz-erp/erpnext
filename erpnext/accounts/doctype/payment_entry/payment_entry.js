@@ -327,11 +327,13 @@ frappe.ui.form.on('Payment Entry', {
             frm.set_df_property("paid_amount", "label", __("Transferred Amount") + " (ARS)");
 
         } else {
-            frm.set_df_property("paid_amount", "label", __("Paid Amount"));
             frm.set_currency_labels(["paid_amount"], get_company_currency(frm));
             if (!frm.doc.party) {
-                if (frm.doc.payment_type == "Receive") {
+                if (is_income(frm)) {
                     frm.set_value("party_type", "Customer");
+                    frm.set_df_property("paid_amount", "label", __("Received Amount") + " (ARS)");
+                }else{
+                    frm.set_df_property("paid_amount", "label", __("Paid Amount") + " (ARS)");
                 }
             }
             else {
