@@ -98,6 +98,8 @@ $.extend(erpnext.utils, {
 			frm.dashboard.add_indicator(__('Total Unpaid: {0}',
 				[format_currency(info.total_unpaid, info.currency)]),
 				info.total_unpaid ? 'orange' : 'green');
+
+			frm.dashboard.add_indicator(__("Pending Bank Checks: {0}", [format_currency(info.pending_checks_total_amount, info.currency)]), 'orange')
 		}
 	},
 

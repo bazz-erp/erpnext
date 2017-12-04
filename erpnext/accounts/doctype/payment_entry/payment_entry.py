@@ -794,6 +794,7 @@ class PaymentEntry(AccountsController):
         for check in self.get("outgoing_bank_checks"):
             bank_check = frappe.new_doc("Bank Check")
             bank_check.third_party_check = False
+            bank_check.used = True
             bank_check.account = check.account
             self.copy_check_info(bank_check, check)
             bank_check.save()
@@ -809,13 +810,20 @@ class PaymentEntry(AccountsController):
             bank_check.internal_number = check.internal_number
             self.copy_check_info(bank_check, check)
             bank_check.save()
+            bank_check.submit()
 
     def copy_check_info(self, bank_check, check):
+        bank_check.issue_date = self.posting_date
         bank_check.concept = self.concept
         bank_check.number = check.number
         bank_check.amount = check.amount
         bank_check.payment_date = check.payment_date
         bank_check.company = self.company
+
+        # save party type and party in bank check
+        if self.party_type and self.party:
+            bank_check.party_type = self.party_type
+            bank_check.party = self.party
 
     def save_documents(self):
         if self.payment_type in ["Miscellaneous Expenditure", "Pay"]:

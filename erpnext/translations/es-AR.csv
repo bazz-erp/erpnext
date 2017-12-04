@@ -277,7 +277,7 @@ For Example: If you are selling Laptops and Backpacks separately and have a spec
 Note: BOM = Bill of Materials",
 apps/erpnext/erpnext/setup/setup_wizard/industry_type.py +8,Agriculture,Agricultura
 apps/erpnext/erpnext/setup/setup_wizard/industry_type.py +9,Airline,Línea aérea
-DocType: Customer,Alberto,
+DocType: Customer,Alberto,Alberto
 DocType: C-Form,All,Todos
 apps/erpnext/erpnext/config/buying.py +53,All Addresses.,Todas las direcciones.
 apps/erpnext/erpnext/setup/setup_wizard/install_fixtures.py +209,All Assessment Groups,Todos los grupos de evaluación
@@ -652,7 +652,7 @@ DocType: Branch,Branch,Sucursal
 DocType: Pricing Rule,Brand,Marca
 DocType: Sales Invoice Item,Brand Name,Marca
 apps/erpnext/erpnext/config/stock.py +200,Brand master.,Marca principal
-DocType: Customer,Brasil,
+DocType: Customer,Brasil,Brasil
 DocType: Maintenance Visit,Breakdown,Desglose
 apps/erpnext/erpnext/setup/setup_wizard/industry_type.py +14,Broadcasting,Difusión
 apps/erpnext/erpnext/setup/setup_wizard/industry_type.py +15,Brokerage,Bolsa de valores
@@ -825,7 +825,7 @@ DocType: Task,Closing Date,Fecha de cierre
 DocType: Period Closing Voucher,Closing Fiscal Year,Cerrando el año fiscal
 DocType: Vehicle Service,Clutch Plate,Placa de embrague
 DocType: Customer,Code,Código
-apps/erpnext/erpnext/selling/doctype/customer/customer.py +133,Code is already taken. Please choose a new one,
+apps/erpnext/erpnext/selling/doctype/customer/customer.py +133,Code is already taken. Please choose a new one,El código ya está en uso, por favor elije otro.
 apps/erpnext/erpnext/schools/doctype/fees/fees.js +41,Collect,Recoger
 apps/erpnext/erpnext/schools/doctype/fees/fees.js +26,Collect Fees,Cobrar cuotas
 DocType: Supplier Scorecard Scoring Standing,Color,Color
@@ -1108,7 +1108,8 @@ DocType: Daily Work Summary,Daily Work Summary,Resumen diario de Trabajo
 DocType: Daily Work Summary Settings,Daily Work Summary Settings,Ajustes de Resumen Diario de Trabajo
 DocType: Daily Work Summary Settings Company,Daily Work Summary Settings Company,Configuración del resumen de Trabajo Diario de la empresa
 apps/erpnext/erpnext/hr/doctype/daily_work_summary/daily_work_summary.py +32,Daily Work Summary for {0},Resumen diario de trabajo para {0}
-DocType: Customer,Daniel,
+DocType: Customer,Daniel,Daniel
+apps/erpnext/erpnext/config/setup.py +51,Data Import and Export,Importación y exportación de datos
 apps/erpnext/erpnext/config/learn.py +37,Data Import and Export,Importación y exportación de datos
 apps/erpnext/erpnext/config/crm.py +12,Database of potential customers.,Base de datos de clientes potenciales.
 apps/erpnext/erpnext/accounts/doctype/asset/asset.js +278,Date,Fecha
@@ -1529,7 +1530,7 @@ DocType: Bin,FCFS Rate,Cambio FCFS
 DocType: Fees,FEE.,CUOTA.
 DocType: Item,FIFO,FIFO
 DocType: Fee Structure,FS.,FS.
-DocType: Customer,Factura,
+DocType: Customer,Factura,Factura
 DocType: Payment Request,Failed,Falló
 DocType: Employee,Family Background,Antecedentes familiares
 DocType: Customer,Fantasy name,Nombre de Fantasía
@@ -2837,12 +2838,12 @@ DocType: Sales Order,Partly Billed,Parcialmente facturado
 DocType: Sales Order,Partly Delivered,Parcialmente entregado
 DocType: Sales Partner,Partner Type,Tipo de socio
 DocType: Sales Partner,Partner website,Sitio web de colaboradores
-DocType: GL Entry,Party,Tercero
+DocType: Bank Check,Party,Tercero
 DocType: Party Account,Party Account,Cuenta asignada
 DocType: Purchase Invoice,Party Account Currency,Divisa de la cuenta de tercero/s
 DocType: Journal Entry Account,Party Balance,Saldo de tercero/s
 DocType: Payment Entry,Party Name,Nombre de Parte
-DocType: GL Entry,Party Type,Tipo de entidad
+DocType: Bank Check,Party Type,Tipo de entidad
 apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +122,Party Type is mandatory,Tipo de parte es obligatorio
 apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.py +125,Party is mandatory,Parte es obligatoria
 DocType: Employee,Passport Number,Número de pasaporte
@@ -2903,6 +2904,7 @@ DocType: Timesheet,Payslip,Recibo de Sueldo
 apps/erpnext/erpnext/buying/doctype/request_for_quotation/request_for_quotation.js +961,Pending,Pendiente
 apps/erpnext/erpnext/setup/doctype/email_digest/templates/default.html +93,Pending Activities,Actividades Pendientes
 apps/erpnext/erpnext/accounts/report/delivered_items_to_be_billed/delivered_items_to_be_billed.py +20,Pending Amount,Monto pendiente
+apps/erpnext/erpnext/public/js/utils.js +102,Pending Bank Checks: {0},Cheques Pendientes: {0}
 DocType: Email Digest,Pending Purchase Orders,A la espera de órdenes de compra
 DocType: Production Plan Item,Pending Qty,Cantidad pendiente
 DocType: Email Digest,Pending Quotations,Presupuestos pendientes
@@ -2936,7 +2938,7 @@ apps/erpnext/erpnext/setup/setup_wizard/install_fixtures.py +124,Pharmaceutical,
 apps/erpnext/erpnext/setup/setup_wizard/industry_type.py +41,Pharmaceuticals,Productos farmacéuticos
 DocType: Lead,Phone,Teléfono
 DocType: Company,Phone No,Teléfono No.
-DocType: Freight,Phone Number,
+DocType: Freight,Phone Number,Numero de Telefono
 DocType: Program Enrollment,Pick/Drop by Guardian,Recoger/Soltar por Tutor
 apps/erpnext/erpnext/setup/setup_wizard/install_fixtures.py +72,Piecework,Trabajo por obra
 DocType: Student,Pincode,Código PIN
@@ -3037,7 +3039,7 @@ apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +728,Please
 apps/erpnext/erpnext/accounts/doctype/journal_entry/journal_entry.js +359,Please select Posting Date first,"Por favor, seleccione fecha de publicación primero"
 apps/erpnext/erpnext/manufacturing/doctype/bom/bom.py +154,Please select Price List,"Por favor, seleccione la lista de precios"
 apps/erpnext/erpnext/schools/doctype/student_group/student_group.py +23,Please select Program,Seleccione el programa
-apps/erpnext/erpnext/public/js/utils.js +245,Please select Quotations,Por Favor seleccione Cotizaciones
+apps/erpnext/erpnext/public/js/utils.js +247,Please select Quotations,Por Favor seleccione Cotizaciones
 apps/erpnext/erpnext/maintenance/doctype/maintenance_schedule/maintenance_schedule.py +149,Please select Start Date and End Date for Item {0},"Por favor, seleccione Fecha de inicio y Fecha de finalización para el elemento {0}"
 apps/erpnext/erpnext/stock/doctype/batch/batch.py +130,Please select a Batch for Item {0}. Unable to find a single batch that fulfills this requirement,Seleccione un lote para el artículo {0}. No se puede encontrar un solo lote que cumpla este requisito
 apps/erpnext/erpnext/accounts/party.py +175,Please select a Company,"Por favor, seleccione la compañía"
@@ -4997,7 +4999,7 @@ apps/erpnext/erpnext/accounts/doctype/journal_entry/journal_entry.py +299,You ca
 apps/erpnext/erpnext/accounts/doctype/fiscal_year/fiscal_year.py +51,You cannot delete Fiscal Year {0}. Fiscal Year {0} is set as default in Global Settings,No se puede eliminar el año fiscal {0}. Año fiscal {0} se establece por defecto en la configuración global
 apps/erpnext/erpnext/projects/doctype/project_type/project_type.py +13,You cannot delete Project Type 'External',YES
 apps/erpnext/erpnext/schools/doctype/assessment_plan/assessment_plan.py +49,You have already assessed for the assessment criteria {}.,Ya ha evaluado los criterios de evaluación {}.
-apps/erpnext/erpnext/public/js/utils.js +208,You have already selected items from {0} {1},Ya ha seleccionado artículos de {0} {1}
+apps/erpnext/erpnext/public/js/utils.js +210,You have already selected items from {0} {1},Ya ha seleccionado artículos de {0} {1}
 apps/erpnext/erpnext/projects/doctype/project/project.py +198,You have been invited to collaborate on the project: {0},Se le ha invitado a colaborar en el proyecto: {0}
 apps/erpnext/erpnext/stock/doctype/packing_slip/packing_slip.js +78,You have entered duplicate items. Please rectify and try again.,Ha introducido elementos duplicados . Por favor rectifique y vuelva a intentarlo .
 apps/erpnext/erpnext/setup/doctype/email_digest/email_digest.js +6,You must Save the form before proceeding,Debe guardar el formulario antes de proceder
