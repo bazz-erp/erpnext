@@ -23,6 +23,24 @@ frappe.query_reports["Outstanding Bank Checks"] = {
                     }
                 }
             }
+		},
+		{
+			"fieldname":"customer",
+			"label": __("Customer"),
+			"fieldtype": "Link",
+			"options": "Customer",
+			"default": "",
+			"reqd": 1
 		}
-	]
+	],
+	"formatter": function (row, cell, value, columnDef, dataContext, default_formatter) {
+
+	    value = default_formatter(row, cell, value, columnDef, dataContext);
+
+	    if (dataContext[__("Concept")] == __("Total")) {
+	    	value = "<span style='font-weight:bold;font-size:larger'>" + value + "</span>";
+	    }
+
+	    return value;
+	}
 }

@@ -57,6 +57,14 @@ frappe.ui.form.on("Customer", {
 			// indicator
 			erpnext.utils.set_party_dashboard_indicators(frm);
 
+			frm.add_custom_button(__("Pending Bank Checks"), function () {
+				frappe.route_options = {
+					"customer": frm.doc.name
+				};
+
+				frappe.set_route("query-report", "Outstanding Bank Checks");
+            });
+
 		} else {
 			frappe.contacts.clear_address_and_contact(frm);
 		}
