@@ -1203,6 +1203,14 @@ frappe.ui.form.on('Payment Entry Line', {
                 break;
         }
 
+        if (line.mode_of_payment == "Cheques propios" || line.mode_of_payment == "Cheques de Terceros") {
+            // show average day if payment type is Cheques propios or Cheques de Terceros
+            frm.toggle_display("bank_checks_average_days_section", is_expenditure(frm)
+                && line.paid_amount != 0 );
+        }
+
+
+
     },
 
     mode_of_payment: function (frm, cdt, cdn) {
@@ -1225,9 +1233,10 @@ frappe.ui.form.on('Payment Entry Bank Check', {
     },
     outgoing_bank_checks_remove: function (frm) {
         frm.events.refresh_amounts(frm, "checks", frm.doc.outgoing_bank_checks);
+        update_bank_checks_average_days(frm);
     },
     third_party_bank_checks_add: function (frm, cdt, cdn) {
-        check = locals[cdt][cdn]
+        check = locals[cdt][cdn];
 		check.company = frm.doc.company;
         check.concept = frm.doc.concept;
 		if (is_income(frm)) {
@@ -1235,12 +1244,24 @@ frappe.ui.form.on('Payment Entry Bank Check', {
         }
     },
     amount: function (frm, cdt, cdn) {
-        frm.events.refresh_amounts(frm, "third_party_bank_checks", frm.doc.third_party_bank_checks);
 
 		if(is_expenditure(frm)) {
             frm.events.refresh_amounts(frm, "checks", frm.doc.outgoing_bank_checks);
+		    update_bank_checks_average_days(frm);
 		}
 
+    },
+
+    payment_date: function (frm, cdt, cdn) {
+        check = locals [cdt][cdn];
+        if (is_expenditure(frm)) {
+            if (frappe.datetime.get_diff(frm.doc.posting_date, check.payment_date) > 0) {
+                frappe.throw(__("Payment Date of Bank Check must be greater than Posting Date"));
+                check.payment_date = frm.doc.posting_date;
+                frm.refresh_fields();
+            }
+            update_bank_checks_average_days(frm);
+        }
     }
 })
 
@@ -1473,6 +1494,7 @@ var update_selected_third_party_bank_checks = function (frm, changed_row) {
         frm.refresh_field("selected_third_party_bank_checks");
     }
     frm.events.refresh_amounts(frm, "third_party_bank_checks", frm.doc.selected_third_party_bank_checks);
+	update_bank_checks_average_days(frm);
 }
 
 var add_selected_bank_check = function (frm, changed_bank_check) {
@@ -1670,3 +1692,32 @@ frappe.ui.form.on("Payment Entry", "refresh", function(frm) {
         }
     });
 });
+
+
+var update_bank_checks_average_days = function (frm) {
+    total_amount = 0;
+    days_per_amount = 0;
+    $.each(frm.doc.selected_third_party_bank_checks, function (index, check) {
+        if (check.payment_date && check.amount && frm.doc.posting_date) {
+            total_amount += check.amount;
+            day_diff = frappe.datetime.get_day_diff(check.payment_date, frm.doc.posting_date);
+            days_per_amount += (check.amount * day_diff);
+        }
+    });
+
+    $.each(frm.doc.outgoing_bank_checks, function (index, check) {
+        if (check.payment_date && check.amount && frm.doc.posting_date) {
+            total_amount += check.amount;
+            day_diff = frappe.datetime.get_day_diff(check.payment_date, frm.doc.posting_date);
+            days_per_amount += (check.amount * day_diff);
+        }
+    });
+
+    if (total_amount != 0) {
+        frm.set_value("bank_checks_average_days", days_per_amount / total_amount);
+    }
+    else {
+        frm.set_value("bank_checks_average_days", 0);
+    }
+
+}

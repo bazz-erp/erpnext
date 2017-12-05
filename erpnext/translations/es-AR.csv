@@ -507,6 +507,7 @@ apps/erpnext/erpnext/stock/doctype/stock_entry/stock_entry.py +234,"Available qt
 apps/erpnext/erpnext/stock/dashboard/item_dashboard.js +114,Available {0},Disponible {0}
 apps/erpnext/erpnext/stock/report/stock_ageing/stock_ageing.py +40,Average Age,Edad Promedio
 ,Average Commission Rate,Tasa de comisión promedio (%)
+DocType: Payment Entry,Average Days,Dias promedio
 DocType: Authorization Rule,Average Discount,Descuento Promedio
 DocType: Item,Average time taken by the supplier to deliver,Tiempo estimado por el proveedor para el envío
 apps/erpnext/erpnext/stock/report/itemwise_recommended_reorder_level/itemwise_recommended_reorder_level.py +42,Avg Daily Outgoing,Promedio diario saliente
@@ -826,7 +827,7 @@ DocType: Task,Closing Date,Fecha de cierre
 DocType: Period Closing Voucher,Closing Fiscal Year,Cerrando el año fiscal
 DocType: Vehicle Service,Clutch Plate,Placa de embrague
 DocType: Customer,Code,Código
-apps/erpnext/erpnext/selling/doctype/customer/customer.py +133,Code is already taken. Please choose a new one,"El código ya está en uso, por favor elije otro."
+apps/erpnext/erpnext/selling/doctype/customer/customer.py +134,Code is already taken. Please choose a new one,"El código ya está en uso, por favor elije otro."
 apps/erpnext/erpnext/schools/doctype/fees/fees.js +41,Collect,Recoger
 apps/erpnext/erpnext/schools/doctype/fees/fees.js +26,Collect Fees,Cobrar cuotas
 DocType: Supplier Scorecard Scoring Standing,Color,Color
@@ -1013,7 +1014,7 @@ DocType: Purchase Invoice,Credit To,Acreditar en
 apps/erpnext/erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py +111,Credit To account must be a Balance Sheet account,La cuenta de crédito debe pertenecer a las cuentas de balance
 apps/erpnext/erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py +114,Credit To account must be a Payable account,La cuenta de crédito debe pertenecer al grupo de cuentas por pagar
 DocType: Journal Entry Account,Credit in Company Currency,Divisa por defecto de la cuenta de credito
-apps/erpnext/erpnext/selling/doctype/customer/customer.py +170,Credit limit has been crossed for customer {0} {1}/{2},Límite de crédito ha sido sobrepasado para el cliente {0} {1}/{2}
+apps/erpnext/erpnext/selling/doctype/customer/customer.py +171,Credit limit has been crossed for customer {0} {1}/{2},Límite de crédito ha sido sobrepasado para el cliente {0} {1}/{2}
 apps/erpnext/erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts.py +140,Creditors,Acreedores
 DocType: Supplier Scorecard Period,Criteria,Course Code:
 DocType: Supplier Scorecard Criteria,Criteria Formula,Created {0} scorecards for {1} between:
@@ -1386,7 +1387,7 @@ DocType: HR Settings,Emails salary slip to employee based on preferred email sel
 DocType: Daily Work Summary Settings,"Emails will be sent to all Active Employees of the company at the given hour, if they do not have holiday. Summary of responses will be sent at midnight.","Los correos electrónicos serán enviados a todos los empleados activos de la empresa a la hora determinada, si no tienen vacaciones. Resumen de las respuestas será enviado a la medianoche."
 DocType: Employee,Emergency Contact,Contacto de emergencia
 DocType: Employee,Emergency Phone,Teléfono de Emergencia
-DocType: Fiscal Year,Employee,Employee
+DocType: Fiscal Year,Employee,Empleado
 DocType: Supplier Scorecard Scoring Standing,Employee ,
 DocType: Employee Attendance Tool,Employee Attendance Tool,Herramienta de asistencia de los empleados
 apps/erpnext/erpnext/setup/setup_wizard/install_fixtures.py +195,Employee Benefits,Beneficios de empleados
@@ -2862,6 +2863,7 @@ apps/erpnext/erpnext/accounts/doctype/purchase_invoice/purchase_invoice.js +782,
 apps/erpnext/erpnext/accounts/report/daily_movements/daily_movements.py +56,Payment ,
 DocType: Payment Gateway Account,Payment Account,Cuenta de pagos
 DocType: Bank Check,Payment Date,Fecha de Pago
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1587,Payment Date of Bank Check must be greater than Posting Date,Payment Date of Bank Check must be greater than Posting Date
 DocType: Salary Slip,Payment Days,Días de pago
 DocType: Payment Entry,Payment Deductions or Loss,Deducciones de Pago o Pérdida
 DocType: Bank Reconciliation Detail,Payment Document,Documento de pago
@@ -2907,7 +2909,7 @@ DocType: Timesheet,Payslip,Recibo de Sueldo
 apps/erpnext/erpnext/buying/doctype/request_for_quotation/request_for_quotation.js +961,Pending,Pendiente
 apps/erpnext/erpnext/setup/doctype/email_digest/templates/default.html +93,Pending Activities,Actividades Pendientes
 apps/erpnext/erpnext/accounts/report/delivered_items_to_be_billed/delivered_items_to_be_billed.py +20,Pending Amount,Monto pendiente
-apps/erpnext/erpnext/selling/doctype/customer/customer.js +58,Pending Bank Checks,Cheques Pendientes
+apps/erpnext/erpnext/selling/doctype/customer/customer.js +60,Pending Bank Checks,Cheques Pendientes
 apps/erpnext/erpnext/public/js/utils.js +102,Pending Bank Checks: {0},Cheques Pendientes: {0}
 DocType: Email Digest,Pending Purchase Orders,A la espera de órdenes de compra
 DocType: Production Plan Item,Pending Qty,Cantidad pendiente
@@ -2967,7 +2969,7 @@ apps/erpnext/erpnext/maintenance/doctype/maintenance_schedule/maintenance_schedu
 apps/erpnext/erpnext/maintenance/doctype/maintenance_schedule/maintenance_schedule.py +230,Please click on 'Generate Schedule' to fetch Serial No added for Item {0},"Por favor, haga clic en 'Generar planificación' para obtener el no. de serie del producto {0}"
 apps/erpnext/erpnext/maintenance/doctype/maintenance_schedule/maintenance_schedule.py +39,Please click on 'Generate Schedule' to get schedule,"Por favor, haga clic en 'Generar planificación' para obtener las tareas"
 apps/erpnext/erpnext/templates/emails/request_for_quotation.html +4,Please click on the following link to set your new password,"Por favor, haga clic en el siguiente enlace para configurar su nueva contraseña"
-apps/erpnext/erpnext/selling/doctype/customer/customer.py +176,Please contact to the user who have Sales Master Manager {0} role,"Por favor, póngase en contacto con el usuario gerente de ventas {0}"
+apps/erpnext/erpnext/selling/doctype/customer/customer.py +177,Please contact to the user who have Sales Master Manager {0} role,"Por favor, póngase en contacto con el usuario gerente de ventas {0}"
 apps/erpnext/erpnext/selling/doctype/quotation/quotation.py +201,Please create Customer from Lead {0},"Por favor, crear el cliente desde iniciativa {0}"
 apps/erpnext/erpnext/accounts/doctype/account/account.js +21,Please create new account from Chart of Accounts.,"Por favor, cree una nueva cuenta en el plan general de contabilidad."
 apps/erpnext/erpnext/schools/doctype/grading_scale/grading_scale.py +20,Please define grade for Threshold 0%,Por favor defina el grado para el Umbral 0%
@@ -4417,6 +4419,7 @@ DocType: Purchase Invoice,Taxes and Charges Deducted (Company Currency),Impuesto
 ,Team Updates,Actualizaciones equipo
 apps/erpnext/erpnext/setup/setup_wizard/industry_type.py +51,Technology,Tecnología
 apps/erpnext/erpnext/setup/setup_wizard/industry_type.py +52,Telecommunications,Telecomunicaciones
+DocType: Sales Partner,Telephone,Telephone
 apps/erpnext/erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts.py +118,Telephone Expenses,Cuenta telefonica
 apps/erpnext/erpnext/setup/setup_wizard/industry_type.py +53,Television,Televisión
 apps/erpnext/erpnext/stock/doctype/item/item_list.js +14,Template,Plantilla
@@ -4480,8 +4483,8 @@ apps/erpnext/erpnext/accounts/doctype/pricing_rule/pricing_rule.js +36,"Then Pri
 DocType: Training Event,Theory,Teoría
 apps/erpnext/erpnext/hr/doctype/salary_slip/salary_slip.py +238,There are more holidays than working days this month.,Existen más vacaciones que días de trabajo en este mes.
 apps/erpnext/erpnext/hr/doctype/process_payroll/process_payroll.py +357,There are no submitted Salary Slips to process.,The condition '{0}' is invalid
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1757,There are no third-party checks in the wallet,No hay Cheques de Terceros en la Cartera
-apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1850,There are no third-party documents in the wallet,No hay Documentos de Terceros en la Cartera
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1778,There are no third-party checks in the wallet,No hay Cheques de Terceros en la Cartera
+apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1872,There are no third-party documents in the wallet,No hay Documentos de Terceros en la Cartera
 apps/erpnext/erpnext/accounts/party.py +246,There can only be 1 Account per Company in {0} {1},Sólo puede existir una (1) cuenta por compañía en {0} {1}
 apps/erpnext/erpnext/accounts/doctype/shipping_rule/shipping_rule.py +47,"There can only be one Shipping Rule Condition with 0 or blank value for ""To Value""",Sólo puede existir una 'regla de envió' con valor 0 o valor en blanco en 'para el valor'
 apps/erpnext/erpnext/hr/doctype/leave_application/leave_application.py +152,There is not enough leave balance for Leave Type {0},No hay suficiente días para las ausencias del tipo: {0}
