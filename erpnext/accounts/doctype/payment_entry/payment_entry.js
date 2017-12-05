@@ -60,6 +60,7 @@ frappe.ui.form.on('Payment Entry', {
         /* Reset the checks and documents autoincremental counter */
         doc_counter = 0;
         check_counter = 0;
+
     },
 
     setup: function (frm) {
@@ -197,6 +198,9 @@ frappe.ui.form.on('Payment Entry', {
                 show_new_third_party_documents(frm);
             }
         }
+
+        frm.toggle_display("bank_checks_average_days_section", is_expenditure(frm) && (frm.doc.selected_third_party_bank_checks.length >0
+            || frm.doc.outgoing_bank_checks.length > 0));
 
         frm.set_df_property("documents_section", "hidden", true);
 
@@ -1160,6 +1164,7 @@ frappe.ui.form.on('Payment Entry Line', {
                 /* cleanup the table */
                 if (is_expenditure(frm)) {
                     frm.set_value("third_party_bank_checks", []);
+                    frm.set_value("selected_third_party_bank_checks", null);
                     show_third_party_checks(frm);
                 } else if(!display){
                     check_counter = 0;
@@ -1206,7 +1211,9 @@ frappe.ui.form.on('Payment Entry Line', {
         if (line.mode_of_payment == "Cheques propios" || line.mode_of_payment == "Cheques de Terceros") {
             // show average day if payment type is Cheques propios or Cheques de Terceros
             frm.toggle_display("bank_checks_average_days_section", is_expenditure(frm)
-                && line.paid_amount != 0 );
+                && (line.paid_amount != 0 || !is_empty_selected_third_party_bank_checks(frm) || !is_empty_outgoing_bank_checks(frm)));
+
+            update_bank_checks_average_days(frm);
         }
 
 
@@ -1720,4 +1727,12 @@ var update_bank_checks_average_days = function (frm) {
         frm.set_value("bank_checks_average_days", 0);
     }
 
+}
+
+var is_empty_selected_third_party_bank_checks = function (frm) {
+    return (!frm.doc.selected_third_party_checks || frm.doc.selected_third_party_checks.length == 0);
+}
+
+var is_empty_outgoing_bank_checks = function (frm) {
+    return (!frm.doc.outgoing_bank_checks || frm.doc.outgoing_bank_checks.length == 0);
 }
