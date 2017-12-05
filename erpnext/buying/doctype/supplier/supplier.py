@@ -42,9 +42,20 @@ class Supplier(TransactionBase):
 
 		validate_party_accounts(self)
 
+	def validate_code(self):
+		result = frappe.db.sql("""SELECT code, name FROM `tabSupplier` WHERE code=%s""", self.code, as_dict=1)
+		match = [s for s in result if s.name == self.name]
+		if len(result) != 0 and len(match) == 0:
+			frappe.throw(_("""Code is already taken. Please choose a new one"""))
+
 	def on_trash(self):
 		delete_contact_and_address('Supplier', self.name)
 
 	def after_rename(self, olddn, newdn, merge=False):
 		if frappe.defaults.get_global_default('supp_master_name') == 'Supplier Name':
 			frappe.db.set(self, "supplier_name", newdn)
+
+
+@frappe.whitelist()
+def get_supplier_code():
+	return frappe.db.sql("""SELECT COUNT(*) as code FROM `tabSupplier`""", as_dict=1)

@@ -12,4 +12,4 @@ class Freight(Document):
 
 @frappe.whitelist()
 def get_address(name):
-	return frappe.db.sql("""SELECT address FROM `tabFreight` WHERE freight_name=%s """, name, as_dict=1)[0].address
+	return frappe.db.sql("""SELECT * FROM `tabFreight` WHERE freight_name=%s """, name, as_dict=1)[0]
