@@ -1086,7 +1086,7 @@
    "read_only": 0, 
    "remember_last_selected_value": 0, 
    "report_hide": 0, 
-   "reqd": 1, 
+   "reqd": 0,
    "search_index": 0, 
    "set_only_once": 0, 
    "unique": 0
@@ -1119,7 +1119,7 @@
    "read_only": 0, 
    "remember_last_selected_value": 0, 
    "report_hide": 0, 
-   "reqd": 1, 
+   "reqd": 0,
    "search_index": 0, 
    "set_only_once": 0, 
    "unique": 0
@@ -1181,7 +1181,7 @@
    "read_only": 1, 
    "remember_last_selected_value": 0, 
    "report_hide": 0, 
-   "reqd": 1, 
+   "reqd": 0,
    "search_index": 0, 
    "set_only_once": 0, 
    "unique": 0
@@ -1212,7 +1212,7 @@
    "read_only": 0, 
    "remember_last_selected_value": 0, 
    "report_hide": 0, 
-   "reqd": 1, 
+   "reqd": 0,
    "search_index": 0, 
    "set_only_once": 0, 
    "unique": 0
@@ -1609,7 +1609,7 @@
    "read_only": 1, 
    "remember_last_selected_value": 0, 
    "report_hide": 0, 
-   "reqd": 1, 
+   "reqd": 0,
    "search_index": 0, 
    "set_only_once": 0, 
    "unique": 0
@@ -2276,7 +2276,7 @@
    "read_only": 1, 
    "remember_last_selected_value": 0, 
    "report_hide": 0, 
-   "reqd": 1, 
+   "reqd": 0,
    "search_index": 0, 
    "set_only_once": 0, 
    "unique": 0
@@ -4602,7 +4602,7 @@
  "istable": 0, 
  "max_attachments": 0, 
  "menu_index": 0, 
- "modified": "2017-11-30 21:55:37.469682",
+ "modified": "2017-12-06 22:06:37.469682",
  "modified_by": "Administrator", 
  "module": "Accounts", 
  "name": "Sales Invoice", 
