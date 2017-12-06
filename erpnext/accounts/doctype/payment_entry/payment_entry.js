@@ -13,7 +13,6 @@ frappe.ui.form.on('Payment Entry', {
             if (!frm.doc.paid_from) frm.set_value("paid_from_account_currency", null);
             if (!frm.doc.paid_to) frm.set_value("paid_to_account_currency", null);
         }
-
         set_up_payment_lines(frm);
 
         frm.get_field('third_party_bank_checks').grid.editable_fields = [
@@ -60,6 +59,9 @@ frappe.ui.form.on('Payment Entry', {
         /* Reset the checks and documents autoincremental counter */
         doc_counter = 0;
         check_counter = 0;
+
+        /* Set concept if payment come from other form */
+        frm.events.set_concept(frm);
 
     },
 
