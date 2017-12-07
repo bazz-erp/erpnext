@@ -46,6 +46,10 @@ frappe.ui.form.on("Supplier", {
 				frappe.set_route('query-report', 'Accounts Payable', { supplier: frm.doc.name });
 			});
 
+			frm.add_custom_button(__('Current Account'), function () {
+				frappe.set_route('query-report', 'Supplier Current Account', { supplier: frm.doc.name });
+			});
+
 			// indicators
 			erpnext.utils.set_party_dashboard_indicators(frm);
 		}
