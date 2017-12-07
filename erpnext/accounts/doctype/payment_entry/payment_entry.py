@@ -610,7 +610,8 @@ class PaymentEntry(AccountsController):
             dr_or_cr = "debit"
         gl_dict = self.get_gl_dict({
             "account": source_account,
-
+            "party": self.party if self.party else None,
+            "party_type": self.party_type if self.party_type else None,
             "against": against_account,
             dr_or_cr: line.paid_amount,
             dr_or_cr + "_in_account_currency": line.paid_amount,
