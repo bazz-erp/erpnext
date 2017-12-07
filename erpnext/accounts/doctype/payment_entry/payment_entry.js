@@ -1235,11 +1235,14 @@ frappe.ui.form.on('Payment Entry Bank Check', {
     },
     amount: function (frm, cdt, cdn) {
 
+
 		if(is_expenditure(frm)) {
             frm.events.refresh_amounts(frm, "checks", frm.doc.outgoing_bank_checks);
 		    update_bank_checks_average_days(frm);
 		}
-
+		else {
+		    frm.events.refresh_amounts(frm, "third_party_bank_checks", frm.doc.third_party_bank_checks);
+        }
     },
 
     payment_date: function (frm, cdt, cdn) {
