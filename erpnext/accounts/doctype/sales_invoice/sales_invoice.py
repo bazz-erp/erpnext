@@ -151,8 +151,8 @@ class SalesInvoice(SellingController):
 		self.update_time_sheet(None)
 
 	# Remove the "Draft" state
-	def after_insert(self):
-		self.submit()
+	#def after_insert(self):
+	#	self.submit()
 
 	def on_cancel(self):
 		self.check_close_sales_order("sales_order")
