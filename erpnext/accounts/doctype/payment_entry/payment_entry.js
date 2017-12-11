@@ -846,6 +846,7 @@ frappe.ui.form.on('Payment Entry', {
                 }
             }
         }
+
         frm.set_value("unallocated_amount", unallocated_amount);
 
         var difference_amount = 0;

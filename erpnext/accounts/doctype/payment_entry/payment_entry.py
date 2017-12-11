@@ -36,6 +36,11 @@ class PaymentEntry(AccountsController):
             self.party_account = self.paid_to
             self.party_account_currency = self.paid_to_account_currency
 
+        elif self.payment_type == "Miscellaneous Income":
+            self.party_account = get_company_defaults(self.company).default_receivable_account
+        elif self.payment_type == "Miscellaneous Expenditure":
+            self.party_account = get_company_defaults(self.company).default_payable_account
+
     def validate(self):
         self.setup_party_account_field()
         self.set_missing_values()
@@ -302,7 +307,7 @@ class PaymentEntry(AccountsController):
         self.base_total_allocated_amount = abs(base_total_allocated_amount)
 
     def set_unallocated_amount(self):
-        self.unallocated_amount = 0;
+        self.unallocated_amount = 0
         if self.party:
             party_amount = self.paid_amount if self.payment_type == "Receive" else self.received_amount
 
@@ -313,6 +318,8 @@ class PaymentEntry(AccountsController):
                     self.unallocated_amount = party_amount - (self.total_allocated_amount - total_deductions)
                 else:
                     self.unallocated_amount = party_amount - (self.total_allocated_amount + total_deductions)
+        else:
+            self.unallocated_amount = self.paid_amount
 
     def set_difference_amount(self):
         base_unallocated_amount = flt(self.unallocated_amount) * (flt(self.source_exchange_rate)
@@ -407,11 +414,15 @@ class PaymentEntry(AccountsController):
 
         self.add_internal_transfer_bank_gl_entries(gl_entries)
 
-        self.add_lines_party_gl_entries(gl_entries)
+       # self.add_lines_party_gl_entries(gl_entries)
+
+        self.add_party_gl_entries(gl_entries)
         self.add_lines_bank_gl_entries(gl_entries)
         self.generate_gl_entries_for_bank_checks(gl_entries)
 
         self.add_deductions_gl_entries(gl_entries)
+
+        print(gl_entries)
 
         make_gl_entries(gl_entries, cancel=cancel, adv_adj=adv_adj)
 
@@ -430,7 +441,7 @@ class PaymentEntry(AccountsController):
                 "account_currency": self.party_account_currency
             })
 
-            dr_or_cr = "credit" if self.party_type == "Customer" else "debit"
+            dr_or_cr = "credit" if (self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income") else "debit"
 
             for d in self.get("references"):
                 gle = party_gl_dict.copy()
@@ -449,6 +460,8 @@ class PaymentEntry(AccountsController):
 
                 gl_entries.append(gle)
 
+
+            print(self.unallocated_amount)
             if self.unallocated_amount:
                 base_unallocated_amount = base_unallocated_amount = self.unallocated_amount * \
                                                                     (
@@ -678,7 +691,9 @@ class PaymentEntry(AccountsController):
 
     def generate_gl_entries_for_outgoing_bank_checks(self, gl_entries):
         def_checks = "Cheques Diferidos - " + self.company_abbr
-        acr = "Acreedores - " + self.company_abbr
+
+        company_defaults = get_company_defaults(self.company)
+        acr = company_defaults.default_payable_account
 
         check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheques propios"]})
         if not check_lines:
@@ -735,7 +750,6 @@ class PaymentEntry(AccountsController):
         ["!=", 0]})
         for line in third_party_check_lines:
             self.generate_gl_bank_line(line, gl_entries)
-            self.generate_gl_party_line(line, gl_entries)
 
 
     def validate_documents(self):
