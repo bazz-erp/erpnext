@@ -57,7 +57,7 @@ def get_supplier_code():
     return frappe.db.sql("""SELECT (MAX(CAST(code AS INTEGER)) + 1) as code  FROM `tabSupplier`""", as_dict=1)
 
 def validate_code(supplier):
-    supplier.code = supplier.code.lstrip("0")
+    supplier.code = supplier.code.lstrip("0") if supplier.code else get_supplier_code()
     result = frappe.db.sql("""SELECT code, name FROM `tabSupplier` WHERE code=%s""", supplier.code, as_dict=1)
     match = [s for s in result if s.name == supplier.name]
     if len(result) != 0 and len(match) == 0:
