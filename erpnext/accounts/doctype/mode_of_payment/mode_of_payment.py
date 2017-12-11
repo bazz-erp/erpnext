@@ -27,3 +27,9 @@ class ModeofPayment(Document):
 			if frappe.db.get_value("Account", entry.default_account, "company") != entry.company:
 				frappe.throw(_("Account {0} does not match with Company {1} in Mode of Account: {2}")
 					.format(entry.default_account, entry.company, self.name))
+
+
+
+@frappe.whitelist()
+def get_mode_of_payment_type(name):
+	return frappe.get_value("Mode of Payment", name, "type")

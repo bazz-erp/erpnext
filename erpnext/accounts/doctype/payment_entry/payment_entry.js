@@ -201,9 +201,6 @@ frappe.ui.form.on('Payment Entry', {
             }
         }
 
-        frm.toggle_display("bank_checks_average_days_section", is_expenditure(frm) && (frm.doc.selected_third_party_bank_checks.length >0
-            || frm.doc.outgoing_bank_checks.length > 0));
-
         frm.set_df_property("documents_section", "hidden", true);
 
 
@@ -1193,15 +1190,9 @@ frappe.ui.form.on('Payment Entry Line', {
                 break;
         }
 
-        if (line.mode_of_payment == "Cheques propios" || line.mode_of_payment == "Cheques de Terceros") {
-            // show average day if payment type is Cheques propios or Cheques de Terceros
-            frm.toggle_display("bank_checks_average_days_section", is_expenditure(frm)
-                && (line.paid_amount != 0 || !is_empty_selected_third_party_bank_checks(frm) || !is_empty_outgoing_bank_checks(frm)));
-
-            update_bank_checks_average_days(frm);
+        if (is_expenditure(frm)) {
+            update_payment_average_days(frm);
         }
-
-
 
     },
 
@@ -1225,7 +1216,7 @@ frappe.ui.form.on('Payment Entry Bank Check', {
     },
     outgoing_bank_checks_remove: function (frm) {
         frm.events.refresh_amounts(frm, "checks", frm.doc.outgoing_bank_checks);
-        update_bank_checks_average_days(frm);
+        update_payment_average_days(frm);
     },
     third_party_bank_checks_add: function (frm, cdt, cdn) {
         check = locals[cdt][cdn];
@@ -1240,7 +1231,7 @@ frappe.ui.form.on('Payment Entry Bank Check', {
 
 		if(is_expenditure(frm)) {
             frm.events.refresh_amounts(frm, "checks", frm.doc.outgoing_bank_checks);
-		    update_bank_checks_average_days(frm);
+		    update_payment_average_days(frm);
 		}
 		else {
 		    frm.events.refresh_amounts(frm, "third_party_bank_checks", frm.doc.third_party_bank_checks);
@@ -1255,7 +1246,7 @@ frappe.ui.form.on('Payment Entry Bank Check', {
                 check.payment_date = frm.doc.posting_date;
                 frm.refresh_fields();
             }
-            update_bank_checks_average_days(frm);
+            update_payment_average_days(frm);
         }
     }
 })
@@ -1266,6 +1257,7 @@ frappe.ui.form.on('Payment Entry Bank Check', {
 frappe.ui.form.on('Payment Entry Document', {
     documents_remove: function (frm) {
         frm.events.refresh_amounts(frm, "documents", frm.doc.documents);
+        update_payment_average_days(frm);
     },
     documents_add: function (frm, cdt, cdn) {
         doc = locals[cdt][cdn];
@@ -1284,7 +1276,13 @@ frappe.ui.form.on('Payment Entry Document', {
 
 		if(is_expenditure(frm)) {
 		    frm.events.refresh_amounts(frm, "documents", frm.doc.documents);
+		    update_payment_average_days(frm);
 		}
+    },
+    date: function (frm) {
+        if (is_expenditure(frm)) {
+            update_payment_average_days(frm);
+        }
     }
 })
 
@@ -1489,7 +1487,7 @@ var update_selected_third_party_bank_checks = function (frm, changed_row) {
         frm.refresh_field("selected_third_party_bank_checks");
     }
     frm.events.refresh_amounts(frm, "third_party_bank_checks", frm.doc.selected_third_party_bank_checks);
-	update_bank_checks_average_days(frm);
+	update_payment_average_days(frm);
 }
 
 var add_selected_bank_check = function (frm, changed_bank_check) {
@@ -1577,8 +1575,9 @@ var update_selected_third_party_documents = function (frm, changed_row) {
             });
         }
 	}
-	frm.events.refresh_amounts(frm, "third_party_documents", frm.doc.selected_third_party_documents);
 
+	frm.events.refresh_amounts(frm, "third_party_documents", frm.doc.selected_third_party_documents);
+    update_payment_average_days(frm);
 }
 
 var add_selected_document = function (frm, changed_document) {
@@ -1690,42 +1689,102 @@ frappe.ui.form.on("Payment Entry", "refresh", function(frm) {
 });
 
 
-var update_bank_checks_average_days = function (frm) {
+var update_payment_average_days = function (frm) {
     total_amount = 0;
     days_per_amount = 0;
-    $.each(frm.doc.selected_third_party_bank_checks, function (index, check) {
-        if (check.payment_date && check.amount && frm.doc.posting_date) {
-            total_amount += check.amount;
-            day_diff = frappe.datetime.get_day_diff(check.payment_date, frm.doc.posting_date);
-            days_per_amount += (check.amount * day_diff);
+
+    $.each(frm.doc.lines, function (index, line) {
+        mode_of_payment_type = get_mode_of_payment_type(line.mode_of_payment);
+        if (mode_of_payment_type == "Cash") {
+            total_amount += line.paid_amount;
+            day_diff = 1;
+            days_per_amount += line.paid_amount * day_diff;
         }
+
+        if (mode_of_payment_type == "Bank Check") {
+            days_per_amount += get_checks_days_per_amount(frm, frm.doc.outgoing_bank_checks);
+            total_amount += get_checks_total_amount(frm, frm.doc.outgoing_bank_checks);
+        }
+
+        if (mode_of_payment_type == "Third Party Bank Check") {
+            days_per_amount += get_checks_days_per_amount(frm, frm.doc.selected_third_party_checks);
+            total_amount += get_checks_total_amount(frm, frm.doc.selected_third_party_checks);
+        }
+
+        if (mode_of_payment_type == "Document") {
+            days_per_amount += get_documents_days_per_amount(frm, frm.doc.documents);
+            total_amount += get_documents_total_amount(frm, frm.doc.documents);
+        }
+
+        if (mode_of_payment_type == "Third Party Document") {
+            days_per_amount += get_documents_days_per_amount(frm, frm.doc.selected_third_party_documents);
+            total_amount += get_documents_total_amount(frm, frm.doc.selected_third_party_documents);
+        }
+
     });
 
-    $.each(frm.doc.outgoing_bank_checks, function (index, check) {
-        if (check.payment_date && check.amount && frm.doc.posting_date) {
-            total_amount += check.amount;
-            day_diff = frappe.datetime.get_day_diff(check.payment_date, frm.doc.posting_date);
-            days_per_amount += (check.amount * day_diff);
-        }
-    });
 
     if (total_amount != 0) {
-        frm.set_value("bank_checks_average_days", days_per_amount / total_amount);
+        frm.set_value("average_days", Math.ceil(days_per_amount / total_amount));
+
     }
     else {
-        frm.set_value("bank_checks_average_days", 0);
+        frm.set_value("average_days", 0);
     }
+    frm.refresh_field("average_days");
 
 }
 
-var is_empty_selected_third_party_bank_checks = function (frm) {
-    return (!frm.doc.selected_third_party_checks || frm.doc.selected_third_party_checks.length == 0);
+var get_day_diff = function (aDate, anotherDate) {
+    day_diff = frappe.datetime.get_day_diff(aDate, anotherDate);
+    if (day_diff <= 0) {
+        day_diff = 1;
+    }
+    return day_diff;
 }
 
-var is_empty_outgoing_bank_checks = function (frm) {
-    return (!frm.doc.outgoing_bank_checks || frm.doc.outgoing_bank_checks.length == 0);
+var get_checks_days_per_amount = function (frm, checks_collection) {
+    var days_per_amount = 0;
+    $.each(checks_collection, function (index, check) {
+        if (check.payment_date && check.amount && frm.doc.posting_date) {
+            day_diff = get_day_diff(check.payment_date, frm.doc.posting_date);
+            days_per_amount += (check.amount * day_diff);
+        }
+    });
+    return days_per_amount;
 }
 
+var get_checks_total_amount = function (frm, checks_collection) {
+     var total_amount = 0;
+     $.each(checks_collection, function (index, check) {
+         if (check.amount) {
+             total_amount += check.amount;
+         }
+     });
+    return total_amount;
+}
+
+
+var get_documents_days_per_amount = function (frm, documents_collection) {
+    var days_per_amount = 0;
+    $.each(documents_collection, function (index, doc) {
+        if (doc.date && doc.amount && frm.doc.posting_date) {
+            day_diff = get_day_diff(doc.date, frm.doc.posting_date);
+            days_per_amount += (doc.amount * day_diff);
+        }
+    });
+    return days_per_amount;
+}
+
+var get_documents_total_amount = function (frm, documents_collection) {
+    var total_amount = 0;
+    $.each(documents_collection, function (index, doc) {
+        if (doc.amount) {
+            total_amount += doc.amount;
+        }
+    });
+    return total_amount;
+}
 
 var set_up_internal_transfer = function (frm) {
     frappe.call({
@@ -1761,4 +1820,19 @@ var show_third_party_documents = function (frm) {
     frm.toggle_display("third_party_documents_section", true);
     frm.toggle_display("third_party_documents", true);
     frm.set_df_property("third_party_documents", "read_only", true);
+}
+
+var get_mode_of_payment_type = function (name) {
+    var m_type;
+    frappe.call({
+       method: "erpnext.accounts.doctype.mode_of_payment.mode_of_payment.get_mode_of_payment_type",
+       args: {
+           "name": name
+       },
+       async: false,
+       callback: function (r, rt) {
+           m_type = r.message;
+       }
+    });
+    return m_type;
 }
