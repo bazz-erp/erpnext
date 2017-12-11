@@ -8,6 +8,8 @@ from frappe import _
 from erpnext.accounts.utils import get_account_currency
 from frappe.permissions import check_admin_or_system_manager
 
+from erpnext.accounts.doctype.account.account import get_account_type
+
 
 def execute(filters=None):
     account_details = {}
@@ -162,9 +164,11 @@ def get_data_with_opening_closing(filters, account_details, gl_entries):
 
     for acc in sorted(gle_map.iterkeys()):
         acc_dict = gle_map[acc]
-        # in account 'Cheques Diferidos' balance is not showed
+
+        account_type = get_account_type(acc)
+
         data.append({"concept": acc})
-        if acc != "Cheques Diferidos - B":
+        if account_type != "Deferred checks":
             data.append(get_balance_row(_("Balance"), acc_dict.opening_credit, acc_dict.opening_debit,
                                     acc_dict.opening_credit_in_account_currency,
                                     acc_dict.opening_debit_in_account_currency, False))
@@ -182,8 +186,8 @@ def get_data_with_opening_closing(filters, account_details, gl_entries):
             # Opening for individual ledger, if grouped by account
             data += acc_dict.entries
 
-        # balance of account Cheques Diferidos -B not includes opening balance:
-        if acc == "Cheques Diferidos - B":
+        # balance of accounts of type Deferred checks not includes opening balance:
+        if account_type == "Deferred checks":
             data += [get_balance_row(_("Saldo") + " " + acc, acc_dict.total_credit, acc_dict.total_debit,
                                      acc_dict.total_credit_in_account_currency,
                                      acc_dict.total_debit_in_account_currency), {}]
@@ -228,6 +232,7 @@ def get_accountwise_gle(filters, gl_entries, gle_map):
     from_date, to_date = getdate(filters.from_date), getdate(filters.to_date)
     for gle in gl_entries:
 
+        account_type = get_account_type(gle.account)
         if gle.posting_date < from_date or cstr(gle.is_opening) == "Yes":
 
             gle_map[gle.account].opening_debit += flt(gle.debit, 3)
@@ -252,8 +257,9 @@ def get_accountwise_gle(filters, gl_entries, gle_map):
             balance_in_account_currency = gle_map[gle.account].total_debit_in_account_currency \
                                           - gle_map[gle.account].total_credit_in_account_currency
 
-            # opening balance is not considered when calculating final balance of 'Cheques Diferidos'
-            if gle.account != "Cheques Diferidos - B":
+            # opening balance is not considered when calculating final balance of accounts of type Deferred checks
+
+            if account_type != "Deferred checks":
                 balance = balance + gle_map[gle.account].opening_debit - gle_map[gle.account].opening_credit
                 balance_in_account_currency = balance_in_account_currency + \
                                               gle_map[gle.account].opening_debit_in_account_currency - gle_map[gle.account].opening_credit_in_account_currency
@@ -269,8 +275,8 @@ def get_accountwise_gle(filters, gl_entries, gle_map):
                 total_debit_in_account_currency += flt(gle.debit_in_account_currency, 3)
                 total_credit_in_account_currency += flt(gle.credit_in_account_currency, 3)
 
-        # gl_entries of 'Cheques Diferidos - B' are not considered when calculating the total balance
-        if gle.posting_date <= to_date and gle.account != "Cheques Diferidos - B":
+        # gl_entries of account whose type is Deferred checks are not considered when calculating the total balance
+        if gle.posting_date <= to_date and account_type != "Deferred checks":
             total_debit += flt(gle.debit, 3)
             total_credit += flt(gle.credit, 3)
 
