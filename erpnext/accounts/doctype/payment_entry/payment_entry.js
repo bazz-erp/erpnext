@@ -1695,10 +1695,9 @@ var update_payment_average_days = function (frm) {
 
     $.each(frm.doc.lines, function (index, line) {
         mode_of_payment_type = get_mode_of_payment_type(line.mode_of_payment);
+        // days per amount in Cash type is 0
         if (mode_of_payment_type == "Cash") {
             total_amount += line.paid_amount;
-            day_diff = 1;
-            days_per_amount += line.paid_amount * day_diff;
         }
 
         if (mode_of_payment_type == "Bank Check") {
