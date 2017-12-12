@@ -712,7 +712,7 @@ class PaymentEntry(AccountsController):
             })
         )
 
-        gl_entries.append(
+        """gl_entries.append(
             self.get_gl_dict({
                 "account": acr,
                 "against": def_checks,
@@ -720,7 +720,7 @@ class PaymentEntry(AccountsController):
                 "debit_in_account_currency": amount,
                 "concept": self.concept
             })
-        )
+        ) """
 
         for check in self.get("outgoing_bank_checks"):
             gl_entries.append(
@@ -813,6 +813,7 @@ class PaymentEntry(AccountsController):
             bank_check.account = check.account
             self.copy_check_info(bank_check, check)
             bank_check.save()
+            bank_check.submit()
 
     def save_new_third_party_bank_checks(self):
         if self.payment_type in ["Miscellaneous Expenditure", "Pay", "Internal Transfer"]:

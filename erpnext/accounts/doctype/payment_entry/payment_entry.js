@@ -187,8 +187,15 @@ frappe.ui.form.on('Payment Entry', {
 
                 show_selected_third_party_documents(frm);
             }
-            // hide check amounts section
-            frm.set_df_property("bank_checks_section", "hidden", true);
+
+
+            if (frm.doc.outgoing_bank_checks && frm.doc.outgoing_bank_checks != 0) {
+                frm.toggle_display("bank_checks_section", true);
+            }
+
+            if (frm.doc.documents && frm.doc.documents != 0) {
+                frm.toggle_display("documents_section", true);
+            }
         }
 
         else {
@@ -200,9 +207,6 @@ frappe.ui.form.on('Payment Entry', {
                 show_new_third_party_documents(frm);
             }
         }
-
-        frm.set_df_property("documents_section", "hidden", true);
-
 
 
         erpnext.hide_company();
@@ -1645,6 +1649,10 @@ var show_new_third_party_documents =  function (frm) {
     frm.set_df_property("third_party_documents", "hidden", false);
     //frm.set_df_property("third_party_documents_amounts_section", "hidden", true);
     frm.set_df_property("selected_third_party_documents", "hidden", true);
+
+}
+
+var show_outgoing_bank_checks = function (frm) {
 
 }
 
