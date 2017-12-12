@@ -25,7 +25,8 @@ class Customer(TransactionBase):
         info = get_dashboard_info(self.doctype, self.name)
         self.set_onload('dashboard_info', info)
 
-    def autoname(self):
+    # autoname was redefined in Bazz
+    """def autoname(self):
         cust_master_name = frappe.defaults.get_global_default('cust_master_name')
         if cust_master_name == 'Customer Name':
             self.name = self.get_customer_name()
@@ -33,7 +34,7 @@ class Customer(TransactionBase):
             if not self.naming_series:
                 frappe.throw(_("Series is mandatory"), frappe.MandatoryError)
 
-            self.name = make_autoname(self.naming_series+'.#####')
+            self.name = make_autoname(self.naming_series+'.#####')"""
 
     def get_customer_name(self):
         if frappe.db.get_value("Customer", self.customer_name):
@@ -143,9 +144,10 @@ class Customer(TransactionBase):
         if self.lead_name:
             frappe.db.sql("update `tabLead` set status='Interested' where name=%s", self.lead_name)
 
-    def after_rename(self, olddn, newdn, merge=False):
+    #updates customer_name field whenever doctype is renamed
+    """def after_rename(self, olddn, newdn, merge=False):
         if frappe.defaults.get_global_default('cust_master_name') == 'Customer Name':
-            frappe.db.set(self, "customer_name", newdn)
+            frappe.db.set(self, "customer_name", newdn)"""
 
 
 def get_customer_list(doctype, txt, searchfield, start, page_len, filters):
