@@ -3295,7 +3295,7 @@ DocType: Purchase Taxes and Charges Template,Purchase Master Manager,Director de
 DocType: Journal Entry Account,Purchase Order,Orden de compra (OC)
 DocType: Purchase Invoice Item,Purchase Order Item,Producto de la orden de compra
 DocType: Purchase Order Item Supplied,Purchase Order Item Supplied,Producto suministrado desde orden de compra
-,Purchase Order Items To Be Billed,Ordenes de compra por pagar
+,Purchase Order Items To Be Billed,Ordenes de compra por facturar
 ,Purchase Order Items To Be Received,Productos por recibir desde orden de compra
 DocType: Notification Control,Purchase Order Message,Mensaje en la orden de compra
 DocType: Buying Settings,Purchase Order Required,Orden de compra requerida
@@ -4563,7 +4563,7 @@ DocType: Packing Slip,To Package No.,Al paquete No.
 ,To Produce,Producir
 DocType: Item Attribute,To Range,A rango
 DocType: Purchase Order,To Receive,Recibir
-DocType: Purchase Order,To Receive and Bill,Para recibir y pagar
+DocType: Purchase Order,To Receive and Bill,Para recibir y facturar
 DocType: Course Scheduling Tool,To TIme,This covers all scorecards tied to this Setup
 DocType: Timesheet Detail,To Time,Hasta hora
 DocType: Shipping Rule Condition,To Value,Para el valor

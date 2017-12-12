@@ -625,8 +625,8 @@ var calculate_total_billing_amount =  function(frm) {
 	refresh_field('total_billing_amount')
 }
 
-$(document).on('save', function (event, doc) {
+/*$(document).on('save', function (event, doc) {
 	if(doc.doctype === "Sales Invoice" && doc.status !== "Cancelled" && cint(frappe.boot.notification_settings.sales_invoice)){
 		cur_frm.email_doc(frappe.boot.notification_settings.sales_invoice_message);
 	}
-});
+});*/

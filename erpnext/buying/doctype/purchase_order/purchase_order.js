@@ -71,7 +71,7 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 
 		if(doc.docstatus == 1 && doc.status != "Closed") {
 			if(flt(doc.per_received, 2) < 100 && allow_receipt) {
-				cur_frm.add_custom_button(__('Receipt'), this.make_purchase_receipt, __("Make"));
+				cur_frm.add_custom_button(__('Receipt'), this.make_purchase_receipt);
 
 				if(doc.is_subcontracted==="Yes") {
 					cur_frm.add_custom_button(__('Material to Supplier'),
@@ -81,12 +81,11 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 
 			if(flt(doc.per_billed, 2) < 100)
 				cur_frm.add_custom_button(__('Invoice'),
-					this.make_purchase_invoice, __("Make"));
+					this.make_purchase_invoice);
 
 			if(flt(doc.per_billed)==0 && doc.status != "Delivered") {
-				cur_frm.add_custom_button(__('Payment'), cur_frm.cscript.make_payment_entry, __("Make"));
+				cur_frm.add_custom_button(__('Payment'), cur_frm.cscript.make_payment_entry);
 			}
-			cur_frm.page.set_inner_btn_group_as_primary(__("Make"));
 
 		}
 	},
@@ -121,7 +120,7 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 		frappe.prompt({fieldname:"item", options: items, fieldtype:"Select",
 			label: __("Select Item for Transfer"), reqd: 1}, function(data) {
 			me._make_stock_entry(data.item);
-		}, __("Select Item"), __("Make"));
+		}, __("Select Item"));
 	},
 
 	_make_stock_entry: function(item) {
