@@ -577,7 +577,7 @@
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0,
-   "default": "Standard Selling",
+   "default": "",
    "fieldname": "default_price_list", 
    "fieldtype": "Link", 
    "hidden": 0, 
@@ -1387,7 +1387,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2017-12-01 18:59:07.445783",
+ "modified": "2017-12-01 21:05:30.445783",
  "modified_by": "Administrator", 
  "module": "Selling", 
  "name": "Customer", 
@@ -1580,8 +1580,7 @@
  "read_only_onload": 0, 
  "search_fields": "customer_name,customer_group,territory", 
  "show_name_in_global_search": 1, 
- "sort_order": "ASC", 
- "title_field": "code",
+ "sort_order": "ASC",
  "track_changes": 1, 
  "track_seen": 0
 }
