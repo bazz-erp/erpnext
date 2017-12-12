@@ -599,7 +599,7 @@
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0,
-   "default": "Standard Buying",
+   "default": "",
    "fieldname": "default_price_list", 
    "fieldtype": "Link", 
    "hidden": 0, 
@@ -1033,7 +1033,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2017-12-06 15:39:46.935608",
+ "modified": "2017-12-06 15:49:46.935608",
  "modified_by": "Administrator", 
  "module": "Buying", 
  "name": "Supplier", 
@@ -1181,7 +1181,7 @@
    "write": 0
   }
  ], 
- "quick_entry": 1, 
+ "quick_entry": 0,
  "read_only": 0, 
  "read_only_onload": 0, 
  "search_fields": "supplier_name, supplier_type", 
