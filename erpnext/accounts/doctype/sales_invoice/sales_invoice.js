@@ -14,6 +14,13 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 		this.setup_posting_date_time_check();
 		this._super(doc);
 	},
+	validate: function (doc) {
+		var filtered = doc.items.filter(function (item) {
+			return item.item_name;
+        });
+		doc.items = filtered;
+		cur_frm.refresh_field("items");
+    },
 	onload: function() {
 		var me = this;
 		this._super();
