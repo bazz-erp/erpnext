@@ -291,7 +291,7 @@
   {
    "allow_bulk_edit": 0, 
    "allow_on_submit": 0, 
-   "bold": 0, 
+   "bold": 1,
    "collapsible": 0, 
    "columns": 0, 
    "fieldname": "supplier_type", 
@@ -1033,7 +1033,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2017-12-06 15:49:46.935608",
+ "modified": "2017-12-06 15:55:46.935608",
  "modified_by": "Administrator", 
  "module": "Buying", 
  "name": "Supplier", 
