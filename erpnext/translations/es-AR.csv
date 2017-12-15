@@ -4399,7 +4399,7 @@ DocType: Sales Taxes and Charges,Tax Amount After Discount Amount (Company Curre
 apps/erpnext/erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts.py +38,Tax Assets,Impuestos pagados
 DocType: Purchase Invoice,Tax Breakup,Disolución de Impuestos
 apps/erpnext/erpnext/controllers/buying_controller.py +84,"Tax Category has been changed to ""Total"" because all the Items are non-stock items","Categoría de Impuesto fue cambiada a ""Total"" debido a que todos los Productos son items de no stock"
-DocType: Sales Invoice,Tax Id,Supplier Variables
+DocType: Sales Invoice,Tax Id, CUIT
 DocType: Item Tax,Tax Rate,Procentaje del impuesto
 DocType: Tax Rule,Tax Rule,Regla fiscal
 apps/erpnext/erpnext/accounts/doctype/tax_rule/tax_rule.py +87,Tax Rule Conflicts with {0},Conflicto de impuestos con {0}

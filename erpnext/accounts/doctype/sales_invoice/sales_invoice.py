@@ -958,5 +958,5 @@ def set_account_for_mode_of_payment(self):
 
 @frappe.whitelist()
 def get_customer(name):
-	customer = frappe.db.sql("""select * from `tabCustomer` where customer_name=%s""", name, as_dict=1)[0]
+	customer = frappe.db.sql("""select * from `tabCustomer` where name=%s""", name, as_dict=1)[0]
 	return customer

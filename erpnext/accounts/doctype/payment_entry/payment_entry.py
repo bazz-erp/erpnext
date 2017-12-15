@@ -217,6 +217,10 @@ class PaymentEntry(AccountsController):
         elif self.party_type == "Employee":
             valid_reference_doctypes = ("Expense Claim", "Journal Entry")
 
+
+        elif self.payment_type == "Miscellaneous Expenditure":
+            valid_reference_doctypes = ("Eventual Purchase Invoice")
+
         for d in self.get("references"):
             if not d.allocated_amount:
                 continue
@@ -230,11 +234,12 @@ class PaymentEntry(AccountsController):
                 else:
                     ref_doc = frappe.get_doc(d.reference_doctype, d.reference_name)
 
-                    if d.reference_doctype != "Journal Entry":
+                    if d.reference_doctype != "Journal Entry" and d.reference_doctype != "Eventual Purchase Invoice":
                         if self.party != ref_doc.get(scrub(self.party_type)):
                             frappe.throw(_("{0} {1} does not associated with {2} {3}")
                                          .format(d.reference_doctype, d.reference_name, self.party_type, self.party))
-                    else:
+
+                    elif d.reference_doctype == "Journal Entry":
                         self.validate_journal_entry()
 
                     if d.reference_doctype in ("Sales Invoice", "Purchase Invoice", "Expense Claim"):
@@ -308,8 +313,8 @@ class PaymentEntry(AccountsController):
 
     def set_unallocated_amount(self):
         self.unallocated_amount = 0
-        if self.party:
-            party_amount = self.paid_amount if self.payment_type == "Receive" else self.received_amount
+        if self.party or self.get("references"):
+            party_amount = self.paid_amount
 
             total_deductions = sum([flt(d.amount) for d in self.get("deductions")])
 
@@ -422,8 +427,6 @@ class PaymentEntry(AccountsController):
 
         self.add_deductions_gl_entries(gl_entries)
 
-        print(gl_entries)
-
         make_gl_entries(gl_entries, cancel=cancel, adv_adj=adv_adj)
 
     def add_party_gl_entries(self, gl_entries):
@@ -444,6 +447,7 @@ class PaymentEntry(AccountsController):
             dr_or_cr = "credit" if (self.payment_type == "Receive" or self.payment_type == "Miscellaneous Income") else "debit"
 
             for d in self.get("references"):
+
                 gle = party_gl_dict.copy()
                 gle.update({
                     "against_voucher_type": d.reference_doctype,
@@ -453,6 +457,8 @@ class PaymentEntry(AccountsController):
                 allocated_amount_in_company_currency = flt(flt(d.allocated_amount) * flt(d.exchange_rate),
                                                            self.precision("paid_amount"))
 
+                frappe.msgprint("allocated amount " + str(allocated_amount_in_company_currency))
+
                 gle.update({
                     dr_or_cr + "_in_account_currency": d.allocated_amount,
                     dr_or_cr: allocated_amount_in_company_currency
@@ -461,7 +467,6 @@ class PaymentEntry(AccountsController):
                 gl_entries.append(gle)
 
 
-            print(self.unallocated_amount)
             if self.unallocated_amount:
                 base_unallocated_amount = base_unallocated_amount = self.unallocated_amount * \
                                                                     (
@@ -1039,7 +1044,7 @@ def get_reference_details(reference_doctype, reference_name, party_account_curre
     total_amount = outstanding_amount = exchange_rate = None
     ref_doc = frappe.get_doc(reference_doctype, reference_name)
 
-    if reference_doctype != "Journal Entry":
+    if reference_doctype != "Journal Entry" and reference_doctype != "Eventual Purchase Invoice":
         if party_account_currency == ref_doc.company_currency:
             if ref_doc.doctype == "Expense Claim":
                 total_amount = ref_doc.total_sanctioned_amount
@@ -1057,10 +1062,18 @@ def get_reference_details(reference_doctype, reference_name, party_account_curre
         outstanding_amount = ref_doc.get("outstanding_amount") \
             if reference_doctype in ("Sales Invoice", "Purchase Invoice", "Expense Claim") \
             else flt(total_amount) - flt(ref_doc.advance_paid)
-    else:
+
+    elif reference_doctype == "Journal Entry":
         # Get the exchange rate based on the posting date of the ref doc
         exchange_rate = get_exchange_rate(party_account_currency,
                                           ref_doc.company_currency, ref_doc.posting_date)
+
+    # reference_doctype is Eventual Purchase Invoice
+    else:
+        exchange_rate = 1
+        total_amount = ref_doc.total_amount
+        outstanding_amount = ref_doc.outstanding_amount
+
 
     return frappe._dict({
         "due_date": ref_doc.get("due_date"),
@@ -1163,6 +1176,29 @@ def get_payment_entry(dt, dn, party_amount=None, bank_account=None, bank_amount=
     if party_account and bank:
         pe.set_exchange_rate()
         pe.set_amounts()
+    return pe
+
+
+@frappe.whitelist()
+def get_payment_entry_for_eventual_purchase_invoice(docname):
+    doc = frappe.get_doc("Eventual Purchase Invoice", docname)
+
+    pe = frappe.new_doc("Payment Entry")
+    pe.payment_type = "Miscellaneous Expenditure"
+    pe.company = doc.company
+    pe.posting_date = nowdate()
+    pe.paid_amount = doc.outstanding_amount
+    pe.base_paid_amount = doc.outstanding_amount
+    pe.concept = _("Pay to Supplier {0}".format(doc.supplier_name))
+
+    pe.append("references", {
+        "reference_doctype": "Eventual Purchase Invoice",
+        "reference_name": docname,
+        "total_amount": doc.total_amount,
+        "outstanding_amount": doc.outstanding_amount,
+        "allocated_amount": doc.outstanding_amount
+
+    })
     return pe
 
 
