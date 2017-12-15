@@ -26,9 +26,18 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 			}
 		}
 
-		// formatter for material request item
+		if( !this.frm.doc.items || this.frm.doc.items.length == 0) {
+            item = this.frm.add_child("items");
+            item.qty = 0;
+            item.rate = 0;
+            item.amount = 0;
+            this.frm.refresh_field("items");
+        }
+
 		this.frm.set_indicator_formatter('item_code',
-			function(doc) { return (doc.qty<=doc.received_qty) ? "green" : "orange" })
+			function (doc) { return (doc.qty <= doc.received_qty) ? "green" : "orange" },
+			function (doc) { return doc.item_code + ' : ' + doc.description; });
+		this.frm.refresh();
 
 	},
 

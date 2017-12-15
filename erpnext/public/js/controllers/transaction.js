@@ -157,6 +157,17 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		}
 
 		this.setup_quality_inspection();
+
+        /**
+		 * TODO: Improve this method
+		this.frm.set_indicator_formatter('item_code',
+			function (doc) {
+				var target_qty = doc.received_qty ? doc.received_qty : doc.delivered_qty;
+				return (doc.qty <= target_qty) ? "green" : "orange"
+			},
+			function (doc) { return doc.item_code + ' : ' + doc.description; });
+		this.frm.refresh();
+         */
 	},
 
 	setup_quality_inspection: function() {

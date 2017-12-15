@@ -18,9 +18,6 @@ frappe.ui.form.on("Purchase Order", {
 			return erpnext.queries.warehouse(frm.doc);
 		});
 
-		frm.set_indicator_formatter('item_code',
-			function(doc) { return (doc.qty<=doc.received_qty) ? "green" : "orange" })
-
         if( !frm.doc.items || frm.doc.items.length == 0) {
             item = frm.add_child("items");
             item.qty = 0;
@@ -28,6 +25,11 @@ frappe.ui.form.on("Purchase Order", {
             item.amount = 0;
             frm.refresh_field("items");
         }
+
+		frm.set_indicator_formatter('item_code',
+			function (doc) { return (doc.qty <= doc.received_qty) ? "green" : "orange" },
+			function (doc) { return doc.item_code + ' : ' + doc.description; });
+		frm.refresh();
 	}
 });
 
@@ -50,6 +52,7 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 				break;
 			}
 		}
+
 
 		cur_frm.set_df_property("drop_ship", "hidden", !is_drop_ship);
 

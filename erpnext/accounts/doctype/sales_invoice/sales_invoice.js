@@ -34,12 +34,26 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 			return erpnext.queries.warehouse(me.frm.doc);
 		});
 
+		if( !this.frm.doc.items || this.frm.doc.items.length == 0) {
+            item = this.frm.add_child("items");
+            item.qty = 0;
+            item.rate = 0;
+            item.amount = 0;
+            this.frm.refresh_field("items");
+        }
+
 		if(this.frm.doc.__islocal && this.frm.doc.is_pos) {
 			//Load pos profile data on the invoice if the default value of Is POS is 1
 
 			me.frm.script_manager.trigger("is_pos");
 			me.frm.refresh_fields();
 		}
+
+		this.frm.set_indicator_formatter('item_code',
+			function (doc) { return (doc.qty <= doc.delivered_qty) ? "green" : "orange" },
+			function (doc) { return doc.item_code + ' : ' + doc.description; });
+		this.frm.refresh();
+
 	},
 
 	refresh: function(doc, dt, dn) {
