@@ -63,6 +63,7 @@ frappe.ui.form.on('Payment Entry', {
         /* Set concept if payment come from other form */
         frm.events.set_concept(frm);
 
+
     },
 
     setup: function (frm) {
@@ -989,7 +990,7 @@ frappe.ui.form.on('Payment Entry', {
                 frm.set_value("concept", __("Pay to") + " " + __(frm.doc.party_type) + " " + frm.doc.party);
             }
         }
-        else {
+        else if (!frm.doc.concept) {
             frm.set_value("concept", "");
         }
     },
