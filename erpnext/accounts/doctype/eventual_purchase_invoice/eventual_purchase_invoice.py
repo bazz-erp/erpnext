@@ -17,8 +17,7 @@ class EventualPurchaseInvoice(Document):
     def validate(self):
         self.set_status()
 
-
-    def set_status(self, update = True):
+    def set_status(self, update = False):
         if self.is_new():
             self.status = 'Draft'
 
@@ -34,6 +33,7 @@ class EventualPurchaseInvoice(Document):
 
     def on_submit(self):
         self.make_gl_entries()
+        self.set_status(update= True)
 
     def make_gl_entries(self):
         gl_entries = []
@@ -53,6 +53,8 @@ class EventualPurchaseInvoice(Document):
                 "credit_in_account_currency": self.total_amount,
                 "voucher_no": self.name,
                 "voucher_type": self.doctype,
+                "against_voucher": self.name,
+                "against_voucher_type": self.doctype,
                 "against": self.supplier_name
             })
         )

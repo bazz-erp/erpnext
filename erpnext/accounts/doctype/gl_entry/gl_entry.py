@@ -175,7 +175,7 @@ def update_outstanding_amt(account, party_type, party, against_voucher_type, aga
         and account = %s {0}""".format(party_condition),
         (against_voucher_type, against_voucher, account))[0][0] or 0.0)
 
-    if against_voucher_type == 'Purchase Invoice':
+    if against_voucher_type == 'Purchase Invoice' or against_voucher_type == 'Eventual Purchase Invoice':
         bal = -bal
     elif against_voucher_type == "Journal Entry":
         against_voucher_amount = flt(frappe.db.sql("""
@@ -196,9 +196,12 @@ def update_outstanding_amt(account, party_type, party, against_voucher_type, aga
         if bal < 0 and not on_cancel:
             frappe.throw(_("Outstanding for {0} cannot be less than zero ({1})").format(against_voucher, fmt_money(bal)))
 
+
+    print ("BAL: " + str(bal))
     # Update outstanding amt on against voucher
     if against_voucher_type in ["Sales Invoice", "Purchase Invoice", "Eventual Purchase Invoice"]:
         ref_doc = frappe.get_doc(against_voucher_type, against_voucher)
+
         ref_doc.db_set('outstanding_amount', bal)
         ref_doc.set_status(update=True)
 

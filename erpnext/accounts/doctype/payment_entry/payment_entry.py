@@ -457,8 +457,6 @@ class PaymentEntry(AccountsController):
                 allocated_amount_in_company_currency = flt(flt(d.allocated_amount) * flt(d.exchange_rate),
                                                            self.precision("paid_amount"))
 
-                frappe.msgprint("allocated amount " + str(allocated_amount_in_company_currency))
-
                 gle.update({
                     dr_or_cr + "_in_account_currency": d.allocated_amount,
                     dr_or_cr: allocated_amount_in_company_currency

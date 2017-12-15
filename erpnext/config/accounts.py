@@ -18,6 +18,11 @@ def get_data():
 				},
 				{
 					"type": "doctype",
+					"name": "Eventual Purchase Invoice",
+					"description": _("Eventual Purchase Invoice")
+				},
+				{
+					"type": "doctype",
 					"name": "Payment Request",
 					"description": _("Payment Request")
 				},

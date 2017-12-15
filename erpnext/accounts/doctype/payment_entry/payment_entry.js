@@ -289,7 +289,7 @@ frappe.ui.form.on('Payment Entry', {
         frm.set_df_property("party_balance", "options", currency_field);
 
         frm.set_currency_labels(["total_amount", "outstanding_amount", "allocated_amount"],
-            party_account_currency, "references");
+            company_currency, "references");
 
         frm.set_currency_labels(["amount"], company_currency, "deductions");
 

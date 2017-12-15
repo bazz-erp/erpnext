@@ -24,12 +24,17 @@ class Supplier(TransactionBase):
         info = get_dashboard_info(self.doctype, self.name)
         self.set_onload('dashboard_info', info)
 
-    def autoname(self):
+
+    # autoname was redefined in Bazz
+    """def autoname(self):
         supp_master_name = frappe.defaults.get_global_default('supp_master_name')
         if supp_master_name == 'Supplier Name':
             self.name = self.supplier_name
         else:
-            self.name = make_autoname(self.naming_series + '.#####')
+            self.name = make_autoname(self.naming_series + '.#####')"""
+
+    def autoname(self):
+        self.name = str(self.code) + " - " + self.supplier_name
 
     def on_update(self):
         if not self.naming_series:
