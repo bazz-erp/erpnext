@@ -49,11 +49,6 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 			me.frm.refresh_fields();
 		}
 
-		this.frm.set_indicator_formatter('item_code',
-			function (doc) { return (doc.qty <= doc.delivered_qty) ? "green" : "orange" },
-			function (doc) { return doc.item_code + ' : ' + doc.description; });
-		this.frm.refresh();
-
 	},
 
 	refresh: function(doc, dt, dn) {

@@ -36,12 +36,6 @@ frappe.ui.form.on("Sales Order", {
             frm.refresh_field("items");
         }
 
-
-		frm.set_indicator_formatter('item_code',
-			function (doc) { console.log(doc); return (doc.qty <= doc.delivered_qty) ? "green" : "orange" },
-			function (doc) { return doc.item_code + ' : ' + doc.description; });
-		frm.refresh();
-
 		erpnext.queries.setup_warehouse_query(frm);
 	},
 	

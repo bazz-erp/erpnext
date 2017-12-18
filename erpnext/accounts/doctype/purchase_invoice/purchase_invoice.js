@@ -34,11 +34,6 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
             this.frm.refresh_field("items");
         }
 
-		this.frm.set_indicator_formatter('item_code',
-			function (doc) { return (doc.qty <= doc.received_qty) ? "green" : "orange" },
-			function (doc) { return doc.item_code + ' : ' + doc.description; });
-		this.frm.refresh();
-
 	},
 
 	refresh: function(doc) {

@@ -26,10 +26,6 @@ frappe.ui.form.on("Purchase Order", {
             frm.refresh_field("items");
         }
 
-		frm.set_indicator_formatter('item_code',
-			function (doc) { return (doc.qty <= doc.received_qty) ? "green" : "orange" },
-			function (doc) { return doc.item_code + ' : ' + doc.description; });
-		frm.refresh();
 	}
 });
 
