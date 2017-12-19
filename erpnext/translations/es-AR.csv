@@ -4955,7 +4955,7 @@ DocType: Holiday List,Wednesday,Miércoles
 DocType: Process Payroll,Weekly,Semanal
 DocType: Holiday List,Weekly Off,Semanal Desactivado
 DocType: Project Task,Weight,Peso
-DocType: Item,Weight UOM,Unidad de Medida (UdM)
+DocType: Item,Weight UOM,Unidad de Peso (UdM)
 apps/erpnext/erpnext/stock/doctype/item/item.js +265,"Weight is mentioned,\nPlease mention ""Weight UOM"" too","El peso está definido,\nPor favor indique ""UDM Peso"" también"
 DocType: Course Assessment Criteria,Weightage,Asignación
 DocType: Appraisal Goal,Weightage (%),Porcentaje (%)

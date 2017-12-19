@@ -14,14 +14,6 @@ def get_data():
 		},
 		'transactions': [
 			{
-				'label': _('Groups'),
-				'items': ['BOM', 'Product Bundle']
-			},
-			{
-				'label': _('Pricing'),
-				'items': ['Item Price', 'Pricing Rule']
-			},
-			{
 				'label': _('Sell'),
 				'items': ['Quotation', 'Sales Order', 'Delivery Note', 'Sales Invoice']
 			},
@@ -31,8 +23,12 @@ def get_data():
 					'Purchase Order', 'Purchase Receipt', 'Purchase Invoice']
 			},
 			{
-				'label': _('Traceability'),
-				'items': ['Serial No', 'Batch']
+				'label': _('Groups'),
+				'items': ['BOM', 'Product Bundle']
+			},
+			{
+				'label': _('Pricing'),
+				'items': ['Item Price', 'Pricing Rule']
 			},
 			{
 				'label': _('Move'),
