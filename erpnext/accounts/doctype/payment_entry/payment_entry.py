@@ -70,6 +70,7 @@ class PaymentEntry(AccountsController):
 
     def on_submit(self):
         self.setup_party_account_field()
+
         if self.difference_amount:
             frappe.throw(_("Difference Amount must be zero"))
         self.make_gl_entries()
@@ -292,6 +293,9 @@ class PaymentEntry(AccountsController):
         if self.paid_amount:
             self.base_paid_amount = flt(flt(self.paid_amount) * flt(self.source_exchange_rate),
                                         self.precision("base_paid_amount"))
+
+        # Bazz received amount is always equal to paid amount
+        self.received_amount = self.paid_amount
 
         if self.received_amount:
             self.base_received_amount = flt(flt(self.received_amount) * flt(self.target_exchange_rate),

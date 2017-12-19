@@ -336,11 +336,13 @@ frappe.ui.form.on('Payment Entry', {
 
         } else {
             frm.set_currency_labels(["paid_amount"], get_company_currency(frm));
+
             if (!frm.doc.party) {
                 if (is_income(frm)) {
-                    frm.set_value("party_type", "Customer");
+
                     frm.set_df_property("paid_amount", "label", __("Received Amount") + " (ARS)");
-                }else{
+                }
+                else {
                     frm.set_df_property("paid_amount", "label", __("Paid Amount") + " (ARS)");
                 }
             }
@@ -607,7 +609,7 @@ frappe.ui.form.on('Payment Entry', {
 
     paid_amount: function (frm) {
         frm.set_value("base_paid_amount", flt(frm.doc.paid_amount) * flt(frm.doc.source_exchange_rate));
-        frm.set_value("received_amount", frm.doc.paid_amount);
+
         frm.trigger("reset_received_amount");
 
         //Updates remaining amount
@@ -862,6 +864,8 @@ frappe.ui.form.on('Payment Entry', {
 
         if (frm.doc.payment_type == "Receive") {
             difference_amount = base_party_amount - flt(frm.doc.base_received_amount);
+            console.log("base party amount: " + base_party_amount);
+            console.log("base received amount: " + frm.doc.base_received_amount);
         } else if (frm.doc.payment_type == "Pay") {
             difference_amount = flt(frm.doc.base_paid_amount) - base_party_amount;
         } else {
