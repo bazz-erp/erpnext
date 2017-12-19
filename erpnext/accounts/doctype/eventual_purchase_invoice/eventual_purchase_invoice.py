@@ -6,16 +6,30 @@ from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 from erpnext.accounts.general_ledger import make_gl_entries
-from frappe.utils import nowdate
+from frappe.utils import nowdate, flt
+from frappe import _
 
 class EventualPurchaseInvoice(Document):
 
-    def autoname(self):
-        self.name = self.supplier_name + " - " + self.invoice_number
-
-
     def validate(self):
+        self.validate_dates()
+        self.check_mandatory()
+        self.validate_cuit()
+        self.set_total_amount()
         self.set_status()
+
+    def validate_dates(self):
+        if not self.issue_date:
+            self.issue_date = nowdate()
+
+        if not self.iva_date:
+            self.iva_date = nowdate()
+
+    def validate_cuit(self):
+        if not self.cuit.isdigit():
+            frappe.throw(_("{0} field must contain only digits"))
+        if len(self.cuit) > 11:
+            frappe.throw (_("CUIT has 11 numbers as maximum"))
 
     def set_status(self, update = False):
         if self.is_new():
@@ -31,9 +45,28 @@ class EventualPurchaseInvoice(Document):
             self.db_set("status", self.status)
 
 
+    def check_mandatory(self):
+        for field in ["supplier_name", "cuit", "iva_type", "taxed_amount_21", "taxed_amount_10",
+                      "taxed_amount_27", "iva_21", "iva_10", "iva_27"]:
+            if self.get(field) == None:
+                frappe.throw(_("{0} in Eventual Purchase Invoice is mandatory").format(self.meta.get_label(field)))
+
+    def set_total_amount(self):
+        total_amount = 0
+        for field in ["taxed_amount_21", "taxed_amount_10",
+                      "taxed_amount_27", "iva_21", "iva_10", "iva_27", "exempts", "others", "iva_perception", "ibb_perception"]:
+
+            if self.get(field):
+                total_amount += flt(self.get(field))
+
+        self.total_amount = total_amount
+
+
+
+
     def on_submit(self):
         self.make_gl_entries()
-        self.set_status(update= True)
+        self.set_status(update = True)
 
     def make_gl_entries(self):
         gl_entries = []
