@@ -13,6 +13,7 @@ frappe.ui.form.on('Payment Entry', {
             if (!frm.doc.paid_from) frm.set_value("paid_from_account_currency", null);
             if (!frm.doc.paid_to) frm.set_value("paid_to_account_currency", null);
         }
+
         set_up_payment_lines(frm);
 
         frm.get_field('third_party_bank_checks').grid.editable_fields = [
@@ -62,7 +63,6 @@ frappe.ui.form.on('Payment Entry', {
 
         /* Set concept if payment come from other form */
         frm.events.set_concept(frm);
-
 
     },
 
@@ -337,9 +337,9 @@ frappe.ui.form.on('Payment Entry', {
 
         } else {
             frm.set_currency_labels(["paid_amount"], get_company_currency(frm));
-            party_type_value = frm.doc.payment_type == "Receive" ? "Customer": "Supplier";
 
-            frm.set_value("party_type",party_type_value);
+            set_party_type(frm);
+
             if (!frm.doc.party) {
                 if (is_income(frm)) {
 
@@ -1865,4 +1865,9 @@ var update_payment_average_days = function (frm) {
            calculate_payment_average_days(frm, lines);
        }
     });
+}
+
+var set_party_type = function (frm) {
+    party_type_value = frm.doc.payment_type == "Receive" ? "Customer": "Supplier";
+    frm.set_value("party_type",party_type_value);
 }
