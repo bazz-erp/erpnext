@@ -19,7 +19,6 @@ frappe.ui.form.on("Item", {
 
 		// should never check Private
 		frm.fields_dict["website_image"].df.is_private = 0;
-
 	},
 
 	refresh: function(frm) {
@@ -97,6 +96,7 @@ frappe.ui.form.on("Item", {
 			}
 			frappe.set_route('Form', 'Item', new_item.name);
 		});
+		frm.toggle_display("item_code", true);
 	},
 
 	validate: function(frm){
