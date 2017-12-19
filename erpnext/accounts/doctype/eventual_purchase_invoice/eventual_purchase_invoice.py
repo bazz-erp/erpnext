@@ -23,7 +23,7 @@ class EventualPurchaseInvoice(Document):
             self.issue_date = nowdate()
 
         if not self.iva_date:
-            self.issue_date = nowdate()
+            self.iva_date = nowdate()
 
     def validate_cuit(self):
         if not self.cuit.isdigit():
