@@ -11,7 +11,62 @@ frappe.ui.form.on("Eventual Purchase Invoice", {
 
     total_amount: function (frm) {
         frm.set_value("outstanding_amount", frm.doc.total_amount);
+    },
+
+    taxed_amount_21: function (frm) {
+        if (frm.doc.taxed_amount_21) {
+            frm.set_value("iva_21", frm.doc.taxed_amount_21 * 0.21);
+            frm.refresh_field("iva_21");
+            frm.events.set_total_amount(frm);
+        }
+    },
+
+    taxed_amount_10: function (frm) {
+        if (frm.doc.taxed_amount_10) {
+            frm.set_value("iva_10", frm.doc.taxed_amount_10 * 0.105);
+            frm.refresh_field("iva_10");
+            frm.events.set_total_amount(frm);
+        }
+    },
+
+    taxed_amount_27: function (frm) {
+        if (frm.doc.taxed_amount_27) {
+            frm.set_value("iva_27", frm.doc.taxed_amount_27 * 0.27);
+            frm.refresh_field("iva_27");
+            frm.events.set_total_amount(frm);
+        }
+    },
+
+    exempts: function (frm) {
+        frm.events.set_total_amount(frm);
+    },
+
+    others: function (frm) {
+        frm.events.set_total_amount(frm);
+    },
+
+    iva_perception: function (frm) {
+        frm.events.set_total_amount(frm);
+    },
+
+    ibb_perception: function (frm) {
+        frm.events.set_total_amount(frm);
+    },
+
+    set_total_amount: function (frm) {
+        total_amount = 0;
+        var fields = ["taxed_amount_21", "taxed_amount_10", "taxed_amount_27",
+            "iva_10", "iva_21", "iva_27", "exempts", "others", "iva_perception", "ibb_perception"];
+
+        $.each(fields, function (i, fieldname) {
+            if (frm.get_field(fieldname).value) {
+                total_amount += frm.get_field(fieldname).value;
+            }
+        });
+
+        frm.set_value("total_amount", total_amount);
     }
+
 
 });
 
