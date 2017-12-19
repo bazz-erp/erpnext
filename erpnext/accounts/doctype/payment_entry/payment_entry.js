@@ -201,6 +201,7 @@ frappe.ui.form.on('Payment Entry', {
 
         else {
             if (frm.doc.third_party_bank_checks && frm.doc.third_party_bank_checks != 0) {
+
                 show_new_third_party_checks(frm);
             }
 
@@ -1652,6 +1653,13 @@ var show_selected_third_party_documents = function (frm) {
 }
 
 var show_new_third_party_checks = function (frm) {
+    frm.get_field('third_party_bank_checks').grid.editable_fields = [
+        {fieldname: 'payment_date', columns: 2},
+        {fieldname: 'amount', columns: 2},
+        {fieldname: 'bank', columns: 2},
+        {fieldname: 'number', columns: 2},
+        {fieldname: 'internal_number', columns: 2}
+        ];
     frm.set_df_property("third_party_bank_checks_section", "hidden", false);
     frm.set_df_property("third_party_bank_checks", "hidden", false);
     //frm.set_df_property("third_party_checks_amounts_section", "hidden", true);
@@ -1659,9 +1667,14 @@ var show_new_third_party_checks = function (frm) {
 }
 
 var show_new_third_party_documents =  function (frm) {
+     frm.get_field('third_party_documents').grid.editable_fields = [
+            {fieldname: 'date', columns: 2},
+            {fieldname: 'amount', columns: 2},
+            {fieldname: 'client_detail', columns: 2},
+            {fieldname: 'internal_number', columns: 2}
+            ];
     frm.set_df_property("third_party_documents_section", "hidden", false);
     frm.set_df_property("third_party_documents", "hidden", false);
-    //frm.set_df_property("third_party_documents_amounts_section", "hidden", true);
     frm.set_df_property("selected_third_party_documents", "hidden", true);
 
 }
