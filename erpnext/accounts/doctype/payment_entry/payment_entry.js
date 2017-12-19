@@ -337,7 +337,9 @@ frappe.ui.form.on('Payment Entry', {
 
         } else {
             frm.set_currency_labels(["paid_amount"], get_company_currency(frm));
+            party_type_value = frm.doc.payment_type == "Receive" ? "Customer": "Supplier";
 
+            frm.set_value("party_type",party_type_value);
             if (!frm.doc.party) {
                 if (is_income(frm)) {
 
@@ -358,7 +360,6 @@ frappe.ui.form.on('Payment Entry', {
         check_counter = 0;
         doc_counter = 0;
 
-        frm.set_value("party_type", null);
         frm.set_value("party", null);
         frm.set_value("references", null);
 
