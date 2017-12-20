@@ -14,7 +14,7 @@ frappe.ui.form.on("Eventual Purchase Invoice", {
     },
 
     taxed_amount_21: function (frm) {
-        if (frm.doc.taxed_amount_21) {
+        if (frm.doc.taxed_amount_21 !== undefined) {
             frm.set_value("iva_21", frm.doc.taxed_amount_21 * 0.21);
             frm.refresh_field("iva_21");
             frm.events.set_total_amount(frm);
@@ -22,7 +22,7 @@ frappe.ui.form.on("Eventual Purchase Invoice", {
     },
 
     taxed_amount_10: function (frm) {
-        if (frm.doc.taxed_amount_10) {
+        if (frm.doc.taxed_amount_10 !== undefined) {
             frm.set_value("iva_10", frm.doc.taxed_amount_10 * 0.105);
             frm.refresh_field("iva_10");
             frm.events.set_total_amount(frm);
@@ -30,7 +30,7 @@ frappe.ui.form.on("Eventual Purchase Invoice", {
     },
 
     taxed_amount_27: function (frm) {
-        if (frm.doc.taxed_amount_27) {
+        if (frm.doc.taxed_amount_27 !== undefined) {
             frm.set_value("iva_27", frm.doc.taxed_amount_27 * 0.27);
             frm.refresh_field("iva_27");
             frm.events.set_total_amount(frm);
