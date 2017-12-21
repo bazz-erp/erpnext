@@ -81,17 +81,34 @@ erpnext.stock.ItemDashboard = Class.extend({
 	get_item_dashboard_data: function(data, max_count, show_item) {
 		if(!max_count) max_count = 0;
 		if(!data) data = [];
+		var total = {
+			warehouse : "Total",
+			actual_or_pending : 0,
+			pending_qty : 0,
+			total_reserved : 0,
+			actual_qty : 0,
+			hide : true
+		};
 		data.forEach(function(d) {
 			d.actual_or_pending = d.projected_qty + d.reserved_qty + d.reserved_qty_for_production;
+
 			d.pending_qty = 0;
 			d.total_reserved = d.reserved_qty + d.reserved_qty_for_production;
 			if(d.actual_or_pending > d.actual_qty) {
 				d.pending_qty = d.actual_or_pending - d.actual_qty;
 			}
 
+			total.actual_or_pending += d.actual_or_pending;
+			total.pending_qty += d.pending_qty;
+			total.total_reserved += d.total_reserved;
+			total.actual_qty += d.actual_qty;
+
 			max_count = Math.max(d.actual_or_pending, d.actual_qty,
 				d.total_reserved, max_count);
 		});
+		if(data.length > 0) {
+			data.push(total);
+		}
 		return {
 			data: data,
 			max_count: max_count,
