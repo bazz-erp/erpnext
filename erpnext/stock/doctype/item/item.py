@@ -74,6 +74,10 @@ class Item(WebsiteGenerator):
         if not self.description:
             self.description = self.item_name
 
+        if (len(frappe.db.sql("select * from tabItem where item_code=%s", self.item_code, as_dict=1)) != 0):
+            frappe.throw(_("Code is already in use."))
+
+        self.validate_code()
         self.validate_uom()
         self.add_default_uom_in_conversion_factor_table()
         self.validate_conversion_factor()
@@ -149,6 +153,10 @@ class Item(WebsiteGenerator):
         if not self.route:
             return cstr(frappe.db.get_value('Item Group', self.item_group,
                 'route')) + '/' + self.scrub(self.item_name + '-' + random_string(5))
+
+    def validate_code(self):
+        if (len(frappe.db.sql("select * from tabItem where item_code=%s", self.item_code, as_dict=1)) != 0):
+            frappe.throw(_("Code is already in use."))
 
     def validate_website_image(self):
         """Validate if the website image is a public file"""
