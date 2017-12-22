@@ -11,6 +11,7 @@ frappe.ui.form.on("Item", {
 		frm.add_fetch('attribute', 'increment', 'increment');
 		frm.add_fetch('tax_type', 'tax_rate', 'tax_rate');
 	},
+
 	onload: function(frm) {
 		erpnext.item.setup_queries(frm);
 		if (frm.doc.variant_of){
@@ -60,6 +61,11 @@ frappe.ui.form.on("Item", {
 				erpnext.item.make_variant(frm);
 			}, __("Make"));
 			frm.page.set_inner_btn_group_as_primary(__("Make"));
+
+			// create all variants
+			frm.add_custom_button(__("Generate all Variants"), function () {
+				make_all_variants(frm);
+            });
 		}
 		if (frm.doc.variant_of) {
 			frm.set_intro(__("This Item is a Variant of {0} (Template).", 
@@ -457,3 +463,15 @@ $.extend(erpnext.item, {
 		}
 	}
 });
+
+var make_all_variants = function (frm) {
+	frappe.call({
+		method: "erpnext.controllers.item_variant.create_all_variants",
+		args: {
+			item: frm.doc.name
+		},
+		callback: function (r) {
+			frappe.set_route("List", frm.doctype);
+        }
+	});
+}
