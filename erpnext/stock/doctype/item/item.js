@@ -17,7 +17,6 @@ frappe.ui.form.on("Item", {
 		if (frm.doc.variant_of){
 			frm.fields_dict["attributes"].grid.set_column_disp("attribute_value", true);
 		}
-
 		// should never check Private
 		frm.fields_dict["website_image"].df.is_private = 0;
 	},
@@ -47,6 +46,8 @@ frappe.ui.form.on("Item", {
 		if(!frm.doc.is_fixed_asset) {
 			erpnext.item.make_dashboard(frm);
 		}
+
+		frm.set_df_property("item_code", "read_only", frm.doc.item_code ? 1 : 0);
 
 		// clear intro
 		frm.set_intro();
@@ -127,7 +128,7 @@ frappe.ui.form.on("Item", {
 		if(!frm.doc.description)
 			frm.set_value("description", frm.doc.item_code);
 	},
-	
+
 	is_stock_item: function(frm) {
 		if(!frm.doc.is_stock_item) {
 			frm.set_value("has_batch_no", 0);
