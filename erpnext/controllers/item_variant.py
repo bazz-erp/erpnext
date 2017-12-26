@@ -132,6 +132,7 @@ def find_variant(template, args, variant_item_code=None):
         )""".format(conditions=conditions), (template, cstr(variant_item_code)))
 
     for variant in possible_variants:
+
         variant = frappe.get_doc("Item", variant)
 
         if len(args.keys()) == len(variant.get("attributes")):
@@ -145,7 +146,6 @@ def find_variant(template, args, variant_item_code=None):
                         # this row matches
                         match_count += 1
                         break
-
             if match_count == len(args.keys()):
                 return variant.name
 
@@ -172,11 +172,11 @@ def create_variant(item, args):
     return variant
 
 @frappe.whitelist()
-def create_all_variants(item):
+def create_all_variants(item, attributes):
     """creates variant for each combination of attributes of a template"""
     template = frappe.get_doc("Item", item)
 
-    attributes_values = get_attributes_values(template)
+    attributes_values = json.loads(attributes)
 
     variants = []
     for combination in itertools.combinations(itertools.chain(*attributes_values), len(attributes_values)):
@@ -190,7 +190,6 @@ def create_all_variants(item):
         copy_attributes_to_variant(template, variant)
         make_variant_item_code(template.item_code, template.item_name, variant)
         variant.save()
-
 
 def get_attributes_values(template):
     value_lists = []
@@ -217,7 +216,6 @@ def make_variant_dict(template, variants):
         for i in range(len(template.attributes)):
             variant_dict.append({"attribute": template.attributes[i].attribute, "attribute_value": variant[i]})
 
-        print (variant_dict)
         variants_dicts.append(variant_dict)
     return variants_dicts
 

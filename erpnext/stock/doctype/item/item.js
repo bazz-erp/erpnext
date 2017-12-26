@@ -53,7 +53,7 @@ frappe.ui.form.on("Item", {
 
 		if (frm.doc.has_variants) {
 			frm.set_intro(__("This Item is a Template and cannot be used in transactions. Item attributes will be copied over into the variants unless 'No Copy' is set"), true);
-			frm.add_custom_button(__("Show Variants"), function() {
+			frm.add_custom_button(__("Scdhow Variants"), function() {
 				frappe.set_route("List", "Item", {"variant_of": frm.doc.name});
 			}, __("View"));
 
@@ -465,13 +465,87 @@ $.extend(erpnext.item, {
 });
 
 var make_all_variants = function (frm) {
-	frappe.call({
-		method: "erpnext.controllers.item_variant.create_all_variants",
-		args: {
-			item: frm.doc.name
-		},
-		callback: function (r) {
-			frappe.set_route("List", frm.doctype);
-        }
-	});
+
+    attributes = $.map(frm.doc.attributes, function (attribute) {
+        return attribute.attribute;
+    })
+    // get all possible values for each attribute
+    frappe.call({
+       method: "erpnext.stock.doctype.item_attribute_value.item_attribute_value.get_attributes_values",
+       args: {
+           attributes: attributes
+       },
+       callback: function (r) {
+           make_all_variants_dialog(frm, r["message"]);
+       }
+    });
+
+}
+
+var make_all_variants_dialog = function (frm, attributes) {
+    fields = [];
+
+    $.each(attributes, function (attribute_name, attribute_values) {
+
+        var html = $(`
+				<div style="border: 1px solid #d1d8dd" data-attribute="${attribute_name}">
+					<div class="list-item list-item--head">
+						<div class="list-item__content list-item__content--flex-2">
+							${attribute_name}
+						</div>
+					</div>
+					${attribute_values.map(attribute_value => `
+						<div class="list-item">
+							<div class="list-item__content list-item__content--flex-2">
+								<label>
+								<input type="checkbox" data-value="${attribute_value}"/>
+								${attribute_value}
+								</label>
+							</div>
+						</div>
+					`).join("")}
+				</div>
+			`);
+
+        fields.push({
+            "label": attribute_name,
+            "fieldname": attribute_name,
+            "fieldtype": "HTML",
+            "options": html
+        });
+
+    });
+
+    var d = new frappe.ui.Dialog({
+        title: __("Generate all Variants"),
+        fields: fields
+    });
+
+    d.set_primary_action(__("Confirm"), function () {
+        selected_values = [];
+
+        $.each(attributes, function (attribute_name, attribute_values) {
+            console.log(attribute_name);
+        	var values = d.wrapper.find('div[data-attribute="' + attribute_name + '"] input[type=checkbox]:checked')
+					.map((i, el) => $(el).attr('data-value')).toArray();
+
+           if ($.isEmptyObject(values)) {
+           	  frappe.throw(__("Select any value for attribute") + " " + attribute_name)
+		   }
+           selected_values.push(values);
+        });
+        frappe.call({
+            method: "erpnext.controllers.item_variant.create_all_variants",
+            args: {
+                item: frm.doc.name,
+                attributes: selected_values
+            },
+            callback: function (r) {
+                frappe.set_route("List", frm.doctype);
+            }
+	    });
+    });
+
+    d.show();
+
 }
