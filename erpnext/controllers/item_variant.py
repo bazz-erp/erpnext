@@ -7,6 +7,7 @@ import itertools
 from frappe import _
 from frappe.utils import cstr, flt
 import json
+from frappe import ValidationError
 
 
 class ItemVariantExistsError(frappe.ValidationError): pass
@@ -128,8 +129,8 @@ def find_variant(template, args, variant_item_code=None):
         where variant_of=%s and exists (
             select name from `tabItem Variant Attribute` iv_attribute
                 where iv_attribute.parent=item.name
-                and ({conditions}) and parent != %s
-        )""".format(conditions=conditions), (template, cstr(variant_item_code)))
+                and ({conditions}) 
+        )""".format(conditions=conditions), template)
 
     for variant in possible_variants:
 
@@ -189,19 +190,11 @@ def create_all_variants(item, attributes):
         variant.set("attributes", variant_attributes)
         copy_attributes_to_variant(template, variant)
         make_variant_item_code(template.item_code, template.item_name, variant)
-        variant.save()
-
-def get_attributes_values(template):
-    value_lists = []
-    for attribute in template.attributes:
-        result = frappe.db.sql("""select attribute_value from `tabItem Attribute Value` where parent=%(attr)s""", {"attr": attribute.attribute}, as_dict=1)
-        attribute_values = []
-        for row in result:
-            attribute_values.append(row.get("attribute_value"))
-        value_lists.append(attribute_values)
-
-    return value_lists
-
+        try:
+            variant.save()
+        except ItemVariantExistsError:
+            # the goal is to continue generating variants
+            pass
 
 def is_valid_combination(combination, attributes_values):
     for i in range(len(combination)):
