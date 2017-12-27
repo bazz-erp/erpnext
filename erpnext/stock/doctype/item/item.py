@@ -153,7 +153,9 @@ class Item(WebsiteGenerator):
                 'route')) + '/' + self.scrub(self.item_name + '-' + random_string(5))
 
     def validate_code(self):
-        if (len(frappe.db.sql("select * from tabItem where item_code=%s", self.item_code, as_dict=1)) != 0):
+        result = frappe.db.sql("select * from tabItem where item_code=%s", self.item_code, as_dict=1)
+        match = [i for i in result if i.name == self.name]
+        if len(result) != 0 and len(match) == 0:
             frappe.throw(_("Code is already in use."))
 
     def validate_website_image(self):

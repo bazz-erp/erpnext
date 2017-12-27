@@ -155,6 +155,66 @@ frappe.ui.form.on("Item", {
 	}
 });
 
+
+frappe.ui.form.on('Item Supplier', {
+    supplier_items_move: function (frm, cdt, cdn) {
+		var row = frappe.get_doc(cdt, cdn);
+		if(row.idx === 1){
+			console.log("Updated default_supplier : " + row.supplier);
+			frm.set_value("default_supplier", row.supplier);
+		}
+    },
+    supplier: function (frm, cdt, cdn) {
+		var row = frappe.get_doc(cdt, cdn);
+		if(row.idx === 1 && row.supplier){
+			console.log("Updated default_supplier : " + row.supplier);
+			frm.set_value("default_supplier", row.supplier);
+		}
+    },
+    supplier_items_remove: function (frm, cdt, cdn) {
+		if(frm.doc.supplier_items.length === 0) {
+			frm.set_value("default_supplier", null);
+		}else{
+			frm.set_value("default_supplier", frm.doc.supplier_items[0].supplier);
+		}
+    }
+});
+
+frappe.ui.form.on('Item Manufacturer', {
+    manufacturer_items_move: function (frm, cdt, cdn) {
+		var row = frappe.get_doc(cdt, cdn);
+		if(row.idx === 1){
+			console.log("Updated manufacturer : " + row.manufacturer);
+			frm.set_value("manufacturer", row.manufacturer);
+			frm.set_value("manufacturer_part_no", row.manufacturer_part_no);
+		}
+    },
+	manufacturer: function (frm, cdt, cdn) {
+		var row = frappe.get_doc(cdt, cdn);
+		if(row.idx === 1 && row.manufacturer){
+			console.log("Updated manufacturer : " + row.manufacturer);
+			frm.set_value("manufacturer", row.manufacturer);
+		}
+    },
+	manufacturer_part_no: function (frm, cdt, cdn) {
+		var row = frappe.get_doc(cdt, cdn);
+		if(row.idx === 1 && row.manufacturer_part_no){
+			console.log("Updated manufacturer_part_no : " + row.manufacturer_part_no);
+			frm.set_value("manufacturer_part_no", row.manufacturer_part_no);
+		}
+    },
+    manufacturer_items_remove: function (frm, cdt, cdn) {
+		if(frm.doc.manufacturer_items.length === 0) {
+			frm.set_value("manufacturer", null);
+			frm.set_value("manufacturer_part_no", null);
+		}else{
+			frm.set_value("manufacturer", frm.doc.manufacturer_items[0].manufacturer);
+			frm.set_value("manufacturer_part_no", frm.doc.manufacturer_items[0].manufacturer_part_no);
+		}
+    }
+
+});
+
 frappe.ui.form.on('Item Reorder', {
 	reorder_levels_add: function(frm, cdt, cdn) {
 		var row = frappe.get_doc(cdt, cdn);
