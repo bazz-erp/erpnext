@@ -108,6 +108,16 @@ class Item(WebsiteGenerator):
         self.update_item_price()
         self.update_template_item()
 
+        # update variants attributes
+        self.update_variants()
+
+    def update_variants(self):
+        if self.has_variants:
+            for variant in frappe.db.sql("""select name from tabItem where variant_of = %s""", self.name, as_dict=1):
+                variant = frappe.get_doc("Item", variant.name)
+                copy_attributes_to_variant(self, variant)
+                variant.db_update()
+
     def add_price(self, price_list=None):
         '''Add a new price'''
         if not price_list:
