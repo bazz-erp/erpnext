@@ -96,6 +96,8 @@ class Item(WebsiteGenerator):
 
         self.validate_code()
 
+        self.validate_price_lists()
+
         if not self.get("__islocal"):
             self.old_item_group = frappe.db.get_value(self.doctype, self.name, "item_group")
             self.old_website_item_groups = frappe.db.sql_list("""select item_group
@@ -658,7 +660,8 @@ class Item(WebsiteGenerator):
                     attributes.append(d.attribute)
 
     def validate_variant_attributes(self):
-        if self.variant_of and self.variant_based_on=='Item Attribute':
+        # validate variant attributes only if is a new item
+        if self.variant_of and self.variant_based_on=='Item Attribute' and self.is_new():
             args = {}
             for d in self.attributes:
                 if not d.attribute_value:
@@ -673,6 +676,15 @@ class Item(WebsiteGenerator):
                     .format(variant), ItemVariantExistsError)"""
 
             validate_item_variant_attributes(self, args)
+
+
+    def validate_price_lists(self):
+        for item_price in self.get("price_lists"):
+            if not item_price.price_list_rate:
+                frappe.throw(_("{0} is mandatory in Item Price").format(item_price.meta.get_label("price_list_rate")))
+            if not item_price.price_list:
+                frappe.throw(_("{0} is mandatory in Item Price").format(item_price.meta.get_label("price_list")))
+            item_price.item_code = self.name
 
 def get_timeline_data(doctype, name):
     '''returns timeline data based on stock ledger entry'''
