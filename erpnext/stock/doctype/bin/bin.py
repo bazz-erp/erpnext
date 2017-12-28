@@ -100,5 +100,13 @@ def update_item_projected_qty(item_code):
 		total_projected_qty = ifnull((select sum(projected_qty) from tabBin where item_code=%s), 0)
 		where name=%s''', (item_code, item_code))
 
+	item = frappe.get_doc("Item", item_code)
+
+	if (item.variant_of):
+		frappe.db.sql('''update tabItem as t1
+				join (select sum(total_projected_qty) as total from tabItem where variant_of=%s) as t2
+ 				set t1.total_projected_qty = t2.total
+	    		where name=%s''', (item.variant_of, item.variant_of))
+
 def on_doctype_update():
 	frappe.db.add_index("Bin", ["item_code", "warehouse"])
