@@ -19,6 +19,9 @@ frappe.ui.form.on("Item", {
 		}
 		// should never check Private
 		frm.fields_dict["website_image"].df.is_private = 0;
+
+		// item code in price lists cant be modified
+		frm.fields_dict["price_lists"].grid.set_column_disp("item_code", false);
 	},
 
 	refresh: function(frm) {
@@ -614,3 +617,11 @@ var make_all_variants_dialog = function (frm, attributes) {
     d.show();
 
 }
+
+frappe.ui.form.on("Item Price", {
+	price_lists_add: function (frm, cdt, cdn) {
+		row = locals[cdt] [cdn];
+		row.item_code = frm.doc.item_name;
+		frm.refresh_field("price_lists");
+    }
+});
