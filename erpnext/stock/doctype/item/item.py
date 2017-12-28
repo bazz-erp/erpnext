@@ -33,7 +33,7 @@ class Item(WebsiteGenerator):
             asset = frappe.db.get_all("Asset", filters={"item_code": self.name, "docstatus": 1}, limit=1)
             self.set_onload("asset_exists", True if asset else False)
 
-    """def autoname(self):
+    def autoname(self):
         if frappe.db.get_default("item_naming_by")=="Naming Series":
             if self.variant_of:
                 if not self.item_code:
@@ -46,15 +46,13 @@ class Item(WebsiteGenerator):
             msgprint(_("Item Code is mandatory because Item is not automatically numbered"), raise_exception=1)
 
         self.item_code = strip(self.item_code)
-        self.name = self.item_code"""
-
-    def autoname(self):
-        self.name = self.item_code + " - " + self.item_name
+        self.name = self.item_code
 
     def before_insert(self):
         if not self.description:
             self.description = self.item_name
-
+        if not self.main_title:
+            self.main_title = self.item_code + " - " + self.item_name
         self.publish_in_hub = 1
 
     def after_insert(self):

@@ -160,7 +160,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 
 		this.frm.set_indicator_formatter('item_code', function() {return "blue"},
-			function (doc) { return doc.item_code;}, false);
+			function (doc) { console.log(doc); return doc.item_code + " - " + doc.item_name;}, false);
 		this.frm.refresh();
 
 	},
