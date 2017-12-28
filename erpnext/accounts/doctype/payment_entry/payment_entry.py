@@ -1079,6 +1079,7 @@ def get_reference_details(reference_doctype, reference_name, party_account_curre
 
     return frappe._dict({
         "due_date": ref_doc.get("due_date"),
+        "posting_date": ref_doc.get("posting_date"),
         "total_amount": total_amount,
         "outstanding_amount": outstanding_amount,
         "exchange_rate": exchange_rate
@@ -1168,6 +1169,7 @@ def get_payment_entry(dt, dn, party_amount=None, bank_account=None, bank_amount=
         "reference_doctype": dt,
         "reference_name": dn,
         "due_date": doc.get("due_date"),
+        "posting_date": doc.get("posting_date"),
         "total_amount": grand_total,
         "outstanding_amount": outstanding_amount,
         "allocated_amount": outstanding_amount
@@ -1198,8 +1200,8 @@ def get_payment_entry_for_eventual_purchase_invoice(docname):
         "reference_name": docname,
         "total_amount": doc.total_amount,
         "outstanding_amount": doc.outstanding_amount,
-        "allocated_amount": doc.outstanding_amount
-
+        "allocated_amount": doc.outstanding_amount,
+        "posting_date": doc.issue_date
     })
     return pe
 

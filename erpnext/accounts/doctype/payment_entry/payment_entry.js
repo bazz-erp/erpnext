@@ -64,6 +64,10 @@ frappe.ui.form.on('Payment Entry', {
         /* Set concept if payment come from other form */
         frm.events.set_concept(frm);
 
+        if (frm.doc.references) {
+            calculate_references_average_payment_date(frm);
+        }
+
     },
 
     setup: function (frm) {
@@ -132,6 +136,10 @@ frappe.ui.form.on('Payment Entry', {
                 var doctypes = ["Expense Claim", "Journal Entry"];
             } else {
                 var doctypes = ["Journal Entry"];
+            }
+
+            if (frm.doc.payment_type == "Miscellaneous Expenditure") {
+                var doctypes = ["Eventual Purchase Invoice"];
             }
 
             return {
@@ -576,6 +584,7 @@ frappe.ui.form.on('Payment Entry', {
 
     posting_date: function (frm) {
         frm.events.paid_from_account_currency(frm);
+        calculate_references_average_payment_date(frm);
     },
 
     source_exchange_rate: function (frm) {
@@ -697,6 +706,7 @@ frappe.ui.form.on('Payment Entry', {
                         c.reference_doctype = d.voucher_type;
                         c.reference_name = d.voucher_no;
                         c.due_date = d.due_date
+                        c.posting_date = d.posting_date
                         c.total_amount = d.invoice_amount;
                         c.outstanding_amount = d.outstanding_amount;
                         if (!in_list(["Sales Order", "Purchase Order", "Expense Claim"], d.voucher_type)) {
@@ -738,6 +748,8 @@ frappe.ui.form.on('Payment Entry', {
 
                 frm.events.allocate_party_amount_against_ref_docs(frm,
                     (frm.doc.payment_type == "Receive" ? frm.doc.paid_amount : frm.doc.received_amount));
+
+                calculate_references_average_payment_date(frm);
             }
         });
     },
@@ -866,8 +878,6 @@ frappe.ui.form.on('Payment Entry', {
 
         if (frm.doc.payment_type == "Receive") {
             difference_amount = base_party_amount - flt(frm.doc.base_received_amount);
-            console.log("base party amount: " + base_party_amount);
-            console.log("base received amount: " + frm.doc.base_received_amount);
         } else if (frm.doc.payment_type == "Pay") {
             difference_amount = flt(frm.doc.base_paid_amount) - base_party_amount;
         } else {
@@ -922,6 +932,7 @@ frappe.ui.form.on('Payment Entry', {
                 frappe.msgprint(__("Row #{0}: Reference Document Type must be one of Expense Claim or Journal Entry", [row.idx]));
                 return false;
             }
+
         }
 
         if (row) {
@@ -1078,6 +1089,7 @@ frappe.ui.form.on('Payment Entry Reference', {
                         frappe.model.set_value(cdt, cdn, field, value);
                     })
                     frm.refresh_fields();
+                    calculate_references_average_payment_date(frm);
                 }
             }
         })
@@ -1089,6 +1101,7 @@ frappe.ui.form.on('Payment Entry Reference', {
 
     references_remove: function (frm) {
         frm.events.set_total_allocated_amount(frm);
+        calculate_references_average_payment_date(frm);
     }
 })
 
@@ -1870,4 +1883,36 @@ var update_payment_average_days = function (frm) {
 var set_party_type = function (frm) {
     party_type_value = frm.doc.payment_type == "Receive" ? "Customer": "Supplier";
     frm.set_value("party_type",party_type_value);
+}
+
+
+var calculate_references_average_payment_date = function (frm) {
+    if (frm.doc.references && frm.doc.references.length == 0) {
+        frm.set_value("references_average_payment_date",null);
+        frm.refresh_field("references_average_payment_date");
+        return
+    }
+    days_per_amount = 0;
+    due_days = 0;
+    total_amount = 0;
+    $.each(frm.doc.references || [], function (i, ref) {
+        diff_between_payment_and_ref = frappe.datetime.get_day_diff(frm.doc.posting_date, ref.posting_date);
+        if (diff_between_payment_and_ref < 0) {
+            diff_between_payment_and_ref = 0;
+        }
+        days_per_amount += (diff_between_payment_and_ref * ref.total_amount);
+        total_amount += ref.total_amount;
+        due_days += frappe.datetime.get_day_diff(ref.due_date, ref.posting_date);
+
+    });
+
+    // calculate payment deadline in days averaging references due date
+    average_due_days = Math.ceil(due_days / (frm.doc.references || []).length);
+
+    average_payment_deadline_in_days = average_due_days - Math.ceil (days_per_amount / total_amount);
+    average_payment_deadline = frappe.datetime.add_days(frm.doc.posting_date, average_payment_deadline_in_days);
+
+    frm.set_value("references_average_payment_date", average_payment_deadline);
+    frm.refresh_field("references_average_payment_date");
+
 }
