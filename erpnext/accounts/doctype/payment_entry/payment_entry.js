@@ -1902,7 +1902,6 @@ var calculate_references_average_payment_date = function (frm) {
         }
         days_per_amount += (diff_between_payment_and_ref * ref.total_amount);
         total_amount += ref.total_amount;
-        alert(ref.due_date);
         due_days += frappe.datetime.get_day_diff(ref.due_date, ref.posting_date);
 
     });
