@@ -28,7 +28,7 @@ def get_data():
 			},
 			{
 				'label': _('Pricing'),
-				'items': ['Item Price', 'Pricing Rule']
+				'items': ['Pricing Rule']
 			},
 			{
 				'label': _('Move'),
