@@ -1893,23 +1893,16 @@ var calculate_references_average_payment_date = function (frm) {
         return
     }
     days_per_amount = 0;
-    due_days = 0;
     total_amount = 0;
     $.each(frm.doc.references || [], function (i, ref) {
-        diff_between_payment_and_ref = frappe.datetime.get_day_diff(frm.doc.posting_date, ref.posting_date);
-        if (diff_between_payment_and_ref < 0) {
-            diff_between_payment_and_ref = 0;
+        day_diff = frappe.datetime.get_day_diff(ref.due_date, frm.doc.posting_date);
+        if (day_diff > 0) {
+            days_per_amount += (day_diff * ref.total_amount);
+            total_amount += ref.total_amount;
         }
-        days_per_amount += (diff_between_payment_and_ref * ref.total_amount);
-        total_amount += ref.total_amount;
-        due_days += frappe.datetime.get_day_diff(ref.due_date, ref.posting_date);
-
     });
 
-    // calculate payment deadline in days averaging references due date
-    average_due_days = Math.ceil(due_days / (frm.doc.references || []).length);
-
-    average_payment_deadline_in_days = average_due_days - Math.ceil (days_per_amount / total_amount);
+    average_payment_deadline_in_days = total_amount != 0 ? Math.ceil (days_per_amount / total_amount): 0;
     average_payment_deadline = frappe.datetime.add_days(frm.doc.posting_date, average_payment_deadline_in_days);
 
     frm.set_value("references_average_payment_date", average_payment_deadline);
