@@ -21,7 +21,11 @@ frappe.ui.form.on("Item", {
 		frm.fields_dict["website_image"].df.is_private = 0;
 
 		// item code in price lists cant be modified
-		frm.fields_dict["price_lists"].grid.set_column_disp("item_code", false);
+		//frm.fields_dict["price_lists"].grid.set_column_disp("item_code", false);
+
+		// item code in price lists is not required
+		var df = frappe.meta.get_docfield("Item Price","item_code",cur_frm.doc.name);
+        df.reqd = 0;
 	},
 
 	refresh: function(frm) {
@@ -617,11 +621,3 @@ var make_all_variants_dialog = function (frm, attributes) {
     d.show();
 
 }
-
-frappe.ui.form.on("Item Price", {
-	price_lists_add: function (frm, cdt, cdn) {
-		row = locals[cdt] [cdn];
-		row.item_code = frm.doc.item_name;
-		frm.refresh_field("price_lists");
-    }
-});

@@ -18,6 +18,8 @@ class ItemPrice(Document):
         self.update_item_details()
 
     def validate_item(self):
+        if not self.item_code:
+            throw(_("{0} is mandatory").format(self.meta.get_label("item_code")))
         if not frappe.db.exists("Item", self.item_code):
             throw(_("Item {0} not found").format(self.item_code))
 
