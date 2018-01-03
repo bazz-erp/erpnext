@@ -169,6 +169,7 @@ def create_variant(item, args):
     variant.set("attributes", variant_attributes)
     copy_attributes_to_variant(template, variant)
     make_variant_item_code(template.item_code, template.item_name, variant)
+    variant.set("main_title", '{} - {}'.format(variant.item_code, variant.item_name))
 
     return variant
 
@@ -190,6 +191,8 @@ def create_all_variants(item, attributes):
         variant.set("attributes", variant_attributes)
         copy_attributes_to_variant(template, variant)
         make_variant_item_code(template.item_code, template.item_name, variant)
+        variant.set("main_title", '{} - {}'.format(variant.item_code, variant.item_name))
+
         try:
             variant.save()
         except ItemVariantExistsError:
