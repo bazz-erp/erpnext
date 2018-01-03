@@ -65,7 +65,8 @@ class Item(WebsiteGenerator):
 
         # update item code in each item price of product
         for item_price in self.price_lists:
-            item_price.item_code = self.name
+            if not item_price.item_code:
+                item_price.item_code = self.name
         self.save()
 
     def validate(self):
@@ -687,6 +688,9 @@ class Item(WebsiteGenerator):
                 frappe.throw(_("{0} is mandatory in Item Price").format(item_price.meta.get_label("price_list_rate")))
             if not item_price.price_list:
                 frappe.throw(_("{0} is mandatory in Item Price").format(item_price.meta.get_label("price_list")))
+
+            if not self.is_new():
+                item_price.item_code = self.name
 
 def get_timeline_data(doctype, name):
     '''returns timeline data based on stock ledger entry'''

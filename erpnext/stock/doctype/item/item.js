@@ -21,7 +21,7 @@ frappe.ui.form.on("Item", {
 		frm.fields_dict["website_image"].df.is_private = 0;
 
 		// item code in price lists cant be modified
-		//frm.fields_dict["price_lists"].grid.set_column_disp("item_code", false);
+		frm.fields_dict["price_lists"].grid.set_column_disp("item_code", false);
 
 		// item code in price lists is not required
 		var df = frappe.meta.get_docfield("Item Price","item_code",cur_frm.doc.name);
