@@ -54,7 +54,7 @@ frappe.ui.form.on("Item", {
 			erpnext.item.make_dashboard(frm);
 		}
 
-		frm.set_df_property("item_code", "read_only", frm.doc.item_code ? 1 : 0);
+		frm.set_df_property("item_code", "read_only", frm.doc.item_code && frm.doc.creation ? 1 : 0);
 
 		// clear intro
 		frm.set_intro();
@@ -134,6 +134,7 @@ frappe.ui.form.on("Item", {
 			frm.set_value("item_name", frm.doc.item_code);
 		if(!frm.doc.description)
 			frm.set_value("description", frm.doc.item_code);
+		frm.set_value("main_title", frm.doc.item_code + ' - ' + frm.doc.item_name);
 	},
 
 	item_name: function(frm) {
