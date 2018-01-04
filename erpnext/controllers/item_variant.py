@@ -232,7 +232,7 @@ def copy_attributes_to_variant(item, variant):
 
     # copy non no-copy fields
 
-    exclude_fields = ["item_code", "item_name", "show_in_website", "main_title"]
+    exclude_fields = ["item_code", "item_name", "show_in_website", "main_title", "total_projected_qty"]
 
     if item.variant_based_on=='Manufacturer':
         # don't copy manufacturer values if based on part no
