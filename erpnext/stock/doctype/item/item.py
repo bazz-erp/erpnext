@@ -839,3 +839,10 @@ def check_stock_uom_with_bin(item, stock_uom):
     if not matched:
         frappe.throw(_("Default Unit of Measure for Item {0} cannot be changed directly because you have already made some transaction(s) with another UOM. You will need to create a new Item to use a different Default UOM.").format(item))
 
+@frappe.whitelist()
+def calculate_total_projected_qty(item):
+    result = frappe.db.sql("""select ifnull(sum(projected_qty),0) as total_projected_qty from tabBin 
+where item_code=%s""", item, as_dict = 1)[0]
+
+    return result
+

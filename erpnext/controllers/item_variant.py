@@ -9,7 +9,6 @@ from frappe.utils import cstr, flt
 import json
 from frappe import ValidationError
 
-
 class ItemVariantExistsError(frappe.ValidationError): pass
 class InvalidItemAttributeValueError(frappe.ValidationError): pass
 class ItemTemplateCannotHaveStock(frappe.ValidationError): pass
@@ -155,6 +154,12 @@ def create_variant(item, args):
     if isinstance(args, basestring):
         args = json.loads(args)
 
+    total_projected_qty = frappe.db.sql("""select ifnull(sum(projected_qty),0) as total_projected_qty from tabBin 
+    where item_code=%s""", item)[0][0]
+
+    if total_projected_qty != 0:
+        frappe.throw(_("Item stock must be zero to generate variants"))
+
     template = frappe.get_doc("Item", item)
     variant = frappe.new_doc("Item")
     variant.variant_based_on = 'Item Attribute'
@@ -177,6 +182,13 @@ def create_variant(item, args):
 def create_all_variants(item, attributes):
     """creates variant for each combination of attributes of a template"""
     template = frappe.get_doc("Item", item)
+
+    # calculates total projected qty of template to know if item was previously used in a transaction
+    total_projected_qty = frappe.db.sql("""select ifnull(sum(projected_qty),0) as total_projected_qty from tabBin 
+where item_code=%s""", item)[0][0]
+
+    if total_projected_qty != 0:
+        frappe.throw(_("Item stock must be zero to generate variants"))
 
     attributes_values = json.loads(attributes)
 
@@ -220,7 +232,7 @@ def copy_attributes_to_variant(item, variant):
 
     # copy non no-copy fields
 
-    exclude_fields = ["item_code", "item_name", "show_in_website"]
+    exclude_fields = ["item_code", "item_name", "show_in_website", "main_title"]
 
     if item.variant_based_on=='Manufacturer':
         # don't copy manufacturer values if based on part no
