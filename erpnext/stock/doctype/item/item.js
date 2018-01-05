@@ -65,15 +65,27 @@ frappe.ui.form.on("Item", {
 				frappe.set_route("List", "Item", {"variant_of": frm.doc.name});
 			}, __("View"));
 
-			frm.add_custom_button(__("Variant"), function() {
-				erpnext.item.make_variant(frm);
-			}, __("Make"));
-			frm.page.set_inner_btn_group_as_primary(__("Make"));
+			// stock must be zero to generate item variants
+			frappe.call({
+               method: "erpnext.stock.doctype.item.item.calculate_total_projected_qty",
+               args: {
+                   item: frm.doc.name
+               },
+               callback: function (r) {
 
-			// create all variants
-			frm.add_custom_button(__("Generate all Variants"), function () {
-				make_all_variants(frm);
+                   if (r.message.total_projected_qty == 0) {
+                        frm.add_custom_button(__("Variant"), function() {
+                            erpnext.item.make_variant(frm);
+                        });
+
+                        // create all variants
+                        frm.add_custom_button(__("Generate all Variants"), function () {
+                            make_all_variants(frm);
+                        });
+                   }
+               }
             });
+
 		}
 		if (frm.doc.variant_of) {
 			frm.set_intro(__("This Item is a Variant of {0} (Template).", 
