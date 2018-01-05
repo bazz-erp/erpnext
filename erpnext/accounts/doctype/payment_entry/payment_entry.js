@@ -178,8 +178,18 @@ frappe.ui.form.on('Payment Entry', {
         });
 
     },
+	validate: function (frm) {
+        debugger;
+		var filtered = frm.doc.lines.filter(function (row) {
+			return row.mode_of_payment;
+        });
+		frm.doc.lines = filtered;
+		frm.refresh_field("lines");
+        frm.events.set_remaining_amount(frm);
+    },
 
     refresh: function (frm) {
+
         if (frm.doc.docstatus == 1) {
             //hide mode of payment amounts section
             frm.set_df_property("mode_of_payment_totals_section", "hidden", true);

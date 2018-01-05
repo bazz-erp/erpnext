@@ -35,5 +35,7 @@ class ModeofPayment(Document):
 def get_mode_of_payment_types(lines):
     items = json.loads(lines)
     for line in items:
-        line["mode_of_payment_type"] = frappe.get_value("Mode of Payment", line["mode_of_payment"], "type")
+        if "mode_of_payment" in line:
+            print("Getting mode of payment type of {}".format(line["mode_of_payment"]))
+            line["mode_of_payment_type"] = frappe.get_value("Mode of Payment", line["mode_of_payment"], "type")
     return items
