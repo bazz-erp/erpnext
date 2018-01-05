@@ -1138,8 +1138,8 @@ frappe.ui.form.on('Payment Entry Line', {
         frm.events.set_remaining_amount(frm);
         set_up_line(frm, line);
 
-        switch (line.mode_of_payment) {
-            case "Cheques propios":
+        switch (line.mode_of_payment_type) {
+            case "Bank Check":
                 frm.toggle_display("bank_checks_section", display);
                 frm.toggle_display("outgoing_bank_checks", display);
 
@@ -1157,7 +1157,7 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.refresh_fields();
                 break;
 
-            case "Documentos propios":
+            case "Document":
                 frm.toggle_display("documents_section", display);
                 frm.toggle_display("documents", display);
 
@@ -1174,7 +1174,7 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.refresh_fields();
                 break;
 
-            case "Cheques de Terceros":
+            case "Third Party Bank Check":
                 frm.toggle_display("third_party_bank_checks_section", display);
                 frm.toggle_display("third_party_bank_checks", display);
 
@@ -1198,7 +1198,7 @@ frappe.ui.form.on('Payment Entry Line', {
                 frm.refresh_fields();
                 break;
 
-            case "Documentos de Terceros":
+            case "Third Party Document":
                 frm.toggle_display("third_party_documents_section", display);
                 frm.toggle_display("third_party_documents", display);
 
@@ -1410,6 +1410,7 @@ var set_up_payment_lines = function (frm) {
                     $.each(r.message, function (index, value) {
                         var child = frm.add_child("lines");
                         child.mode_of_payment = value.name;
+                        child.mode_of_payment_type = value.type;
                         child.paid_amount = 0
                     });
                     var df1 = frappe.meta.get_docfield("Payment Entry Line","mode_of_payment", frm.doc.name);

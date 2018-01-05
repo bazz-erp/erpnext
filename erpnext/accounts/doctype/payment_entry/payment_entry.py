@@ -588,8 +588,8 @@ class PaymentEntry(AccountsController):
             frappe.throw(_("{0} in Payment Line is mandatory").format("Paid Amount"))
 
     def add_lines_bank_gl_entries(self, gl_entries):
-        # Movements for bank checks are generated separately
-        for line in self.get("lines", {"mode_of_payment": ["not in", ["Cheques propios", "Cheques de Terceros"]]}):
+        # Movements for bank checks mode of payments are generated separately
+        for line in self.get("lines", {"mode_of_payment_type": ["not in", ["Bank Check", "Third Party Bank Check"]]}):
             self.generate_gl_bank_line(line, gl_entries)
 
     def generate_gl_bank_line(self, line, gl_entries):
@@ -702,7 +702,7 @@ class PaymentEntry(AccountsController):
         company_defaults = get_company_defaults(self.company)
         acr = company_defaults.default_payable_account
 
-        check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheques propios"]})
+        check_lines = self.get("lines", {"mode_of_payment_type": ["=", "Bank Check"]})
         if not check_lines:
             return
         # get dest account of check line. All lines has the same dest account
@@ -753,7 +753,7 @@ class PaymentEntry(AccountsController):
 
 
     def generate_gl_entries_for_third_party_bank_checks(self, gl_entries):
-        third_party_check_lines = self.get("lines", {"mode_of_payment": ["=", "Cheques de Terceros"], "paid_amount":
+        third_party_check_lines = self.get("lines", {"mode_of_payment_type": ["=", "Third Party Bank Check"], "paid_amount":
         ["!=", 0]})
         for line in third_party_check_lines:
             self.generate_gl_bank_line(line, gl_entries)
@@ -1208,11 +1208,11 @@ def get_payment_entry_for_eventual_purchase_invoice(docname):
 
 @frappe.whitelist()
 def get_mod_of_payments(company, payment_type):
-    mode_of_payments = frappe.db.sql("""select parent as name from `tabMode of Payment Account` 
-    where parenttype=%(parenttype)s and company=%(company)s order by name""",
+    mode_of_payments = frappe.db.sql("""select t1.parent as name, type from `tabMode of Payment Account` as t1 inner join `tabMode of Payment` as t2 on t1.parent = t2.name
+    where t1.parenttype=%(parenttype)s and t1.company=%(company)s order by name""",
                          {"parenttype": "Mode of Payment", "company": company}, as_dict=1)
 
     if payment_type == "income":
-        return filter(lambda x: (x.name != "Cheques propios") and (x.name != "Documentos propios"), mode_of_payments)
+        return filter(lambda x: (x.type != "Bank Check") and (x.type != "Document"), mode_of_payments)
 
     return mode_of_payments
