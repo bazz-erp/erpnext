@@ -649,6 +649,12 @@ class PaymentEntry(AccountsController):
     def validate_outgoing_checks(self):
         if self.get("checks_topay") != self.get("checks_acumulated"):
             frappe.throw(_("Total Amount Paid with checks must be equal to amount assigned to mode of payment Cheques propios"))
+
+        if self.get("outgoing_bank_checks") and \
+                not get_company_defaults(self.company).default_deferred_checks_account:
+
+            frappe.throw(_("Default deferred checks account in Company is needed for outgoing Bank Checks"))
+
         for check in self.get("outgoing_bank_checks"):
             self.validate_check(check)
 
@@ -697,10 +703,11 @@ class PaymentEntry(AccountsController):
             self.generate_gl_entries_for_third_party_bank_checks(gl_entries)
 
     def generate_gl_entries_for_outgoing_bank_checks(self, gl_entries):
-        def_checks = "Cheques Diferidos - " + self.company_abbr
 
         company_defaults = get_company_defaults(self.company)
+
         acr = company_defaults.default_payable_account
+        def_checks = company_defaults.default_deferred_checks_account
 
         check_lines = self.get("lines", {"mode_of_payment_type": ["=", "Bank Check"]})
         if not check_lines:
@@ -1026,7 +1033,7 @@ def get_account_details(account, date):
 @frappe.whitelist()
 def get_company_defaults(company):
     fields = ["write_off_account", "exchange_gain_loss_account", "cost_center", "default_payable_account",
-              "default_receivable_account"]
+              "default_receivable_account", "default_deferred_checks_account"]
     ret = frappe.db.get_value("Company", company, fields, as_dict=1)
 
     # get currency of default accounts

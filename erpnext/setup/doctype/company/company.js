@@ -153,7 +153,8 @@ erpnext.company.setup_queries = function(frm) {
 		["default_inventory_account", {"account_type": "Stock"}],
 		["cost_center", {}],
 		["round_off_cost_center", {}],
-		["depreciation_cost_center", {}]
+		["depreciation_cost_center", {}],
+		["default_deferred_checks_account", {"account_type": "Deferred checks"}]
 	], function(i, v) {
 		erpnext.company.set_custom_query(frm, v);
 	});
