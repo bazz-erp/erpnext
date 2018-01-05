@@ -63,6 +63,10 @@ class Item(WebsiteGenerator):
         if self.opening_stock:
             self.set_opening_stock()
 
+            # refresh total_projected_qty from database
+            self.total_projected_qty = self.db_get("total_projected_qty")
+
+
         # update item code in each item price of product
         for item_price in self.price_lists:
             if not item_price.item_code:
