@@ -1043,6 +1043,8 @@ frappe.ui.form.on('Payment Entry', {
         $('div[data-fieldname="third_party_bank_checks"] .grid-row-check').change(function (event) {
             var changed_row = event.target;
             update_selected_third_party_bank_checks(frm, changed_row);
+
+            update_payment_average_days(frm);
         });
     },
 
@@ -1050,6 +1052,8 @@ frappe.ui.form.on('Payment Entry', {
         $('div[data-fieldname="third_party_documents"] .grid-row-check').change(function (event) {
             var changed_row = event.target;
             update_selected_third_party_documents(frm, changed_row);
+
+            update_payment_average_days(frm);
         });
     },
 
@@ -1532,7 +1536,6 @@ var update_selected_third_party_bank_checks = function (frm, changed_row) {
         frm.refresh_field("selected_third_party_bank_checks");
     }
     frm.events.refresh_amounts(frm, "third_party_bank_checks", frm.doc.selected_third_party_bank_checks);
-    update_payment_average_days(frm);
 }
 
 var add_selected_bank_check = function (frm, changed_bank_check) {
@@ -1622,7 +1625,6 @@ var update_selected_third_party_documents = function (frm, changed_row) {
     }
 
     frm.events.refresh_amounts(frm, "third_party_documents", frm.doc.selected_third_party_documents);
-    update_payment_average_days(frm);
 }
 
 var add_selected_document = function (frm, changed_document) {
@@ -1750,45 +1752,43 @@ frappe.ui.form.on("Payment Entry", "refresh", function(frm) {
 });
 
 
-var calculate_payment_average_days = function (frm, lines) {
+var update_payment_average_days = function (frm) {
     total_amount = 0;
     days_per_amount = 0;
 
-        $.each(lines, function (i, line) {
+        $.each(frm.doc.lines, function (i, line) {
             if (line.mode_of_payment_type == "Cash") {
                 total_amount += line.paid_amount;
             }
         });
 
         if (is_expenditure(frm)) {
-            days_per_amount += get_checks_days_per_amount(frm, frm.doc.outgoing_bank_checks);
-            total_amount += get_checks_total_amount(frm, frm.doc.outgoing_bank_checks);
 
-            days_per_amount += get_checks_days_per_amount(frm, frm.doc.selected_third_party_checks);
-            total_amount += get_checks_total_amount(frm, frm.doc.selected_third_party_checks);
+            $.each(["outgoing_bank_checks", "selected_third_party_bank_checks"], function (i, field_name) {
+                checks_amounts = get_vouchers_amounts(frm, frm.doc[field_name], function (check) {return check.payment_date});
+                days_per_amount += checks_amounts.days_per_amount;
+                total_amount += checks_amounts.total_amount;
+            });
 
-            days_per_amount += get_documents_days_per_amount(frm, frm.doc.documents);
-            total_amount += get_documents_total_amount(frm, frm.doc.documents);
-
-            days_per_amount += get_documents_days_per_amount(frm, frm.doc.selected_third_party_documents);
-            total_amount += get_documents_total_amount(frm, frm.doc.selected_third_party_documents);
+            $.each(["documents", "selected_third_party_documents"], function (i, field_name) {
+                documents_amounts = get_vouchers_amounts(frm, frm.doc[field_name], function (d) {return d.date});
+                days_per_amount += documents_amounts.days_per_amount;
+                total_amount += documents_amounts.total_amount;
+            });
         }
         else if (is_income(frm)) {
-            days_per_amount += get_checks_days_per_amount(frm, frm.doc.third_party_bank_checks);
-            total_amount += get_checks_total_amount(frm, frm.doc.third_party_bank_checks);
+            checks_amounts = get_vouchers_amounts(frm, frm.doc.third_party_bank_checks, function (check) {return check.payment_date});
+            days_per_amount += checks_amounts.days_per_amount;
+            total_amount += checks_amounts.total_amount;
 
-            days_per_amount += get_documents_days_per_amount(frm, frm.doc.third_party_documents);
-            total_amount += get_documents_total_amount(frm, frm.doc.third_party_documents);
+            documents_amounts = get_vouchers_amounts(frm, frm.doc.third_party_documents, function (d) {return d.date});
+            days_per_amount = documents_amounts.days_per_amount;
+            total_amount += documents_amounts.total_amount;
         }
 
-    if (total_amount != 0) {
-        frm.set_value("average_days", Math.ceil(days_per_amount / total_amount));
-    }
-    else {
-        frm.set_value("average_days", 0);
-    }
-    frm.refresh_field("average_days");
+        frm.set_value("average_days",total_amount != 0 ? Math.ceil(days_per_amount / total_amount): 0);
 
+    frm.refresh_field("average_days");
 }
 
 var get_day_diff = function (aDate, anotherDate) {
@@ -1799,47 +1799,20 @@ var get_day_diff = function (aDate, anotherDate) {
     return day_diff;
 }
 
-var get_checks_days_per_amount = function (frm, checks_collection) {
+var get_vouchers_amounts = function (frm, vouchers_collection, get_due_date) {
     var days_per_amount = 0;
-    $.each(checks_collection, function (index, check) {
-        if (check.payment_date && check.amount && frm.doc.posting_date) {
-            day_diff = get_day_diff(check.payment_date, frm.doc.posting_date);
-            days_per_amount += (check.amount * day_diff);
-        }
-    });
-    return days_per_amount;
-}
-
-var get_checks_total_amount = function (frm, checks_collection) {
-     var total_amount = 0;
-     $.each(checks_collection, function (index, check) {
-         if (check.amount) {
-             total_amount += check.amount;
-         }
-     });
-    return total_amount;
-}
-
-
-var get_documents_days_per_amount = function (frm, documents_collection) {
-    var days_per_amount = 0;
-    $.each(documents_collection, function (index, doc) {
-        if (doc.date && doc.amount && frm.doc.posting_date) {
-            day_diff = get_day_diff(doc.date, frm.doc.posting_date);
-            days_per_amount += (doc.amount * day_diff);
-        }
-    });
-    return days_per_amount;
-}
-
-var get_documents_total_amount = function (frm, documents_collection) {
     var total_amount = 0;
-    $.each(documents_collection, function (index, doc) {
-        if (doc.amount) {
-            total_amount += doc.amount;
+    var dict = {};
+    $.each(vouchers_collection, function (index, voucher) {
+        if (get_due_date(voucher) && voucher.amount && frm.doc.posting_date) {
+            day_diff = get_day_diff(get_due_date(voucher), frm.doc.posting_date);
+            days_per_amount += (voucher.amount * day_diff);
+            total_amount += voucher.amount;
         }
     });
-    return total_amount;
+    dict.days_per_amount = days_per_amount;
+    dict.total_amount = total_amount;
+    return dict;
 }
 
 var set_up_internal_transfer = function (frm) {
@@ -1876,19 +1849,6 @@ var show_third_party_documents = function (frm) {
     frm.toggle_display("third_party_documents_section", true);
     frm.toggle_display("third_party_documents", true);
     frm.set_df_property("third_party_documents", "read_only", true);
-}
-
-var update_payment_average_days = function (frm) {
-    frappe.call({
-       method: "erpnext.accounts.doctype.mode_of_payment.mode_of_payment.get_mode_of_payment_types",
-       args: {
-           "lines": frm.doc.lines
-       },
-       callback: function (r, rt) {
-           var lines = r.message;
-           calculate_payment_average_days(frm, lines);
-       }
-    });
 }
 
 var set_party_type = function (frm) {
