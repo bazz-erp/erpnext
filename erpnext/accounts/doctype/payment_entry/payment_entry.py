@@ -68,6 +68,11 @@ class PaymentEntry(AccountsController):
         if self.payment_type == "Internal Transfer":
             self.validate_internal_transfer()
 
+        #Removes 'Draft' transition, submit document directly
+        self._action = "submit"
+        self.docstatus = 1
+
+
     def on_submit(self):
         self.setup_party_account_field()
 

@@ -18,6 +18,10 @@ class EventualPurchaseInvoice(Document):
         self.set_total_amount()
         self.set_status()
 
+        # Removes 'Draft' transition, submit document directly
+        self._action = "submit"
+        self.docstatus = 1
+
     def validate_dates(self):
         if not self.issue_date:
             self.issue_date = nowdate()

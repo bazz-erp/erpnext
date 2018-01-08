@@ -47,6 +47,10 @@ class SalesOrder(SellingController):
 		if not self.billing_status: self.billing_status = 'Not Billed'
 		if not self.delivery_status: self.delivery_status = 'Not Delivered'
 
+		# Removes 'Draft' transition, submit document directly
+		self._action = "submit"
+		self.docstatus = 1
+
 	def validate_po(self):
 		# validate p.o date v/s delivery date
 		if self.po_date:
