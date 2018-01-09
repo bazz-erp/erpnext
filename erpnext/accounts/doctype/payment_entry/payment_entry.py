@@ -1090,7 +1090,7 @@ def get_reference_details(reference_doctype, reference_name, party_account_curre
 
 
     return frappe._dict({
-        "due_date": ref_doc.get("due_date"),
+        "due_date": ref_doc.get("due_date") if reference_doctype != "Eventual Purchase Invoice" else ref_doc.get("issue_date"),
         "posting_date": ref_doc.get("posting_date"),
         "total_amount": total_amount,
         "outstanding_amount": outstanding_amount,
