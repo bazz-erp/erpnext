@@ -16,11 +16,12 @@ class EventualPurchaseInvoice(Document):
         self.check_mandatory()
         self.validate_cuit()
         self.set_total_amount()
-        self.set_status()
 
         # Removes 'Draft' transition, submit document directly
         self._action = "submit"
         self.docstatus = 1
+
+        self.set_status()
 
     def validate_dates(self):
         if not self.issue_date:
@@ -36,10 +37,12 @@ class EventualPurchaseInvoice(Document):
             frappe.throw (_("CUIT has 11 numbers as maximum"))
 
     def set_status(self, update = False):
+
         if self.is_new():
             self.status = 'Draft'
 
-        elif self.docstatus == 1 and self.outstanding_amount > 0:
+        # None value in outstanding amount indicates that document is new
+        elif self.docstatus == 1 and (self.outstanding_amount > 0 or self.outstanding_amount is None):
             self.status = 'Unpaid'
 
         elif self.docstatus == 1 and self.outstanding_amount <= 0:

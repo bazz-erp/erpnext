@@ -568,7 +568,8 @@ class PaymentEntry(AccountsController):
             total_amount += line.paid_amount
 
         if self.payment_type != "Internal Transfer" and (
-                total_amount != self.paid_amount or self.remaining_amount != 0):
+                total_amount != self.paid_amount):
+
             frappe.throw(_("Remaining Amount must be zero"))
 
     def validate_line_accounts(self, line):
@@ -1201,6 +1202,7 @@ def get_payment_entry_for_eventual_purchase_invoice(docname):
 
     pe = frappe.new_doc("Payment Entry")
     pe.payment_type = "Miscellaneous Expenditure"
+    pe.party_type = None
     pe.company = doc.company
     pe.posting_date = nowdate()
     pe.paid_amount = doc.outstanding_amount
