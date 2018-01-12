@@ -68,6 +68,12 @@ frappe.ui.form.on('Payment Entry', {
             calculate_references_average_payment_date(frm);
         }
 
+        if (!frm.doc.party_type && frm.doc.payment_type == "Receive") {
+            frm.set_value("party_type", "Customer");
+        }
+
+
+
     },
 
     setup: function (frm) {
