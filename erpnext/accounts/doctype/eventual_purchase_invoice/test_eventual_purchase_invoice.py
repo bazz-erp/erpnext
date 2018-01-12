@@ -27,7 +27,7 @@ class TestEventualPurchaseInvoice(unittest.TestCase):
 
         return e_invoice
 
-    def test_eventual_purchase_invoice_total_amount(self):
+    def test_eventual_purchase_invoice(self):
         e_invoice = self.make_eventual_purchase_invoice()
         e_invoice.save()
 
@@ -40,8 +40,6 @@ class TestEventualPurchaseInvoice(unittest.TestCase):
 
         # test Eventual Purchase Invoice Payment
         payment_entry = get_payment_entry_for_eventual_purchase_invoice(e_invoice.name)
-
-
 
         cash_mode_of_payment = frappe.get_value("Mode of Payment",{"type": "Cash"}, "name")
 
