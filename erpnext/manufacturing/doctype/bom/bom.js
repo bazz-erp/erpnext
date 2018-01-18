@@ -188,13 +188,15 @@ erpnext.bom.calculate_op_cost = function(doc) {
 	doc.base_operating_cost = 0.0;
 
 	for(var i=0;i<op.length;i++) {
+		/**
 		var operating_cost = flt(flt(op[i].hour_rate) * flt(op[i].time_in_mins) / 60, 2);
 		var base_operating_cost = flt(flt(op[i].base_hour_rate) * flt(op[i].time_in_mins) / 60, 2);
 		frappe.model.set_value('BOM Operation',op[i].name, "operating_cost", operating_cost);
-		frappe.model.set_value('BOM Operation',op[i].name, "base_operating_cost", base_operating_cost);
+		frappe.model.set_value('BOM Operation',op[i].name, "base_operating_cost", base_operating_cost);*/
 
-		doc.operating_cost += operating_cost;
-		doc.base_operating_cost += base_operating_cost;
+		// BAZZ - operation cost is set directly by user
+		doc.operating_cost += op[i].operating_cost;
+		doc.base_operating_cost += op[i].base_operating_cost;
 	}
 	refresh_field(['operating_cost', 'base_operating_cost']);
 }
