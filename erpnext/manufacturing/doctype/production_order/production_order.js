@@ -113,6 +113,9 @@ frappe.ui.form.on("Production Order", {
 				})
 			})
 		}
+
+		// Bazz - operations can be started when production order is "In Process"
+        frm.fields_dict['operations'].grid.toggle_display("action_button",frm.doc.status === "In Process");
 	},
 	
 	show_progress: function(frm) {
@@ -251,6 +254,11 @@ frappe.ui.form.on("Production Order Operation", {
 		erpnext.production_order.calculate_cost(frm.doc);
 		erpnext.production_order.calculate_total_cost(frm);
 	},
+
+    action_button: function (frm, cdt, cdn) {
+	    var op = locals[cdt][cdn];
+	    frappe.set_route("Form","Operation Completion", op.completion);
+    }
 });
 
 erpnext.production_order = {
