@@ -357,7 +357,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2018-01-18 11:40:08.256238",
+ "modified": "2018-01-18 11:45:08.256238",
  "modified_by": "Administrator", 
  "module": "Manufacturing", 
  "name": "Operation Completion", 
@@ -381,7 +381,7 @@
    "role": "System Manager", 
    "set_user_permissions": 0, 
    "share": 1, 
-   "submit": 0, 
+   "submit": 1,
    "write": 1
   }, 
   {
@@ -401,7 +401,7 @@
    "role": "Manufacturing User", 
    "set_user_permissions": 0, 
    "share": 1, 
-   "submit": 0, 
+   "submit": 1,
    "write": 1
   }, 
   {
@@ -421,7 +421,7 @@
    "role": "Manufacturing Manager", 
    "set_user_permissions": 0, 
    "share": 1, 
-   "submit": 0, 
+   "submit": 1,
    "write": 1
   }
  ], 
