@@ -1901,6 +1901,7 @@ apps/erpnext/erpnext/hr/doctype/upload_attendance/upload_attendance.js +63,Impor
 apps/erpnext/erpnext/stock/doctype/item_price/item_price.js +16,Import in Bulk,Importación en masa
 DocType: Sales Invoice,Impuestos,Impuestos
 DocType: Production Order,In Process,En Proceso
+DocType: Production Order Operation,In Progress,In Progress
 apps/erpnext/erpnext/stock/report/batch_wise_balance_history/batch_wise_balance_history.py +37,In Qty,En Cantidad
 apps/erpnext/erpnext/templates/form_grid/stock_entry_grid.html +26,In Stock,En inventario
 apps/erpnext/erpnext/manufacturing/report/bom_stock_report/bom_stock_report.py +20,In Stock Qty,En Cantidad de Stock
@@ -2753,14 +2754,14 @@ DocType: BOM,Operating Cost (Company Currency),Costo de funcionamiento (Divisa d
 apps/erpnext/erpnext/manufacturing/doctype/operation_completion/operation_completion.js +38,Operating Cost is mandatory to Finish Operation,El costo de Operacion es obligatorio para finalizarla
 DocType: BOM Operation,Operating Cost(Company Currency),Costo de funcionamiento (Divisa de la Compañia)
 DocType: Workstation,Operating Costs,Costos operativos
-DocType: BOM Operation,Operation,Operación
+DocType: BOM Operation,Operation,Operation
 DocType: Operation Completion,Operation ,
 DocType: Operation Completion,Operation Completion,Realización de Operación
 DocType: Operation Completion Item,Operation Completion Item,Producto de Realización de Operación
 DocType: Operation Completion,Operation Cost,Costo de operación
 DocType: Production Order Operation,Operation Description,Descripción de la operación
 DocType: Timesheet Detail,Operation Id,One of
-DocType: BOM Website Operation,Operation Time,Tiempo de Operación
+DocType: BOM Website Operation,Operation Time,Operation Time
 DocType: BOM Operation,Operation Time ,
 apps/erpnext/erpnext/manufacturing/doctype/production_order/production_order.py +410,Operation Time must be greater than 0 for Operation {0},El tiempo de operación debe ser mayor que 0 para {0}
 apps/erpnext/erpnext/manufacturing/doctype/operation_completion/operation_completion.py +23,Operation cannot be started,La Operación no puede ser iniciada
@@ -2904,7 +2905,7 @@ DocType: Account,Payable,Pagadero
 DocType: Expense Claim,Payable Account,Cuenta por pagar
 DocType: Email Digest,Payables,Cuentas por pagar
 DocType: Cheque Print Template,Payer Settings,Configuración del pagador
-apps/erpnext/erpnext/accounts/doctype/eventual_purchase_invoice/eventual_purchase_invoice.js +8,Payment,Pago
+apps/erpnext/erpnext/accounts/doctype/eventual_purchase_invoice/eventual_purchase_invoice.js +8,Payment,Payment
 apps/erpnext/erpnext/accounts/report/daily_movements/daily_movements.py +56,Payment ,
 DocType: Payment Gateway Account,Payment Account,Cuenta de pagos
 DocType: Bank Check,Payment Date,Fecha de Pago
@@ -4940,6 +4941,7 @@ DocType: GL Entry,Voucher Type,Tipo de Comprobante
 apps/erpnext/erpnext/manufacturing/doctype/production_order/production_order_calendar.js +42,WIP Warehouse,Almacén de trabajos en proceso
 DocType: Workstation,Wages,Salarios
 DocType: Workstation,Wages per hour,Salarios por hora
+DocType: Production Order Operation,Waiting,En Espera
 DocType: Program Enrollment,Walking,Caminando
 apps/erpnext/erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts.py +41,Wallets,Carteras
 DocType: Asset,Warehouse,Almacén
@@ -5031,7 +5033,6 @@ DocType: Purchase Invoice,Without Payment of Tax,Without Payment of Tax
 DocType: Guardian,Work Address,Dirección del trabajo
 DocType: Maintenance Visit Purpose,Work Done,Trabajo Realizado
 DocType: Warranty Claim,Work In Progress,Trabajo en proceso
-DocType: Production Order Operation,Work in Progress,Warning: Invalid attachment {0}
 DocType: Production Order,Work-in-Progress Warehouse,Almacén de trabajos en proceso
 apps/erpnext/erpnext/manufacturing/doctype/production_order/production_order.py +182,Work-in-Progress Warehouse is required before Submit,Se requiere un almacén de trabajos en proceso antes de validar
 apps/erpnext/erpnext/config/setup.py +71,Workflow,Flujos de Trabajo
