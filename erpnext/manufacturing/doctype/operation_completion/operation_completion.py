@@ -50,6 +50,8 @@ parent = %s AND idx = %s""", (self.production_order, po_operation.idx - 1))
 
         if next_operation:
             next_operation[0].db_set("status", "Pending")
+            next_operation_completion = frappe.get_doc("Operation Completion", next_operation[0].completion)
+            next_operation_completion.db_set("status", "Pending")
 
 
 
