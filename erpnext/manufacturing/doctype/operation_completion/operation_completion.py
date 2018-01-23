@@ -26,12 +26,6 @@ class OperationCompletion(Document):
 
         po_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
 
-        previous_op_status = frappe.db.sql("""select status from `tabProduction Order Operation` where 
-parent = %s AND idx = %s""", (self.production_order, po_operation.idx - 1))
-
-        if previous_op_status and previous_op_status[0][0] != 'Completed':
-            frappe.throw(_("Previous Operation must be completed"))
-
         self.db_set("status", "In Process")
         po_operation.db_set("status", "In Process")
 
@@ -45,22 +39,6 @@ parent = %s AND idx = %s""", (self.production_order, po_operation.idx - 1))
 
         self.db_set("status", "Completed")
         po_operation.db_set("status", "Completed")
-
-        next_operation = filter(lambda op: op.idx == po_operation.idx + 1, production_order.operations)
-
-        if next_operation:
-            next_operation[0].db_set("status", "Pending")
-            next_operation_completion = frappe.get_doc("Operation Completion", next_operation[0].completion)
-            next_operation_completion.db_set("status", "Pending")
-
-
-
-
-
-
-
-
-
 
 
 
