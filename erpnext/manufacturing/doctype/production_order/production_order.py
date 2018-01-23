@@ -236,23 +236,16 @@ class ProductionOrder(Document):
             bom_list = [self.bom_no]
 
         # BAZZ - operating cost is needed.
-
-        """BAZZ - operations must be done manually in order by user. Thus, all operations except first 
-           has 'Waiting' status"""
         operations = frappe.db.sql("""
             select 
                 operation, description, workstation, idx, operating_cost,
                 base_hour_rate as hour_rate, time_in_mins, 
-                "Waiting" as status, parent as bom
+                "Pending" as status, parent as bom
             from
                 `tabBOM Operation`
             where
                  parent in (%s) order by idx
         """	% ", ".join(["%s"]*len(bom_list)), tuple(bom_list), as_dict=1)
-
-        # BAZZ - first operation can be completed, thus its state is 'Pending'
-        if operations:
-            operations[0].status = 'Pending'
 
         self.set('operations', operations)
         self.calculate_time()
@@ -651,3 +644,20 @@ def stop_unstop(production_order, status):
     pro_order.notify_update()
 
     return pro_order.status
+
+
+# BAZZ - start operation
+@frappe.whitelist()
+def start_operation(operation_id):
+    get_operation_completion(operation_id).start_operation()
+
+# BAZZ- end operation
+@frappe.whitelist()
+def finish_operation(operation_id):
+    get_operation_completion(operation_id).finish_operation()
+
+
+def get_operation_completion(operation_id):
+    completion_id = frappe.db.sql("""select completion from `tabProduction Order Operation` where name = %s""", operation_id)[0][0]
+    return frappe.get_doc("Operation Completion", completion_id)
+

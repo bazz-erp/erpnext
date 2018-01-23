@@ -90,6 +90,12 @@ frappe.ui.form.on("Production Order", {
 		// formatter for production order operation
 		frm.set_indicator_formatter('operation',
 			function(doc) { return (frm.doc.qty==doc.completed_qty) ? "green" : "orange" });
+
+		if (frm.doc.docstatus == 1) {
+			frm.fields_dict["operations"].grid.add_custom_button("Pepe", function () {
+				alert ("pepe");
+            });
+		}
 	},
 
 	refresh: function(frm) {
@@ -256,8 +262,14 @@ frappe.ui.form.on("Production Order Operation", {
 	},
 
     action_button: function (frm, cdt, cdn) {
-	    var op = locals[cdt][cdn];
-	    frappe.set_route("Form","Operation Completion", op.completion);
+	    var operation = locals[cdt][cdn];
+	    if (operation.status == "Pending") {
+	    	create_start_operation_dialog(frm, operation);
+		}
+		if (operation.status == "In Process") {
+	    	create_finish_operation_dialog(frm, operation);
+		}
+	    //frappe.set_route("Form","Operation Completion", op.completion);
     }
 });
 
@@ -391,4 +403,71 @@ erpnext.production_order = {
 			}
 		})
 	}
+}
+
+var create_start_operation_dialog = function (frm, operation) {
+	var fields = [{
+		fieldname: "workshop",
+		fieldtype: "Link",
+		options: "Supplier",
+		label: __("Workshop")
+	},{
+		fieldtype: "Table",
+		fieldname: "items_supplied",
+		description: __("Supplied Items"),
+		fields: [
+			{fieldtype: "Link", fieldname: "item", options: "Item" ,label: __("Item Code"), in_list_view: 1 },
+			{fieldtype: "Int", fieldname: "qty", label: __("Qty"), in_list_view: 1}
+			],
+		get_data: function () {
+			return [];
+        }
+	}];
+
+	var d = new frappe.ui.Dialog({
+		title: __("Start Operation"),
+		fields: fields,
+	});
+
+	d.set_primary_action(__("Start"),function () {
+		frappe.call({
+			method: "erpnext.manufacturing.doctype.production_order.production_order.start_operation",
+			args: {
+				"operation_id": operation.name
+			},
+			callback: function (r) {
+				d.hide();
+            }
+		});
+	});
+
+	d.show();
+}
+
+var create_finish_operation_dialog = function (frm, operation) {
+	var dialog = new frappe.ui.Dialog({
+		title: __("Finish Operation"),
+		fields: [
+			{
+				fieldname: "operating_cost",
+				fieldtype: "Currency",
+				label: __("Operating Cost")
+			}
+		]
+	});
+
+	dialog.set_value("operating_cost", operation.operating_cost);
+	
+	dialog.set_primary_action(__("Finish"), function () {
+		frappe.call({
+			method: "erpnext.manufacturing.doctype.production_order.production_order.finish_operation",
+			args: {
+				operation_id: operation.name
+			},
+			callback: function (r) {
+				dialog.hide();
+            }
+		});
+    });
+	dialog.show();
 }
