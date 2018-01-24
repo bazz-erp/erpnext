@@ -122,6 +122,8 @@ frappe.ui.form.on("Production Order", {
 
 		// Bazz - operations can be started when production order is "In Process"
         frm.fields_dict['operations'].grid.toggle_display("action_button",frm.doc.status === "In Process");
+
+		update_operations_action(frm);
 	},
 	
 	show_progress: function(frm) {
@@ -470,4 +472,21 @@ var create_finish_operation_dialog = function (frm, operation) {
 		});
     });
 	dialog.show();
+}
+
+var update_operations_action = function (frm) {
+
+	$.each(frm.doc.operations, function (i, operation) {
+		var start_button = "<a class='action-button'>Start</a>";
+		var finish_button = "<a class='action-button'>Finish</a>";
+		wrapper = frm.fields_dict["operations"].grid.grid_rows_by_docname[operation.name].wrapper.find("div[data-fieldname='test_button'] .static-area");
+		debugger;
+		if (operation.status == "Pending") {
+			wrapper.html(start_button);
+		}
+		if (operation.status == "In Process") {
+			wrapper.html(finish_button);
+		}
+
+    });
 }
