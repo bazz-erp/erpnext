@@ -409,7 +409,7 @@ var create_start_operation_dialog = function (frm, operation) {
 	var fields = [{
 		fieldname: "workshop",
 		fieldtype: "Link",
-		options: "Supplier",
+		options: "Workshop",
 		label: __("Workshop")
 	},{
 		fieldtype: "Table",
@@ -430,7 +430,7 @@ var create_start_operation_dialog = function (frm, operation) {
 	});
 
 	d.set_primary_action(__("Start"),function () {
-		frappe.call({
+	    frappe.call({
 			method: "erpnext.manufacturing.doctype.production_order.production_order.start_operation",
 			args: {
 				"operation_id": operation.name
