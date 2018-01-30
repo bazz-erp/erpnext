@@ -850,3 +850,7 @@ where item_code=%s""", item, as_dict = 1)[0]
 
     return result
 
+
+@frappe.whitelist()
+def get_product_subgroups():
+    return frappe.db.sql("""select name from `tabItem Group` where parent_item_group='Productos'""", as_dict=1)

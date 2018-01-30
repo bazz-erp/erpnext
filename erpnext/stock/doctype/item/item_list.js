@@ -1,44 +1,54 @@
 frappe.listview_settings['Item'] = {
-	add_fields: ["item_name", "stock_uom", "item_group", "image", "variant_of",
-		"has_variants", "end_of_life", "disabled", "total_projected_qty"],
-	filters: [["disabled", "=", "0"]],
+    add_fields: ["item_name", "stock_uom", "item_group", "image", "variant_of",
+        "has_variants", "end_of_life", "disabled", "total_projected_qty"],
+    filters: [["disabled", "=", "0"]],
 
-	get_indicator: function(doc) {
-		if(doc.total_projected_qty < 0) {
-			return [__("Shortage"), "red", "total_projected_qty,<,0"];
-		} else if (doc.disabled) {
-			return [__("Disabled"), "grey", "disabled,=,Yes"];
-		} else if (doc.end_of_life && doc.end_of_life < frappe.datetime.get_today()) {
-			return [__("Expired"), "grey", "end_of_life,<,Today"];
-		} else if (doc.has_variants) {
-			return [__("Template"), "orange", "has_variants,=,Yes"];
-		} else if (doc.variant_of) {
-			return [__("Variant"), "green", "variant_of,=," + doc.variant_of];
-		}
-	},
-	reports: [
-		{
-			name: 'Stock Summary',
-			report_type: 'Page',
-			route: 'stock-balance'
-		},
-		{
-			name: 'Stock Ledger',
-			report_type: 'Script Report'
-		},
-		{
-			name: 'Stock Balance',
-			report_type: 'Script Report'
-		},
-		{
-			name: 'Stock Projected Qty',
-			report_type: 'Script Report'
-		}
+    get_indicator: function (doc) {
+        if (doc.total_projected_qty < 0) {
+            return [__("Shortage"), "red", "total_projected_qty,<,0"];
+        } else if (doc.disabled) {
+            return [__("Disabled"), "grey", "disabled,=,Yes"];
+        } else if (doc.end_of_life && doc.end_of_life < frappe.datetime.get_today()) {
+            return [__("Expired"), "grey", "end_of_life,<,Today"];
+        } else if (doc.has_variants) {
+            return [__("Template"), "orange", "has_variants,=,Yes"];
+        } else if (doc.variant_of) {
+            return [__("Variant"), "green", "variant_of,=," + doc.variant_of];
+        }
+    },
+    reports: [
+        {
+            name: 'Stock Summary',
+            report_type: 'Page',
+            route: 'stock-balance'
+        },
+        {
+            name: 'Stock Ledger',
+            report_type: 'Script Report'
+        },
+        {
+            name: 'Stock Balance',
+            report_type: 'Script Report'
+        },
+        {
+            name: 'Stock Projected Qty',
+            report_type: 'Script Report'
+        }
 
-	],
-	onload: function (listview) {
-        	frappe.route_options = {"item_group": ["=",__("Products")]};
-	}
+    ],
+    onload: function (listview) {
+        frappe.call({
+            method: "erpnext.stock.doctype.item.item.get_product_subgroups",
+            args: {},
+            callback: function (r) {
+                groups = r.message.map(function (obj) {
+                    return obj.name;
+                });
+                groups.push("Productos");
+                frappe.route_options = {"item_group": ["in", groups]};
+                frappe.views.list_view.Item.refresh();
+            }
+        });
+    }
 };
-
 frappe.help.youtube_id["Item"] = "qXaEwld4_Ps";
