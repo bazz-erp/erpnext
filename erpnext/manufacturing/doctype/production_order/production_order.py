@@ -172,6 +172,11 @@ class ProductionOrder(Document):
 
             self.db_set(fieldname, qty)
 
+    def before_insert(self):
+        item_name = frappe.get_doc("Item", self.production_item).item_name
+        if not self.main_title:
+            self.main_title = self.production_item + " - " + item_name
+
     def before_submit(self):
         # BAZZ - Time logs not needed
         # self.make_time_logs()
@@ -425,6 +430,7 @@ class ProductionOrder(Document):
         self.set_required_items()
         self.set_production_order_operations()
 
+
         return check_if_scrap_warehouse_mandatory(self.bom_no)
 
     def set_available_qty(self):
@@ -445,6 +451,8 @@ class ProductionOrder(Document):
             for item in item_dict.values():
                 self.append('required_items', {
                     'item_code': item.item_code,
+                    'item_name': item.item_name,
+                    'description': item.description,
                     'required_qty': item.qty,
                     'source_warehouse': item.source_warehouse or item.default_warehouse
                 })
