@@ -91,11 +91,6 @@ frappe.ui.form.on("Production Order", {
 		frm.set_indicator_formatter('operation',
 			function(doc) { return (frm.doc.qty==doc.completed_qty) ? "green" : "orange" });
 
-		if (frm.doc.docstatus == 1) {
-			frm.fields_dict["operations"].grid.add_custom_button("Pepe", function () {
-				alert ("pepe");
-            });
-		}
 	},
 
 	refresh: function(frm) {
@@ -475,12 +470,13 @@ var create_finish_operation_dialog = function (frm, operation) {
 }
 
 var update_operations_action = function (frm) {
-
 	$.each(frm.doc.operations, function (i, operation) {
-		var start_button = "<a class='action-button'>Start</a>";
-		var finish_button = "<a class='action-button'>Finish</a>";
-		wrapper = frm.fields_dict["operations"].grid.grid_rows_by_docname[operation.name].wrapper.find("div[data-fieldname='test_button'] .static-area");
-		debugger;
+		var operations_grid = frm.fields_dict["operations"].grid;
+		var start_button = "<a id='_operation' class='action-button'>Start</a>";
+		var finish_button = "<a id='_operation' class='action-button'>Finish</a>";
+
+		wrapper = operations_grid.grid_rows_by_docname[operation.name].wrapper.find("div[data-fieldname='test_button'] .static-area");
+
 		if (operation.status == "Pending") {
 			wrapper.html(start_button);
 		}
@@ -488,5 +484,8 @@ var update_operations_action = function (frm) {
 			wrapper.html(finish_button);
 		}
 
+		$("#_operation").on('click', function () {
+			alert($(this).text());
+        })
     });
 }

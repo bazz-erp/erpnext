@@ -185,7 +185,6 @@ frappe.ui.form.on('Payment Entry', {
 
     },
 	validate: function (frm) {
-        debugger;
 		var filtered = frm.doc.lines.filter(function (row) {
 			return row.mode_of_payment;
         });
