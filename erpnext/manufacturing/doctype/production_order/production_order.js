@@ -402,32 +402,47 @@ erpnext.production_order = {
 	}
 }
 
-var create_start_operation_dialog = function (frm, operation) {
+var create_start_operation_dialog = function (operation) {
 	var fields = [{
 		fieldname: "workshop",
 		fieldtype: "Link",
-		options: "Workshop",
-		label: __("Workshop")
+		options: "Supplier",
+		label: __("Workshop"),
+		get_query: function(doc) {
+            return {
+                filters: {
+                    'supplier_type': 'Taller',
+                }
+            }
+        }
 	},{
 		fieldtype: "Table",
 		fieldname: "items_supplied",
-		description: __("Supplied Items"),
+		description: __("Materials"),
 		fields: [
 			{fieldtype: "Link", fieldname: "item", options: "Item" ,label: __("Item Code"), in_list_view: 1 },
+			{fieldtype: "Data", fieldname: "item_name", label: __("Name"), in_list_view: 0},
 			{fieldtype: "Int", fieldname: "qty", label: __("Qty"), in_list_view: 1}
 			],
 		get_data: function () {
-			return [];
+			items = cur_frm.doc.required_items;
+
+			return items.map(function(obj) {
+				return {item : obj.item_code, item_name: obj.item_name, qty : 0}
+            });
         }
 	}];
 
 	var d = new frappe.ui.Dialog({
-		title: __("Start Operation"),
+		title: __("Send Materials"),
 		fields: fields,
 	});
 
-	d.set_primary_action(__("Start"),function () {
-	    frappe.call({
+	if (!d.fields_dict.items_supplied.df.data)
+		d.fields_dict.items_supplied.df.data = [];
+
+	d.set_primary_action(__("Send"),function () {
+		frappe.call({
 			method: "erpnext.manufacturing.doctype.production_order.production_order.start_operation",
 			args: {
 				"operation_id": operation.name
@@ -441,9 +456,9 @@ var create_start_operation_dialog = function (frm, operation) {
 	d.show();
 }
 
-var create_finish_operation_dialog = function (frm, operation) {
+var create_finish_operation_dialog = function (operation) {
 	var dialog = new frappe.ui.Dialog({
-		title: __("Finish Operation"),
+		title: __("Receive materials"),
 		fields: [
 			{
 				fieldname: "operating_cost",
@@ -455,7 +470,7 @@ var create_finish_operation_dialog = function (frm, operation) {
 
 	dialog.set_value("operating_cost", operation.operating_cost);
 	
-	dialog.set_primary_action(__("Finish"), function () {
+	dialog.set_primary_action(__("Receive"), function () {
 		frappe.call({
 			method: "erpnext.manufacturing.doctype.production_order.production_order.finish_operation",
 			args: {
@@ -468,24 +483,28 @@ var create_finish_operation_dialog = function (frm, operation) {
     });
 	dialog.show();
 }
-
+var get_operation_by_name = function (frm, operation_name) {
+	return frm.fields_dict["operations"].grid.grid_rows_by_docname[operation_name]
+}
 var update_operations_action = function (frm) {
 	$.each(frm.doc.operations, function (i, operation) {
-		var operations_grid = frm.fields_dict["operations"].grid;
-		var start_button = "<a id='_operation' class='action-button'>Start</a>";
-		var finish_button = "<a id='_operation' class='action-button'>Finish</a>";
 
-		wrapper = operations_grid.grid_rows_by_docname[operation.name].wrapper.find("div[data-fieldname='test_button'] .static-area");
+		var start_button = "<button id='_operation_send' operation='" + operation.name + "' class='btn btn-secondary btn-xs'>Enviar</button>";
+		var finish_button = "<button id='_operation_receive' operation='" + operation.name + "' class='btn btn-secondary btn-xs'>Recibir</button>";
 
-		if (operation.status == "Pending") {
-			wrapper.html(start_button);
-		}
-		if (operation.status == "In Process") {
-			wrapper.html(finish_button);
-		}
+		wrapper = get_operation_by_name(frm, operation.name).wrapper.find("div[data-fieldname='test_button'] .static-area");
+		wrapper.html(start_button + " " + finish_button);
 
-		$("#_operation").on('click', function () {
-			alert($(this).text());
-        })
+		$("#_operation_send").on('click', function () {
+			var op = get_operation_by_name(cur_frm, $(this).attr('operation'));
+			console.log(op);
+			create_start_operation_dialog(op);
+        });
+
+		$("#_operation_receive").on('click', function () {
+			var op = get_operation_by_name(cur_frm, $(this).attr('operation'));
+			console.log(op);
+			create_finish_operation_dialog(op);
+        });
     });
 }

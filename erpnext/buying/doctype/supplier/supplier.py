@@ -9,6 +9,7 @@ from frappe.model.naming import make_autoname
 from frappe.contacts.address_and_contact import load_address_and_contact, delete_contact_and_address
 from erpnext.utilities.transaction_base import TransactionBase
 from erpnext.accounts.party import validate_party_accounts, get_dashboard_info, get_timeline_data  # keep this
+import erpnext
 
 
 class Supplier(TransactionBase):
@@ -46,6 +47,9 @@ class Supplier(TransactionBase):
             if not self.naming_series:
                 msgprint(_("Series is mandatory"), raise_exception=1)
 
+        print("Supplier type:" + self.supplier_type)
+        if (self.supplier_type == 'Taller'):
+            self.create_workshop_warehouse()
         validate_party_accounts(self)
         validate_code(self)
 
@@ -55,6 +59,14 @@ class Supplier(TransactionBase):
     def after_rename(self, olddn, newdn, merge=False):
         if frappe.defaults.get_global_default('supp_master_name') == 'Supplier Name':
             frappe.db.set(self, "supplier_name", newdn)
+
+    def create_workshop_warehouse(self):
+        if not self.workshop_warehouse:
+            print("Creating supplier workshop")
+            warehouse = frappe.get_doc({"doctype": "Warehouse", "is_group": 0, "company": erpnext.get_default_company(),
+                                        "warehouse_name": self.supplier_name})
+            warehouse.save()
+            self.workshop_warehouse = warehouse.name
 
 
 @frappe.whitelist()
