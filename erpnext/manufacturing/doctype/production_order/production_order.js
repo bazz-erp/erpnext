@@ -402,7 +402,7 @@ erpnext.production_order = {
 	}
 }
 
-var create_start_operation_dialog = function (frm, operation) {
+var create_start_operation_dialog = function (operation) {
 	var fields = [{
 		fieldname: "workshop",
 		fieldtype: "Link",
@@ -441,7 +441,7 @@ var create_start_operation_dialog = function (frm, operation) {
 	d.show();
 }
 
-var create_finish_operation_dialog = function (frm, operation) {
+var create_finish_operation_dialog = function (operation) {
 	var dialog = new frappe.ui.Dialog({
 		title: __("Finish Operation"),
 		fields: [
@@ -468,24 +468,28 @@ var create_finish_operation_dialog = function (frm, operation) {
     });
 	dialog.show();
 }
-
+var get_operation_by_name = function (frm, operation_name) {
+	return frm.fields_dict["operations"].grid.grid_rows_by_docname[operation_name]
+}
 var update_operations_action = function (frm) {
 	$.each(frm.doc.operations, function (i, operation) {
-		var operations_grid = frm.fields_dict["operations"].grid;
-		var start_button = "<a id='_operation' class='action-button'>Start</a>";
-		var finish_button = "<a id='_operation' class='action-button'>Finish</a>";
 
-		wrapper = operations_grid.grid_rows_by_docname[operation.name].wrapper.find("div[data-fieldname='test_button'] .static-area");
+		var start_button = "<button id='_operation_send' operation='" + operation.name + "' class='btn btn-secondary btn-xs'>Enviar</button>";
+		var finish_button = "<button id='_operation_receive' operation='" + operation.name + "' class='btn btn-secondary btn-xs'>Recibir</button>";
 
-		if (operation.status == "Pending") {
-			wrapper.html(start_button);
-		}
-		if (operation.status == "In Process") {
-			wrapper.html(finish_button);
-		}
+		wrapper = get_operation_by_name(frm, operation.name).wrapper.find("div[data-fieldname='test_button'] .static-area");
+		wrapper.html(start_button + finish_button);
 
-		$("#_operation").on('click', function () {
-			alert($(this).text());
-        })
+		$("#_operation_send").on('click', function () {
+			var op = get_operation_by_name(cur_frm, $(this).attr('operation'));
+			console.log(op);
+			create_start_operation_dialog(op);
+        });
+
+		$("#_operation_receive").on('click', function () {
+			var op = get_operation_by_name(cur_frm, $(this).attr('operation'));
+			console.log(op);
+			create_finish_operation_dialog(op);
+        });
     });
 }
