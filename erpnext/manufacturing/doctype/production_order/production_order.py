@@ -172,10 +172,10 @@ class ProductionOrder(Document):
 
             self.db_set(fieldname, qty)
 
-    def before_insert(self):
-        item_name = frappe.get_doc("Item", self.production_item).item_name
+    def on_update(self):
+        self.production_item_name = frappe.get_doc("Item", self.production_item).item_name
         if not self.main_title:
-            self.main_title = self.production_item + " - " + item_name
+            self.main_title = self.production_item + " - " + self.production_item_name
 
     def before_submit(self):
         # BAZZ - Time logs not needed
@@ -656,13 +656,13 @@ def stop_unstop(production_order, status):
 
 # BAZZ - start operation
 @frappe.whitelist()
-def start_operation(operation_id):
-    get_operation_completion(operation_id).start_operation()
+def start_operation(operation_id, workshop, items_supplied):
+    get_operation_completion(operation_id).start_operation(workshop, json.loads(items_supplied))
 
 # BAZZ- end operation
 @frappe.whitelist()
-def finish_operation(operation_id):
-    get_operation_completion(operation_id).finish_operation()
+def finish_operation(operation_id, operating_cost, items_received):
+    get_operation_completion(operation_id).finish_operation(operating_cost, json.loads(items_received))
 
 
 def get_operation_completion(operation_id):
