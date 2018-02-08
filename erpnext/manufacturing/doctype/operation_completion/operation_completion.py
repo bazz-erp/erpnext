@@ -29,7 +29,25 @@ class OperationCompletion(Document):
         if self.status == 'Pending':
             po_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
             self.db_set("status", "In Process")
+            self.db_set("workshop",workshop)
             po_operation.db_set("status", "In Process")
+
+        # Clear items whose transferred qty is 0
+        items_supplied = filter(lambda item: item.qty != 0, items_supplied)
+
+        # REALIZAR EL MOVIMIENTO DE STOCK
+        self.transfer_material_to_workshop(production_order, items_supplied)
+
+        # update total qty supplied to the workshop in items supplied Table
+        for item in items_supplied:
+            items_supplied_detail = self.get("items_supplied", {"item_code": item.item})
+            if not items_supplied_detail:
+                self.append("items_supplied", {"item_code": item, "item_qty": item.qty})
+                self.save()
+            else:
+                items_supplied_detail[0].qty += item.qty
+                items_supplied_detail[0].save()
+
 
     def finish_operation(self, operating_cost, items_received):
         if not self.status == 'In Process':
@@ -55,6 +73,25 @@ class OperationCompletion(Document):
         if (self.total_received_qty == production_order.qty):
             self.db_set("status", "Completed")
             po_operation.db_set("status", "Completed")
+
+    def transfer_material_to_workshop(self, production_order, items_supplied):
+        stock_entry = frappe.new_doc("Stock Entry")
+        stock_entry.purpose = "Material Transfer"
+        stock_entry.title = "Material Transfer to Workshop"
+        stock_entry.production_order = production_order.name
+        stock_entry.company = production_order.company
+        stock_entry.from_bom = 0
+
+        workshop_warehouse = frappe.get_doc("Supplier", self.workshop).workshop_warehouse
+
+        stock_entry.from_warehouse = production_order.wip_warehouse
+        stock_entry.to_warehouse = workshop_warehouse
+
+        for item in items_supplied:
+            stock_entry.append("items", {"item_code": item.item, "qty": item.qty})
+
+        stock_entry.submit()
+
 
 
 

@@ -413,7 +413,7 @@ var create_start_operation_dialog = function (operation) {
 		fields: [
 			{fieldtype: "Link", fieldname: "item", options: "Item" ,label: __("Item Code"), in_list_view: 1 },
 			{fieldtype: "Data", fieldname: "item_name", label: __("Name"), in_list_view: 0},
-			{fieldtype: "Int", fieldname: "qty", label: __("Qty"), in_list_view: 1}
+			{fieldtype: 'Int', fieldname: "qty", label: __("Qty"), in_list_view: 1, reqd: 1}
 			],
 		get_data: function () {
 			items = cur_frm.doc.required_items;
@@ -444,7 +444,7 @@ var create_start_operation_dialog = function (operation) {
 			callback: function (r) {
 				dialog.hide();
             }
-		});
+		});*/
 	});
 
 	dialog.show();
@@ -466,7 +466,7 @@ var create_finish_operation_dialog = function (operation) {
                 fields: [
                     {fieldtype: "Link", fieldname: "item", options: "Item", label: __("Item Code"), in_list_view: 1},
                     {fieldtype: "Data", fieldname: "item_name", label: __("Name"), in_list_view: 0},
-                    {fieldtype: "Int", fieldname: "qty", label: __("Qty"), in_list_view: 1}
+                    {fieldtype: "Float", fieldname: "qty", label: __("Qty"), in_list_view: 1}
                 ],
                 get_data: function () {
 					return [{
