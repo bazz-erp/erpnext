@@ -425,29 +425,29 @@ var create_start_operation_dialog = function (operation) {
         }
 	}];
 
-	var d = new frappe.ui.Dialog({
+	var dialog = new frappe.ui.Dialog({
 		title: __("Send Materials"),
 		fields: fields,
 	});
 
-	if (!d.fields_dict.items_supplied.df.data)
-		d.fields_dict.items_supplied.df.data = [];
+	if (!dialog.fields_dict.items_supplied.df.data)
+		dialog.fields_dict.items_supplied.df.data = [];
 
-	d.set_primary_action(__("Send"),function () {
+	dialog.set_primary_action(__("Send"),function () {
 		frappe.call({
 			method: "erpnext.manufacturing.doctype.production_order.production_order.start_operation",
 			args: {
 				operation_id: operation,
-				workshop: d.get_value("workshop"),
-				items_supplied: d.get_value("items_supplied")
+				workshop: dialog.get_value("workshop"),
+				items_supplied: dialog.get_value("items_supplied")
 			},
 			callback: function (r) {
-				d.hide();
+				dialog.hide();
             }
 		});
 	});
 
-	d.show();
+	dialog.show();
 }
 
 var create_finish_operation_dialog = function (operation) {
@@ -485,8 +485,8 @@ var create_finish_operation_dialog = function (operation) {
 			method: "erpnext.manufacturing.doctype.production_order.production_order.finish_operation",
 			args: {
 				operation_id: operation.name,
-				operating_cost: d.get_value("operating_cost"),
-				items_received: d.get_value("items_received")
+				operating_cost: dialog.get_value("operating_cost"),
+				items_received: dialog.get_value("items_received")
 			},
 			callback: function (r) {
 				dialog.hide();
@@ -502,8 +502,11 @@ var update_operations_action = function (frm) {
 
 	$.each(frm.doc.operations, function (i, operation) {
 
-		var start_button = "<button operation='" + operation.name + "' class='btn btn-secondary btn-xs _operation_send'>Enviar</button>";
-		var finish_button = "<button operation='" + operation.name + "' class='btn btn-secondary btn-xs _operation_receive'>Recibir</button>";
+	    var send_disabled = ["Pending", "In Process"].includes(operation.status) ? "" : "disabled";
+	    var receive_disabled = operation.status == "In Process" ? "" : "disabled";
+
+		var start_button = "<button operation='" + operation.name + "' class='btn btn-secondary btn-xs _operation_send' " + send_disabled + ">Enviar</button>";
+		var finish_button = "<button operation='" + operation.name + "' class='btn btn-secondary btn-xs _operation_receive' " + receive_disabled + ">Recibir</button>";
 
 		wrapper = get_operation_by_name(frm, operation.name).wrapper.find("div[data-fieldname='test_button'] .static-area");
 		wrapper.html(start_button + " " + finish_button);
