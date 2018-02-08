@@ -23,6 +23,7 @@ class OperationCompletion(Document):
            frappe.throw(_("You cant send anymore, the operation is already completed."))
         production_order = frappe.get_doc("Production Order", self.production_order)
 
+        # ACUMULAR EN LA TABLA
         # REALIZAR EL MOVIMIENTO DE STOCK
 
         if self.status == 'Pending':
@@ -31,24 +32,27 @@ class OperationCompletion(Document):
             po_operation.db_set("status", "In Process")
 
     def finish_operation(self, operating_cost, items_received):
-        # agarrar la canitdad que recibo
-        qty = items_received[0].qty
-        if qty <= 0:
-            frappe.throw(_("Quantity must be greater than 0."))
-
         if not self.status == 'In Process':
             frappe.throw(_("Operation must be started to send materials."))
 
-        production_order = frappe.get_doc("Production Order", self.production_order)
+        # agarrar la canitdad que recibo
+        received_qty = items_received[0].get('qty', 0)
+        print(items_received[0], received_qty)
+        if received_qty <= 0:
+            frappe.throw(_("Quantity must be greater than 0."))
 
+        production_order = frappe.get_doc("Production Order", self.production_order)
         po_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
 
+        # costos
+        self.db_set("operating_cost", self.operating_cost + operating_cost)
 
         # la sumo a un contador de la operación
+        self.db_set("total_received_qty", self.total_received_qty + received_qty)
 
         # REALIZAR EL MOVIMIENTO DE STOCK
         # si la el contador es igual a la cantidad a fabricar la termino
-        if ():
+        if (self.total_received_qty == production_order.qty):
             self.db_set("status", "Completed")
             po_operation.db_set("status", "Completed")
 
