@@ -90,7 +90,6 @@ frappe.ui.form.on("Production Order", {
 		// formatter for production order operation
 		frm.set_indicator_formatter('operation',
 			function(doc) { return (frm.doc.qty==doc.completed_qty) ? "green" : "orange" });
-
 	},
 
 	refresh: function(frm) {
@@ -487,24 +486,29 @@ var get_operation_by_name = function (frm, operation_name) {
 	return frm.fields_dict["operations"].grid.grid_rows_by_docname[operation_name]
 }
 var update_operations_action = function (frm) {
+
 	$.each(frm.doc.operations, function (i, operation) {
 
-		var start_button = "<button id='_operation_send' operation='" + operation.name + "' class='btn btn-secondary btn-xs'>Enviar</button>";
-		var finish_button = "<button id='_operation_receive' operation='" + operation.name + "' class='btn btn-secondary btn-xs'>Recibir</button>";
+		var start_button = "<button operation='" + operation.name + "' class='btn btn-secondary btn-xs _operation_send'>Enviar</button>";
+		var finish_button = "<button operation='" + operation.name + "' class='btn btn-secondary btn-xs _operation_receive'>Recibir</button>";
 
 		wrapper = get_operation_by_name(frm, operation.name).wrapper.find("div[data-fieldname='test_button'] .static-area");
 		wrapper.html(start_button + " " + finish_button);
 
-		$("#_operation_send").on('click', function () {
-			var op = get_operation_by_name(cur_frm, $(this).attr('operation'));
-			console.log(op);
-			create_start_operation_dialog(op);
-        });
-
-		$("#_operation_receive").on('click', function () {
-			var op = get_operation_by_name(cur_frm, $(this).attr('operation'));
-			console.log(op);
-			create_finish_operation_dialog(op);
-        });
     });
+
+	$("._operation_send").off();
+	$("._operation_send").on('click', function () {
+		var op = get_operation_by_name(cur_frm, $(this).attr('operation'));
+		console.log(op);
+		create_start_operation_dialog(op);
+	});
+
+	$("._operation_receive").off();
+	$("._operation_receive").on('click', function () {
+		var op = get_operation_by_name(cur_frm, $(this).attr('operation'));
+		console.log(op);
+		create_finish_operation_dialog(op);
+	});
+
 }
