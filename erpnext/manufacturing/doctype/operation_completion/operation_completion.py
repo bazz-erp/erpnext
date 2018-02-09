@@ -7,6 +7,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
+import json
 
 class OperationCompletion(Document):
 
@@ -109,6 +110,14 @@ class OperationCompletion(Document):
         stock_entry.company = production_order.company
         stock_entry.from_bom = 0
         return stock_entry
+
+@frappe.whitelist()
+def get_received_materials(operation_completion_id):
+    operation_completion = frappe.get_doc("Operation Completion", operation_completion_id)
+    received_materials = []
+    for item in operation_completion.items_received:
+        received_materials.append({"item_code": item.item_code, "item_qty": item.item_qty})
+    return received_materials
 
 
 

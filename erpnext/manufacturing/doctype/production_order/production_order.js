@@ -393,11 +393,13 @@ erpnext.production_order = {
 	}
 }
 
-var create_start_operation_dialog = function (operation) {
-	var items = [{item_code : cur_frm.doc.production_item,
-                        item_name: cur_frm.doc.production_item_name}];
-	items = items.concat(cur_frm.doc.required_items);
-	console.log(cur_frm.doc.production_item_name);
+var create_start_operation_dialog = function (frm, operation) {
+
+    operation_details = get_operation_by_name(frm, operation).doc;
+
+    var items = [{item_code : frm.doc.production_item,
+                        item_name: frm.doc.production_item_name}];
+	items = items.concat(frm.doc.required_items);
 
 	/**var html = $(`
 				<div style="border: 1px solid #d1d8dd" data-attribute="items_supplied">
@@ -419,7 +421,11 @@ var create_start_operation_dialog = function (operation) {
 				</div>
 			`); */
 
-    var fields = [{
+    var fields = [];
+
+    // Workshop is selected once, when operation is Pending
+    if (operation_details.status == 'Pending') {
+        fields.push({
 		fieldname: "workshop",
 		fieldtype: "Link",
 		options: "Supplier",
@@ -432,18 +438,15 @@ var create_start_operation_dialog = function (operation) {
                 }
             }
         }
-	},{
-            label: "Materials Supplied (Enter the amount)",
-            fieldtype: "Section Break",
-            fieldname: "materials_supplied_section"
-        }
-    /**{
-		label: "Materials Supplied",
-        fieldtype: "HTML",
-		fieldname: "items_supplied",
-        options: html
+	    });
+    }
 
-	}*/];
+	fields.push({
+        label: "Materials Supplied (Enter the amount)",
+        fieldtype: "Section Break",
+        fieldname: "materials_supplied_section"
+    });
+
 
     $.each(items, function (i, item) {
         fields.push({
@@ -463,6 +466,37 @@ var create_start_operation_dialog = function (operation) {
 	/**if (!dialog.fields_dict.items_supplied.df.data)
 		dialog.fields_dict.items_supplied.df.data = [];*/
 
+	// get materials received in previous operation
+    previous_operation = $(cur_frm.doc.operations).filter(function (i, op) {
+       return op.idx == (operation_details.idx - 1);
+    });
+
+    // If previous operation not exist
+    if (previous_operation.length == 0) {
+        $.each(cur_frm.doc.required_items, function (i, item) {
+           dialog.set_value(item.item_code, item.required_qty);
+        });
+    }
+    else {
+        // get materials qtys received in previous operation
+        previous_operation = previous_operation[0];
+        frappe.call({
+           method: "erpnext.manufacturing.doctype.operation_completion.operation_completion.get_received_materials",
+            args: {
+               operation_completion_id: previous_operation.completion
+            },
+            callback: function (r) {
+              console.log(r);
+              if (r.message) {
+                   $.each(r.message[0], function (i, item) {
+                    dialog.set_value(item.item_code, item.item_qty)
+                    });
+              }
+
+            }
+        });
+    }
+
 	dialog.set_primary_action(__("Send"),function () {
 	    var items_supplied = dialog.get_values();
 
@@ -472,8 +506,6 @@ var create_start_operation_dialog = function (operation) {
 	    /**	items_supplied = dialog.wrapper.find("input[data-fieldname='qty']").map( function (i, el) {
              return {item_code: $(el).attr('data-item'), qty: $(el).val()}; }).toArray();*/
 
-		console.log(items_supplied);
-
 	    frappe.call({
 			method: "erpnext.manufacturing.doctype.production_order.production_order.start_operation",
 			args: {
@@ -482,7 +514,7 @@ var create_start_operation_dialog = function (operation) {
 				items_supplied: items_supplied
 			},
 			callback: function (r) {
-			    cur_frm.refresh();
+			    frm.reload_doc();
 				dialog.hide();
             }
 		});
@@ -552,7 +584,7 @@ var update_operations_action = function (frm) {
 
 	$("._operation_send").off();
 	$("._operation_send").on('click', function () {
-		create_start_operation_dialog($(this).attr('operation'));
+		create_start_operation_dialog(frm, $(this).attr('operation'));
 	});
 
 	$("._operation_receive").off();
@@ -563,3 +595,15 @@ var update_operations_action = function (frm) {
 	});
 
 }
+
+/**
+ * iterates required items and set its qty to dialogs fields
+ * @param dialog
+ * @param required_items
+ */
+var setup_materials_qty_for_start_operation = function (dialog, required_items) {
+    $.each(required_items, function (index) {
+        
+    })
+}
+
