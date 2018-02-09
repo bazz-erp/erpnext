@@ -662,7 +662,7 @@ def start_operation(operation_id, workshop, items_supplied):
 # BAZZ- end operation
 @frappe.whitelist()
 def finish_operation(operation_id, operating_cost, items_received):
-    get_operation_completion(operation_id).finish_operation(operating_cost, json.loads(items_received))
+    get_operation_completion(operation_id).finish_operation(flt(operating_cost), json.loads(items_received))
 
 
 def get_operation_completion(operation_id):

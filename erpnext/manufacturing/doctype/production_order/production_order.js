@@ -397,7 +397,6 @@ var create_start_operation_dialog = function (operation) {
 	var items = [{item_code : cur_frm.doc.production_item,
                         item_name: cur_frm.doc.production_item_name}];
 	items = items.concat(cur_frm.doc.required_items);
-	console.log(cur_frm.doc.production_item_name);
 
 	/**var html = $(`
 				<div style="border: 1px solid #d1d8dd" data-attribute="items_supplied">
@@ -460,9 +459,6 @@ var create_start_operation_dialog = function (operation) {
 		fields: fields
 	});
 
-	/**if (!dialog.fields_dict.items_supplied.df.data)
-		dialog.fields_dict.items_supplied.df.data = [];*/
-
 	dialog.set_primary_action(__("Send"),function () {
 	    var items_supplied = dialog.get_values();
 
@@ -471,8 +467,6 @@ var create_start_operation_dialog = function (operation) {
 
 	    /**	items_supplied = dialog.wrapper.find("input[data-fieldname='qty']").map( function (i, el) {
              return {item_code: $(el).attr('data-item'), qty: $(el).val()}; }).toArray();*/
-
-		console.log(items_supplied);
 
 	    frappe.call({
 			method: "erpnext.manufacturing.doctype.production_order.production_order.start_operation",
@@ -517,13 +511,15 @@ var create_finish_operation_dialog = function (operation) {
 	dialog.set_value("operating_cost", operation.operating_cost);
 	
 	dialog.set_primary_action(__("Receive"), function () {
+		var items_received = dialog.get_values();
+		delete items_received["operating_cost"];
 
 	    frappe.call({
 			method: "erpnext.manufacturing.doctype.production_order.production_order.finish_operation",
 			args: {
 				operation_id: operation.name,
 				operating_cost: dialog.get_value("operating_cost"),
-				item_received: {it}
+				items_received: items_received
 			},
 			callback: function (r) {
 				dialog.hide();
@@ -558,7 +554,6 @@ var update_operations_action = function (frm) {
 	$("._operation_receive").off();
 	$("._operation_receive").on('click', function () {
 		var op = get_operation_by_name(cur_frm, $(this).attr('operation')).doc;
-		console.log(op);
 		create_finish_operation_dialog(op);
 	});
 
