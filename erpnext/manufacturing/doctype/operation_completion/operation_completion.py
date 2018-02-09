@@ -59,28 +59,33 @@ class OperationCompletion(Document):
             frappe.throw(_("Operation must be started to send materials."))
 
         production_order = frappe.get_doc("Production Order", self.production_order)
-
-        # agarrar la canitdad que recibo del producto a fabricar
         received_qty = flt(items_received.get(production_order.production_item, 0))
 
         if received_qty <= 0:
             frappe.throw(_("Quantity must be greater than 0."))
 
         po_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
+        filtered_items = {code: qty for code, qty in items_received.items() if qty != 0}
 
-        # costos
-        self.db_set("operating_cost", self.operating_cost + operating_cost)
-
-        # la sumo a un contador de la operación
-        self.db_set("total_received_qty", self.total_received_qty + received_qty)
+        for item_code, item_qty in filtered_items.items():
+            items_received_detail = self.get("items_received", {"item_code": item_code})
+            if not items_received_detail:
+                self.append("items_received", {"item_code": item_code, "item_qty": item_qty})
+                self.save()
+            else:
+                items_received_detail[0].item_qty += item_qty
+                items_received_detail[0].save()
 
         # REALIZAR EL MOVIMIENTO DE STOCK
+        self.receive_material_from_workshop(production_order, filtered_items)
 
+        self.db_set("total_operating_cost", self.total_operating_cost + operating_cost)
+        self.db_set("total_received_qty", self.total_received_qty + received_qty)
 
-        # si la el contador es igual a la cantidad a fabricar la termino
         if (self.total_received_qty == production_order.qty):
             self.db_set("status", "Completed")
             po_operation.db_set("status", "Completed")
+
 
     def transfer_material_to_workshop(self, production_order, items_supplied):
         stock_entry = self.create_stock_entry(production_order)
@@ -96,11 +101,22 @@ class OperationCompletion(Document):
 
         stock_entry.submit()
 
-    def receive_material_from_workshop(self, production_order, items_received):
-        stock_entry = self.create_stock_entry(production_order)
 
+    def receive_material_from_workshop(self, production_order, items_received):
+        stock_entry = frappe.new_doc("Stock Entry")
+        stock_entry.purpose = "Manufacture"
+        stock_entry.company = production_order.company
+        stock_entry.from_bom = 0
         stock_entry.title = _("Receive Material from Workshop")
 
+        #workshop_warehouse = frappe.get_doc("Supplier", self.workshop).workshop_warehouse
+
+        stock_entry.to_warehouse = production_order.wip_warehouse
+
+        for item_code, item_qty in items_received.items():
+            stock_entry.append("items", {"item_code": item_code, "qty": item_qty})
+
+        stock_entry.submit()
 
 
     def create_stock_entry(self, production_order):
