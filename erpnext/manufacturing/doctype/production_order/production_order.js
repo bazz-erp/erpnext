@@ -394,11 +394,37 @@ erpnext.production_order = {
 }
 
 var create_start_operation_dialog = function (operation) {
-	var fields = [{
+	var items = [{item_code : cur_frm.doc.production_item,
+                        item_name: cur_frm.doc.production_item_name}];
+	items = items.concat(cur_frm.doc.required_items);
+	console.log(cur_frm.doc.production_item_name);
+
+	/**var html = $(`
+				<div style="border: 1px solid #d1d8dd" data-attribute="items_supplied">
+					<div class="list-item list-item--head">
+						<div class="list-item__content list-item__content--flex-2">
+							${__("Materials supplied")}
+						</div>
+					</div>
+					${items.map(item => `
+						<div class="list-item">
+							<div class="list-item__content list-item__content--flex-2">
+								<label class="control-label">
+								${item.item_name}
+								</label>
+								<input type="text" data-fieldname="qty" data-item="${item.item_code}" class="form-control bold" data-fieldtype="Float"/>
+							</div>
+						</div>
+					`).join("")}
+				</div>
+			`); */
+
+    var fields = [{
 		fieldname: "workshop",
 		fieldtype: "Link",
 		options: "Supplier",
 		label: __("Workshop"),
+        reqd: 1,
 		get_query: function(doc) {
             return {
                 filters: {
@@ -407,51 +433,67 @@ var create_start_operation_dialog = function (operation) {
             }
         }
 	},{
-		fieldtype: "Table",
-		fieldname: "items_supplied",
-		description: __("Materials supplied"),
-		fields: [
-			{fieldtype: "Link", fieldname: "item", options: "Item" ,label: __("Item Code"), in_list_view: 1 },
-			{fieldtype: "Data", fieldname: "item_name", label: __("Name"), in_list_view: 0},
-			{fieldtype: 'Int', fieldname: "qty", label: __("Qty"), in_list_view: 1, reqd: 1}
-			],
-		get_data: function () {
-			items = cur_frm.doc.required_items;
-			result = items.map(function(obj) {
-				return {item : obj.item_code, item_name: obj.item_name, qty : 0}
-            });
-			result.push({ item : cur_frm.doc.production_item, item_name : cur_frm.doc.production_item_name, qty : 0 } );
-			return result;
+            label: "Materials Supplied (Enter the amount)",
+            fieldtype: "Section Break",
+            fieldname: "materials_supplied_section"
         }
-	}];
+    /**{
+		label: "Materials Supplied",
+        fieldtype: "HTML",
+		fieldname: "items_supplied",
+        options: html
+
+	}*/];
+
+    $.each(items, function (i, item) {
+        fields.push({
+            label:item.item_code.toString() + " - " + item.item_name,
+            fieldtype: "Float",
+            fieldname: item.item_code.toString(),
+            reqd: 0,
+            default: "0"
+        });
+    });
 
 	var dialog = new frappe.ui.Dialog({
 		title: __("Send Materials"),
-		fields: fields,
+		fields: fields
 	});
 
-	if (!dialog.fields_dict.items_supplied.df.data)
-		dialog.fields_dict.items_supplied.df.data = [];
+	/**if (!dialog.fields_dict.items_supplied.df.data)
+		dialog.fields_dict.items_supplied.df.data = [];*/
 
 	dialog.set_primary_action(__("Send"),function () {
-		frappe.call({
+	    var items_supplied = dialog.get_values();
+
+	    // removes workshop key from json object
+	    delete items_supplied["workshop"];
+
+	    /**	items_supplied = dialog.wrapper.find("input[data-fieldname='qty']").map( function (i, el) {
+             return {item_code: $(el).attr('data-item'), qty: $(el).val()}; }).toArray();*/
+
+		console.log(items_supplied);
+
+	    frappe.call({
 			method: "erpnext.manufacturing.doctype.production_order.production_order.start_operation",
 			args: {
 				operation_id: operation,
 				workshop: dialog.get_value("workshop"),
-				items_supplied: dialog.get_value("items_supplied")
+				items_supplied: items_supplied
 			},
 			callback: function (r) {
+			    cur_frm.refresh();
 				dialog.hide();
             }
-		});*/
+		});
 	});
 
 	dialog.show();
 }
 
 var create_finish_operation_dialog = function (operation) {
-	var dialog = new frappe.ui.Dialog({
+
+    var dialog = new frappe.ui.Dialog({
 		title: __("Receive materials"),
 		fields: [
 			{
@@ -460,33 +502,28 @@ var create_finish_operation_dialog = function (operation) {
 				label: __("Operating Cost")
 			},
             {
-                fieldname: "items_received",
-                fieldtype: "Table",
-                description: __("Materials received"),
-                fields: [
-                    {fieldtype: "Link", fieldname: "item", options: "Item", label: __("Item Code"), in_list_view: 1},
-                    {fieldtype: "Data", fieldname: "item_name", label: __("Name"), in_list_view: 0},
-                    {fieldtype: "Float", fieldname: "qty", label: __("Qty"), in_list_view: 1}
-                ],
-                get_data: function () {
-					return [{
-                        item: cur_frm.doc.production_item,
-                        item_name: cur_frm.doc.production_item_name,
-                        qty: 0
-                    }];
-                }
+				fieldname: "items_received_section",
+				fieldtype: "Section Break",
+				label: __("Items Received")
+			},
+            {
+                fieldname: cur_frm.doc.production_item.toString(),
+                label: cur_frm.doc.production_item.toString() + " - " + cur_frm.doc.production_item_name,
+                fieldtype: "Float",
+                default: "0"
             }]
 	});
 
 	dialog.set_value("operating_cost", operation.operating_cost);
 	
 	dialog.set_primary_action(__("Receive"), function () {
-		frappe.call({
+
+	    frappe.call({
 			method: "erpnext.manufacturing.doctype.production_order.production_order.finish_operation",
 			args: {
 				operation_id: operation.name,
 				operating_cost: dialog.get_value("operating_cost"),
-				items_received: dialog.get_value("items_received")
+				item_received: {it}
 			},
 			callback: function (r) {
 				dialog.hide();

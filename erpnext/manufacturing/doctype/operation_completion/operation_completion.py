@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from frappe.model.document import Document
+from frappe.utils import flt
 
 class OperationCompletion(Document):
 
@@ -19,47 +20,51 @@ class OperationCompletion(Document):
 
 
     def start_operation(self, workshop, items_supplied):
+
         if self.status == 'Completed':
            frappe.throw(_("You cant send anymore, the operation is already completed."))
+
         production_order = frappe.get_doc("Production Order", self.production_order)
 
         # ACUMULAR EN LA TABLA
-        # REALIZAR EL MOVIMIENTO DE STOCK
 
         if self.status == 'Pending':
             po_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
             self.db_set("status", "In Process")
-            self.db_set("workshop",workshop)
+            self.db_set("workshop", workshop)
             po_operation.db_set("status", "In Process")
 
-        # Clear items whose transferred qty is 0
-        items_supplied = filter(lambda item: item.qty != 0, items_supplied)
+        # Clear items whose transferred qty is 0 and update total qty supplied to the workshop in items supplied Table
+        for item_code, item_qty in items_supplied.items():
+            if item_qty == 0:
+                items_supplied.pop(item_code)
+
+            items_supplied_detail = self.get("items_supplied", {"item_code": item_code})
+            if not items_supplied_detail:
+                self.append("items_supplied", {"item_code": item_code, "item_qty": item_qty})
+                self.save()
+            else:
+                items_supplied_detail[0].item_qty += item_qty
+                items_supplied_detail[0].save()
+
+        print(items_supplied)
 
         # REALIZAR EL MOVIMIENTO DE STOCK
         self.transfer_material_to_workshop(production_order, items_supplied)
-
-        # update total qty supplied to the workshop in items supplied Table
-        for item in items_supplied:
-            items_supplied_detail = self.get("items_supplied", {"item_code": item.item})
-            if not items_supplied_detail:
-                self.append("items_supplied", {"item_code": item, "item_qty": item.qty})
-                self.save()
-            else:
-                items_supplied_detail[0].qty += item.qty
-                items_supplied_detail[0].save()
 
 
     def finish_operation(self, operating_cost, items_received):
         if not self.status == 'In Process':
             frappe.throw(_("Operation must be started to send materials."))
 
-        # agarrar la canitdad que recibo
-        received_qty = items_received[0].get('qty', 0)
-        print(items_received[0], received_qty)
+        production_order = frappe.get_doc("Production Order", self.production_order)
+
+        # agarrar la canitdad que recibo del producto a fabricar
+        received_qty = flt(items_received.get(production_order.production_item, 0))
+
         if received_qty <= 0:
             frappe.throw(_("Quantity must be greater than 0."))
 
-        production_order = frappe.get_doc("Production Order", self.production_order)
         po_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
 
         # costos
@@ -69,28 +74,42 @@ class OperationCompletion(Document):
         self.db_set("total_received_qty", self.total_received_qty + received_qty)
 
         # REALIZAR EL MOVIMIENTO DE STOCK
+
+
         # si la el contador es igual a la cantidad a fabricar la termino
         if (self.total_received_qty == production_order.qty):
             self.db_set("status", "Completed")
             po_operation.db_set("status", "Completed")
 
     def transfer_material_to_workshop(self, production_order, items_supplied):
-        stock_entry = frappe.new_doc("Stock Entry")
-        stock_entry.purpose = "Material Transfer"
-        stock_entry.title = "Material Transfer to Workshop"
-        stock_entry.production_order = production_order.name
-        stock_entry.company = production_order.company
-        stock_entry.from_bom = 0
+        stock_entry = self.create_stock_entry(production_order)
 
+        stock_entry.title = _("Material Transfer to Workshop")
         workshop_warehouse = frappe.get_doc("Supplier", self.workshop).workshop_warehouse
 
         stock_entry.from_warehouse = production_order.wip_warehouse
         stock_entry.to_warehouse = workshop_warehouse
 
-        for item in items_supplied:
-            stock_entry.append("items", {"item_code": item.item, "qty": item.qty})
+        for item_code, item_qty in items_supplied.items():
+            stock_entry.append("items", {"item_code": item_code, "qty": item_qty})
 
         stock_entry.submit()
+
+    def receive_material_from_workshop(self, production_order, items_received):
+        stock_entry = self.create_stock_entry(production_order)
+
+        stock_entry.title = _("Receive Material from Workshop")
+
+
+
+    def create_stock_entry(self, production_order):
+        stock_entry = frappe.new_doc("Stock Entry")
+        stock_entry.purpose = "Material Transfer"
+        stock_entry.production_order = production_order.name
+        stock_entry.company = production_order.company
+        stock_entry.from_bom = 0
+        return stock_entry
+
 
 
 
