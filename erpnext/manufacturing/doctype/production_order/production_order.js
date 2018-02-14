@@ -488,7 +488,7 @@ var create_start_operation_dialog = function (frm, operation) {
               if (r.message) {
                    $.each(r.message, function (i, item) {
                     dialog.set_value(item.item_code, item.item_qty)
-                    dialog.refresh();
+
                    });
 
               }
@@ -561,7 +561,9 @@ var create_finish_operation_dialog = function (operation) {
 				items_received: items_received
 			},
 			callback: function (r) {
-				dialog.hide();
+			    cur_frm.reload_doc();
+			    dialog.hide();
+
             }
 		});
     });
