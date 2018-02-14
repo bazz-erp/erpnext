@@ -485,15 +485,13 @@ var create_start_operation_dialog = function (frm, operation) {
                operation_completion_id: previous_operation.completion
             },
             callback: function (r) {
-              console.log(r);
               if (r.message) {
-                   $.each(r.message[0], function (i, item) {
+                   $.each(r.message, function (i, item) {
                     dialog.set_value(item.item_code, item.item_qty)
                     dialog.refresh();
                    });
 
               }
-
             }
         });
     }
