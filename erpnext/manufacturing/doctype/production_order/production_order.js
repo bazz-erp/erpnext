@@ -423,9 +423,9 @@ var create_start_operation_dialog = function (frm, operation) {
 
     var fields = [];
 
-    // Workshop is selected once, when operation is Pending
-    if (operation_details.status == 'Pending') {
-        fields.push({
+    // Workshop must be selected once, when operation is Pending
+
+    fields.push({
 		fieldname: "workshop",
 		fieldtype: "Link",
 		options: "Supplier",
@@ -438,8 +438,7 @@ var create_start_operation_dialog = function (frm, operation) {
                 }
             }
         }
-	    });
-    }
+    });
 
 	fields.push({
         label: "Materials Supplied (Enter the amount)",
@@ -490,7 +489,9 @@ var create_start_operation_dialog = function (frm, operation) {
               if (r.message) {
                    $.each(r.message[0], function (i, item) {
                     dialog.set_value(item.item_code, item.item_qty)
-                    });
+                    dialog.refresh();
+                   });
+
               }
 
             }
@@ -508,7 +509,7 @@ var create_start_operation_dialog = function (frm, operation) {
 
 		console.log(items_supplied);
 
-	    frappe.call({
+		frappe.call({
 			method: "erpnext.manufacturing.doctype.production_order.production_order.start_operation",
 			args: {
 				operation_id: operation,

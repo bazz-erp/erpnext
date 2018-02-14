@@ -169,7 +169,8 @@ class StockEntry(StockController):
                 frappe.throw(_("Source and target warehouse cannot be same for row {0}").format(d.idx))
 
     def validate_production_order(self):
-        if self.purpose in ("Manufacture", "Material Transfer for Manufacture"):
+        # BAZZ - added Material Receipt purpose to production order stock entries
+        if self.purpose in ("Manufacture", "Material Transfer for Manufacture", "Material Receipt"):
             # check if production order is entered
 
             if self.purpose=="Manufacture" and self.production_order:

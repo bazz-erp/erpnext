@@ -90,6 +90,7 @@ class OperationCompletion(Document):
     def transfer_material_to_workshop(self, production_order, items_supplied):
         stock_entry = self.create_stock_entry(production_order)
 
+        stock_entry.purpose = "Material Transfer for Manufacture"
         stock_entry.title = _("Material Transfer to Workshop")
         workshop_warehouse = frappe.get_doc("Supplier", self.workshop).workshop_warehouse
 
@@ -103,14 +104,10 @@ class OperationCompletion(Document):
 
 
     def receive_material_from_workshop(self, production_order, items_received):
-        stock_entry = frappe.new_doc("Stock Entry")
-        stock_entry.purpose = "Manufacture"
-        stock_entry.company = production_order.company
-        stock_entry.from_bom = 0
+        stock_entry = self.create_stock_entry(production_order)
+        stock_entry.purpose = "Material Receipt"
+
         stock_entry.title = _("Receive Material from Workshop")
-
-        #workshop_warehouse = frappe.get_doc("Supplier", self.workshop).workshop_warehouse
-
         stock_entry.to_warehouse = production_order.wip_warehouse
 
         for item_code, item_qty in items_received.items():
@@ -121,7 +118,6 @@ class OperationCompletion(Document):
 
     def create_stock_entry(self, production_order):
         stock_entry = frappe.new_doc("Stock Entry")
-        stock_entry.purpose = "Material Transfer"
         stock_entry.production_order = production_order.name
         stock_entry.company = production_order.company
         stock_entry.from_bom = 0
