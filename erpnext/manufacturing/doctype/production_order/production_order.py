@@ -34,6 +34,9 @@ class ProductionOrder(Document):
         if self.bom_no:
             validate_bom_no(self.production_item, self.bom_no)
 
+            # BAZZ - copy BOM produced qty to production order to calculate the cost of operations
+            self.bom_produced_qty = frappe.get_doc("BOM", self.bom_no).quantity
+
         self.validate_sales_order()
         self.validate_warehouse_belongs_to_company()
         self.calculate_operating_cost()

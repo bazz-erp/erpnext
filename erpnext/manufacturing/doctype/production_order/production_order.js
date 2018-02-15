@@ -421,11 +421,7 @@ var create_start_operation_dialog = function (frm, operation) {
 				</div>
 			`); */
 
-    var fields = [];
-
-    // Workshop must be selected once, when operation is Pending
-
-    fields.push({
+    var fields = [{
 		fieldname: "workshop",
 		fieldtype: "Link",
 		options: "Supplier",
@@ -438,14 +434,11 @@ var create_start_operation_dialog = function (frm, operation) {
                 }
             }
         }
-    });
-
-	fields.push({
+    },{
         label: "Materials Supplied (Enter the amount)",
         fieldtype: "Section Break",
         fieldname: "materials_supplied_section"
-    });
-
+    }];
 
     $.each(items, function (i, item) {
         fields.push({
@@ -464,6 +457,14 @@ var create_start_operation_dialog = function (frm, operation) {
 
 	/**if (!dialog.fields_dict.items_supplied.df.data)
 		dialog.fields_dict.items_supplied.df.data = [];*/
+
+	// Workshop must be selected once when operation is Pending. If operation is 'In Process' workshop is read-only field
+    if (operation_details.status == 'In Process') {
+        console.log(dialog.fields_dict["workshop"]);
+        dialog.fields_dict["workshop"].df.read_only = 1;
+        dialog.set_value("workshop", operation_details.workshop);
+        dialog.fields_dict["workshop"].refresh();
+    }
 
 	// get materials received in previous operation
     previous_operation = $(cur_frm.doc.operations).filter(function (i, op) {
@@ -543,11 +544,17 @@ var create_finish_operation_dialog = function (operation) {
                 fieldname: cur_frm.doc.production_item.toString(),
                 label: cur_frm.doc.production_item.toString() + " - " + cur_frm.doc.production_item_name,
                 fieldtype: "Float",
-                default: "0"
+                default: (cur_frm.doc.qty)
             }]
 	});
 
-	dialog.set_value("operating_cost", operation.operating_cost);
+    dialog.set_value("operating_cost", (operation.operating_cost * cur_frm.doc.qty)/ cur_frm.doc.bom_produced_qty);
+
+
+    dialog.get_input(cur_frm.doc.production_item.toString()).on("focusout", function () {
+       dialog.set_value("operating_cost", (operation.operating_cost * dialog.get_value(cur_frm.doc.production_item))/ cur_frm.doc.bom_produced_qty);
+       dialog.fields_dict["operating_cost"].refresh();
+    });
 	
 	dialog.set_primary_action(__("Receive"), function () {
 		var items_received = dialog.get_values();
@@ -568,6 +575,7 @@ var create_finish_operation_dialog = function (operation) {
 		});
     });
 	dialog.show();
+
 }
 var get_operation_by_name = function (frm, operation_name) {
 	return frm.fields_dict["operations"].grid.grid_rows_by_docname[operation_name]
