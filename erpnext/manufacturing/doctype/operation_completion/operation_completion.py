@@ -34,6 +34,7 @@ class OperationCompletion(Document):
             self.db_set("status", "In Process")
             self.db_set("workshop", workshop)
             po_operation.db_set("status", "In Process")
+            po_operation.db_set("workshop", workshop)
 
         # Clear items whose transferred qty is 0 and update total qty supplied to the workshop in items supplied Table
         for item_code, item_qty in items_supplied.items():

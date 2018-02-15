@@ -45,7 +45,7 @@
   }, 
   {
    "allow_bulk_edit": 0, 
-   "allow_on_submit": 1,
+   "allow_on_submit": 0,
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0, 
@@ -166,7 +166,7 @@
   }, 
   {
    "allow_bulk_edit": 0, 
-   "allow_on_submit": 1,
+   "allow_on_submit": 0,
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0, 
@@ -419,7 +419,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2018-02-09 17:50:10.256238",
+ "modified": "2018-02-09 17:55:10.256238",
  "modified_by": "Administrator", 
  "module": "Manufacturing", 
  "name": "Operation Completion", 
