@@ -18,6 +18,7 @@ from erpnext.stock.stock_balance import get_planned_qty, update_bin_qty
 from frappe.utils.csvutils import getlink
 from erpnext.stock.utils import get_bin, validate_warehouse_company, get_latest_stock_qty
 from erpnext.utilities.transaction_base import validate_uom_is_integer
+from erpnext.accounts.general_ledger import make_gl_entries
 
 class OverProductionError(frappe.ValidationError): pass
 class StockOverProductionError(frappe.ValidationError): pass
@@ -665,10 +666,50 @@ def start_operation(operation_id, workshop, items_supplied):
 # BAZZ- end operation
 @frappe.whitelist()
 def finish_operation(operation_id, operating_cost, items_received):
-    get_operation_completion(operation_id).finish_operation(flt(operating_cost), json.loads(items_received))
+    operation_completion = get_operation_completion(operation_id)
+    operation_completion.finish_operation(flt(operating_cost), json.loads(items_received))
+
+    make_operation_cost_gl_entries(operation_completion, operating_cost)
 
 
 def get_operation_completion(operation_id):
     completion_id = frappe.db.sql("""select completion from `tabProduction Order Operation` where name = %s""", operation_id)[0][0]
     return frappe.get_doc("Operation Completion", completion_id)
+
+def make_operation_cost_gl_entries(operation_completion, operating_cost):
+    company_name = frappe.get_doc("Production Order", operation_completion.production_order).company
+    company = frappe.get_doc("Company", company_name)
+
+    gl_entries = []
+    gl_entries.append(
+        frappe._dict({
+            'company': company_name,
+            'posting_date': nowdate(),
+            "account": company.default_payable_account,
+            "party": operation_completion.workshop,
+            "party_type": "Supplier",
+            "credit": flt(operating_cost),
+            "credit_in_account_currency": flt(operating_cost),
+            "voucher_no": operation_completion.name,
+            "voucher_type": operation_completion.doctype,
+            "against": operation_completion.workshop
+        })
+    )
+
+    gl_entries.append(
+        frappe._dict({
+            'company': company_name,
+            'posting_date': nowdate(),
+            "account": company.default_expense_account,
+            "cost_center": company.cost_center,
+            "debit": flt(operating_cost),
+            "debit_in_account_currency": flt(operating_cost),
+            "voucher_no": operation_completion.name,
+            "voucher_type": operation_completion.doctype,
+            "against": company.default_payable_account
+        })
+    )
+    make_gl_entries(gl_entries, update_outstanding='No')
+
+
 
