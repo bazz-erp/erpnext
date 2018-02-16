@@ -36,6 +36,9 @@ class OperationCompletion(Document):
             po_operation.db_set("status", "In Process")
             po_operation.db_set("workshop", workshop)
 
+
+        # supplied qty of production item cannot be greather than qty received in previous operation
+
         # Clear items whose transferred qty is 0 and update total qty supplied to the workshop in items supplied Table
         for item_code, item_qty in items_supplied.items():
             if item_qty == 0:
@@ -49,7 +52,6 @@ class OperationCompletion(Document):
                 items_supplied_detail[0].item_qty += item_qty
                 items_supplied_detail[0].save()
 
-        print(items_supplied)
 
         # REALIZAR EL MOVIMIENTO DE STOCK
         self.transfer_material_to_workshop(production_order, items_supplied)
@@ -124,13 +126,36 @@ class OperationCompletion(Document):
         stock_entry.from_bom = 0
         return stock_entry
 
+
 @frappe.whitelist()
-def get_received_materials(operation_completion_id):
-    operation_completion = frappe.get_doc("Operation Completion", operation_completion_id)
+def get_available_materials(operation_id, previous_operation_id):
+    """ get the available products that can be send to a Workshop in an Operation Completion"""
+    operation = frappe.get_doc("Operation Completion", operation_id)
+    previous_operation = frappe.get_doc("Operation Completion", previous_operation_id)
+
     received_materials = []
-    for item in operation_completion.items_received:
-        received_materials.append({"item_code": item.item_code, "item_qty": item.item_qty})
+    """ for each item calculates its available qty based on the qty received in previous operation and the qty already sent in current operation"""
+    for item in previous_operation.items_received:
+        item_sent = operation.get("items_supplied", {"item_code": item.item_code})
+
+        item_available_qty = (item.item_qty - item_sent[0].item_qty) if item_sent else item.item_qty
+
+        received_materials.append({"item_code": item.item_code, "item_qty": item_available_qty})
     return received_materials
+
+
+"""When the production item is sent to the Workshop, calculates remaining qty that must be received from the workshop"""
+@frappe.whitelist()
+def calculate_production_item_remaining_qty(operation_id):
+    operation = frappe.get_doc("Operation Completion", operation_id)
+    production_order = frappe.get_doc("Production Order", operation.production_order)
+
+    production_item_supplied = operation.get("items_supplied", {"item_code": production_order.production_item})
+    if production_item_supplied and production_item_supplied[0].item_qty > 0:
+        production_item_received = operation.get("items_received", {"item_code": production_order.production_item})
+        return (production_item_supplied[0].item_qty - production_item_received[0].item_qty) if production_item_received else production_item_supplied[0].item_qty
+    return 0
+
 
 
 

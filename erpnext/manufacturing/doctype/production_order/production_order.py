@@ -38,6 +38,9 @@ class ProductionOrder(Document):
             # BAZZ - copy BOM produced qty to production order to calculate the cost of operations
             self.bom_produced_qty = frappe.get_doc("BOM", self.bom_no).quantity
 
+        # get production item name
+        self.production_item_name = frappe.get_doc("Item", self.production_item).item_name
+
         self.validate_sales_order()
         self.validate_warehouse_belongs_to_company()
         self.calculate_operating_cost()
@@ -181,7 +184,6 @@ class ProductionOrder(Document):
             self.db_set(fieldname, qty)
 
     def on_update(self):
-        self.production_item_name = frappe.get_doc("Item", self.production_item).item_name
         if not self.main_title:
             self.main_title = self.production_item + " - " + self.production_item_name
 

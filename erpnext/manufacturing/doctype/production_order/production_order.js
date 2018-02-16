@@ -455,9 +455,6 @@ var create_start_operation_dialog = function (frm, operation) {
 		fields: fields
 	});
 
-	/**if (!dialog.fields_dict.items_supplied.df.data)
-		dialog.fields_dict.items_supplied.df.data = [];*/
-
 	// Workshop must be selected once when operation is Pending. If operation is 'In Process' workshop is read-only field
     if (operation_details.status == 'In Process') {
         console.log(dialog.fields_dict["workshop"]);
@@ -478,18 +475,18 @@ var create_start_operation_dialog = function (frm, operation) {
         });
     }
     else {
-        // get materials qtys received in previous operation
+        // get materials availables to be sent to the workshop based on items received in previous operation
         previous_operation = previous_operation[0];
         frappe.call({
-           method: "erpnext.manufacturing.doctype.operation_completion.operation_completion.get_received_materials",
+           method: "erpnext.manufacturing.doctype.operation_completion.operation_completion.get_available_materials",
             args: {
-               operation_completion_id: previous_operation.completion
+               	operation_id: operation_details.completion,
+           		previous_operation_id: previous_operation.completion
             },
             callback: function (r) {
               if (r.message) {
                    $.each(r.message, function (i, item) {
                     dialog.set_value(item.item_code, item.item_qty)
-
                    });
 
               }
@@ -549,6 +546,8 @@ var create_finish_operation_dialog = function (operation) {
 	});
 
     dialog.set_value("operating_cost", (operation.operating_cost * cur_frm.doc.qty)/ cur_frm.doc.bom_produced_qty);
+
+    calculate_production_item_remaining_qty(operation,dialog);
 
 
     dialog.get_input(cur_frm.doc.production_item.toString()).on("focusout", function () {
@@ -618,4 +617,21 @@ var setup_materials_qty_for_start_operation = function (dialog, required_items) 
 
     })
 }
+
+/**
+ * calculates remainig qty of production item that must be received from the workshop, and populates the dialog with this value
+ * @param dialog
+ */
+var calculate_production_item_remaining_qty  = function (operation, dialog) {
+    frappe.call({
+        method: "erpnext.manufacturing.doctype.operation_completion.operation_completion.calculate_production_item_remaining_qty",
+        args: {
+            operation_id: operation.completion
+        },
+        callback: function (r) {
+            console.log(r);
+            dialog.set_value(cur_frm.doc.production_item, r.message);
+        }
+    });
+};
 
