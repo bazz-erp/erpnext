@@ -46,6 +46,10 @@ class ProductionOrder(Document):
         # Operation time is not used in Bazz
         # self.validate_operation_time()
 
+        # BAZZ - Removes 'Draft' transition, submit document directly
+        self._action = "submit"
+        self.docstatus = 1
+
         self.status = self.get_status()
 
         validate_uom_is_integer(self, "stock_uom", ["qty", "produced_qty"])
