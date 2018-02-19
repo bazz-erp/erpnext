@@ -29,15 +29,18 @@ class OperationCompletion(Document):
 
         # ACUMULAR EN LA TABLA
 
+        po_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
+
+        # supplied qty of production item cannot be greather than qty received in previous operation
+        production_item_available_qty = get_production_item_available_qty(production_order, po_operation)
+        if items_supplied.get(production_order.production_item) and items_supplied.get(production_order.production_item) > production_item_available_qty:
+            frappe.throw(_("Available qty of production item is {0}").format(production_item_available_qty))
+
         if self.status == 'Pending':
-            po_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
             self.db_set("status", "In Process")
             self.db_set("workshop", workshop)
             po_operation.db_set("status", "In Process")
             po_operation.db_set("workshop", workshop)
-
-
-        # supplied qty of production item cannot be greather than qty received in previous operation
 
         # Clear items whose transferred qty is 0 and update total qty supplied to the workshop in items supplied Table
         for item_code, item_qty in items_supplied.items():
@@ -62,10 +65,14 @@ class OperationCompletion(Document):
             frappe.throw(_("Operation must be started to send materials."))
 
         production_order = frappe.get_doc("Production Order", self.production_order)
-        received_qty = flt(items_received.get(production_order.production_item, 0))
+        production_item_received_qty = flt(items_received.get(production_order.production_item, 0))
 
-        if received_qty <= 0:
+        if production_item_received_qty <= 0:
             frappe.throw(_("Quantity must be greater than 0."))
+
+        remaining_production_item_qty = calculate_production_item_remaining_qty(self.name)
+        if production_item_received_qty > remaining_production_item_qty:
+            frappe.throw(_("Remaining qty of production item is {0}").format(remaining_production_item_qty))
 
         po_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
         filtered_items = {code: qty for code, qty in items_received.items() if qty != 0}
@@ -83,7 +90,7 @@ class OperationCompletion(Document):
         self.receive_material_from_workshop(production_order, filtered_items)
 
         self.db_set("total_operating_cost", self.total_operating_cost + operating_cost)
-        self.db_set("total_received_qty", self.total_received_qty + received_qty)
+        self.db_set("total_received_qty", self.total_received_qty + production_item_received_qty)
 
         if (self.total_received_qty == production_order.qty):
             self.db_set("status", "Completed")
@@ -129,7 +136,9 @@ class OperationCompletion(Document):
 
 @frappe.whitelist()
 def get_available_materials(operation_id, previous_operation_id):
-    """ get the available products that can be send to a Workshop in an Operation Completion"""
+    """ get the available products that can be send to a Workshop in an Operation Completion.
+    This result is calculated depending on the qty received in previous operation and the qty already sent in current operation"""
+
     operation = frappe.get_doc("Operation Completion", operation_id)
     previous_operation = frappe.get_doc("Operation Completion", previous_operation_id)
 
@@ -144,17 +153,30 @@ def get_available_materials(operation_id, previous_operation_id):
     return received_materials
 
 
-"""When the production item is sent to the Workshop, calculates remaining qty that must be received from the workshop"""
+"""When the production item (final product) is sent to the Workshop, calculates remaining qty that must be received from the workshop"""
 @frappe.whitelist()
 def calculate_production_item_remaining_qty(operation_id):
     operation = frappe.get_doc("Operation Completion", operation_id)
     production_order = frappe.get_doc("Production Order", operation.production_order)
 
     production_item_supplied = operation.get("items_supplied", {"item_code": production_order.production_item})
+
+    # check if production item was send to the workshop
     if production_item_supplied and production_item_supplied[0].item_qty > 0:
         production_item_received = operation.get("items_received", {"item_code": production_order.production_item})
         return (production_item_supplied[0].item_qty - production_item_received[0].item_qty) if production_item_received else production_item_supplied[0].item_qty
     return 0
+
+
+def get_production_item_available_qty(production_order, production_order_operation):
+    # operation has no predecessor
+    if production_order_operation.idx == 1:
+        return 0
+
+    previous_operation_id = filter(lambda op: (op.idx + 1) == production_order_operation.idx, production_order.operations)[0].completion
+    available_materials = get_available_materials(production_order_operation.completion, previous_operation_id)
+    production_item = filter(lambda item: item["item_code"] == production_order.production_item, available_materials)
+    return production_item[0]["item_qty"] if production_item else 0
 
 
 

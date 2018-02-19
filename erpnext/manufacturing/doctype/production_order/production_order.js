@@ -629,8 +629,7 @@ var calculate_production_item_remaining_qty  = function (operation, dialog) {
             operation_id: operation.completion
         },
         callback: function (r) {
-            console.log(r);
-            dialog.set_value(cur_frm.doc.production_item, r.message);
+            dialog.set_value(cur_frm.doc.production_item, r.message ? r.message: 0);
         }
     });
 };
