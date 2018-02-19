@@ -55,6 +55,8 @@ class ProductionOrder(Document):
 
         self.status = self.get_status()
 
+        self.main_title = self.production_item + " - " + self.production_item_name
+
         validate_uom_is_integer(self, "stock_uom", ["qty", "produced_qty"])
 
         if not self.get("required_items"):
@@ -182,10 +184,6 @@ class ProductionOrder(Document):
                     self.meta.get_label(fieldname), qty, self.qty, self.name), StockOverProductionError)
 
             self.db_set(fieldname, qty)
-
-    def on_update(self):
-        if not self.main_title:
-            self.main_title = self.production_item + " - " + self.production_item_name
 
     def before_submit(self):
         # BAZZ - Time logs not needed
