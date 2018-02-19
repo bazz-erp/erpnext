@@ -70,11 +70,15 @@ class OperationCompletion(Document):
         if production_item_received_qty <= 0:
             frappe.throw(_("Quantity must be greater than 0."))
 
+        po_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
         remaining_production_item_qty = calculate_production_item_remaining_qty(self.name)
-        if production_item_received_qty > remaining_production_item_qty:
+
+        # in the first operation production item is not sent, thus, remaining qty is always 0.
+        # validation of remaining qty must be done in subsequents operations
+        if po_operation.idx > 1 and production_item_received_qty > remaining_production_item_qty:
             frappe.throw(_("Remaining qty of production item is {0}").format(remaining_production_item_qty))
 
-        po_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
+
         filtered_items = {code: qty for code, qty in items_received.items() if qty != 0}
 
         for item_code, item_qty in filtered_items.items():
@@ -86,7 +90,7 @@ class OperationCompletion(Document):
                 items_received_detail[0].item_qty += item_qty
                 items_received_detail[0].save()
 
-        # REALIZAR EL MOVIMIENTO DE STOCK
+
         self.receive_material_from_workshop(production_order, filtered_items)
 
         self.db_set("total_operating_cost", self.total_operating_cost + operating_cost)
