@@ -72,8 +72,9 @@ class StockEntry(StockController):
         self.make_gl_entries_on_cancel()
 
     def validate_purpose(self):
+        # BAZZ - added "Manufacturer Shipping" and "Manufacturer Receipt" to valid purposes
         valid_purposes = ["Material Issue", "Material Receipt", "Material Transfer", "Material Transfer for Manufacture",
-            "Manufacture", "Repack", "Subcontract"]
+            "Manufacture", "Repack", "Subcontract", "Manufacturer Shipping", "Manufacturer Receipt"]
         if self.purpose not in valid_purposes:
             frappe.throw(_("Purpose must be one of {0}").format(comma_or(valid_purposes)))
 
@@ -125,11 +126,13 @@ class StockEntry(StockController):
             for d in self.get('items'):
                 d.t_warehouse = None
         elif self.purpose in target_mandatory and self.purpose not in source_mandatory:
+            pass
             self.from_warehouse = None
             for d in self.get('items'):
                 d.s_warehouse = None
 
         for d in self.get('items'):
+
             if not d.s_warehouse and not d.t_warehouse:
                 d.s_warehouse = self.from_warehouse
                 d.t_warehouse = self.to_warehouse
@@ -169,8 +172,8 @@ class StockEntry(StockController):
                 frappe.throw(_("Source and target warehouse cannot be same for row {0}").format(d.idx))
 
     def validate_production_order(self):
-        # BAZZ - added Material Receipt purpose to production order stock entries
-        if self.purpose in ("Manufacture", "Material Transfer for Manufacture", "Material Receipt"):
+        # BAZZ - added "Manufacturer Shipping" and "Manufacturer Receipt" purpose to production order stock entries
+        if self.purpose in ("Manufacture", "Material Transfer for Manufacture","Manufacturer Receipt", "Manufacturer Shipping"):
             # check if production order is entered
 
             if self.purpose=="Manufacture" and self.production_order:
@@ -178,6 +181,7 @@ class StockEntry(StockController):
                     frappe.throw(_("For Quantity (Manufactured Qty) is mandatory"))
                 self.check_if_operations_completed()
                 self.check_duplicate_entry_for_production_order()
+
         elif self.purpose != "Material Transfer":
             self.production_order = None
 
@@ -559,14 +563,17 @@ class StockEntry(StockController):
                     if not self.fg_completed_qty:
                         frappe.throw(_("Manufacturing Quantity is mandatory"))
 
-                    item_dict = self.get_bom_raw_materials(self.fg_completed_qty)
+                    # BAZZ - When production order finish BOM items must not be transferred from wip_warehouse because after that production item was manufactured
+                    # BOM items are in the warehouses that belongs to workshops in charge of carrying out the operations
+
+                    """item_dict = self.get_bom_raw_materials(self.fg_completed_qty)
                     for item in item_dict.values():
                         if self.pro_doc and not self.pro_doc.skip_transfer:
                             item["from_warehouse"] = self.pro_doc.wip_warehouse
 
                         item["to_warehouse"] = self.to_warehouse if self.purpose=="Subcontract" else ""
 
-                    self.add_to_stock_entry_detail(item_dict)
+                    self.add_to_stock_entry_detail(item_dict)"""
 
                     scrap_item_dict = self.get_bom_scrap_material(self.fg_completed_qty)
                     for item in scrap_item_dict.values():

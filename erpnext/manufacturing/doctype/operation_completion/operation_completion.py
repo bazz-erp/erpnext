@@ -7,6 +7,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
+from erpnext.manufacturing.doctype.bom.bom import get_bom_items_as_dict
 import json
 
 class OperationCompletion(Document):
@@ -104,9 +105,9 @@ class OperationCompletion(Document):
     def transfer_material_to_workshop(self, production_order, items_supplied):
         stock_entry = self.create_stock_entry(production_order)
 
-        stock_entry.purpose = "Material Transfer for Manufacture"
+        stock_entry.purpose = "Manufacturer Shipping"
         stock_entry.title = _("Material Transfer to Workshop")
-        workshop_warehouse = frappe.get_doc("Supplier", self.workshop).workshop_warehouse
+        workshop_warehouse = self.get_workshop_warehouse()
 
         stock_entry.from_warehouse = production_order.wip_warehouse
         stock_entry.to_warehouse = workshop_warehouse
@@ -119,16 +120,45 @@ class OperationCompletion(Document):
 
     def receive_material_from_workshop(self, production_order, items_received):
         stock_entry = self.create_stock_entry(production_order)
-        stock_entry.purpose = "Material Receipt"
+        stock_entry.purpose = "Manufacturer Receipt"
 
         stock_entry.title = _("Receive Material from Workshop")
-        stock_entry.to_warehouse = production_order.wip_warehouse
 
+        """production item must be transferred to 'work in progress' warehouse. 
+        If this item was sent, it must be deducted from the workshop's warehouse. 
+        Else, if the workshop origin the product, source warehouse is null"""
         for item_code, item_qty in items_received.items():
-            stock_entry.append("items", {"item_code": item_code, "qty": item_qty})
+            product_dict = {"item_code": item_code, "qty": item_qty, "t_warehouse": production_order.wip_warehouse}
+            if item_code == production_order.production_item:
+                product_dict["s_warehouse"] = self.get_workshop_warehouse() if self.is_production_item_supplied(production_order) else None
+            else:
+                product_dict["s_warehouse"] = self.get_workshop_warehouse()
+            stock_entry.append("items", product_dict)
 
+        self.consume_raw_materials(stock_entry, production_order, items_received)
         stock_entry.submit()
 
+    def get_workshop_warehouse(self):
+        return frappe.get_doc("Supplier", self.workshop).workshop_warehouse
+
+
+    def is_production_item_supplied(self, production_order):
+        production_item_supplied = self.get("items_supplied", {"item_code": production_order.production_item})
+        return production_item_supplied and production_item_supplied[0].item_qty != 0
+
+
+    def consume_raw_materials(self,stock_entry,production_order, items_received):
+        if self.is_production_item_supplied(production_order):
+            return
+        production_item_received_qty = items_received.get(production_order.production_item)
+
+        """based on production_item_qty raw materials in the workshop's warehouse are deducted"""
+        bom_items = get_bom_items_as_dict(production_order.bom_no, production_order.company, qty=production_item_received_qty,
+                                          fetch_exploded=production_order.use_multi_level_bom)
+        for bom_item in bom_items.values():
+            print (str(bom_item["item_code"]) + " - " +  str(bom_item["qty"]))
+            stock_entry.append("items", {"item_code": bom_item["item_code"], "qty": bom_item["qty"],
+                                         "s_warehouse": self.get_workshop_warehouse()})
 
     def create_stock_entry(self, production_order):
         stock_entry = frappe.new_doc("Stock Entry")
