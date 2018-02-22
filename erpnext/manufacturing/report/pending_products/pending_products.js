@@ -34,5 +34,14 @@ frappe.query_reports["Pending Products"] = {
 			"options": "Workshop\nItem\nCustomer",
 			"default": "Workshop"
 	  }
-	]
+	],
+	"formatter": function (row, cell, value, columnDef, dataContext, default_formatter) {
+	    value = default_formatter(row, cell, value, columnDef, dataContext);
+        debugger;
+	    if (!dataContext[__("Operation")] && !dataContext[__("Production Order")]) {
+	        value = "<span style='font-weight:bold;font-size:larger'>" + value + "</span>";
+	    }
+
+	    return value;
+	}
 }

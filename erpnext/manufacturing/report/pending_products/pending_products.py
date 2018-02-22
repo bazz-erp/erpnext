@@ -12,9 +12,9 @@ def execute(filters=None):
 
 
 def get_columns():
-    columns = [_("Item Code") + ":Link/Item:140",
+    columns = [_("Item Code") + ":Link/Item:80",
                _("Item Name") + ":Data:140",
-               _("Workshop") + ":Link/Supplier:100",
+               _("Workshop") + ":Link/Supplier:150",
                _("Operation") + ":Link/Operation Completion:150",
                _("Production Order") + ":Link/Production Order:140",
                _("Pending Qty") + ":Float:140",
@@ -78,14 +78,36 @@ def get_order_by(filters):
 def get_data_grouped_by_field(in_process_operations, group_field):
     data = []
     current_value = None
+    sub_group_field = "workshop" if group_field == "production_item" else "production_item"
+    sub_group_current_value = None
+    total_item_qty = 0
+
     for operation in in_process_operations:
         item_remaining_qty = calculate_production_item_remaining_qty(operation.completion)
+
         if current_value != operation.get(group_field) and item_remaining_qty != 0:
+
             current_value = operation.get(group_field)
+            total_item_qty, sub_group_current_value = reset_sub_group_total(data,sub_group_field,operation,total_item_qty)
             add_title_row(data, group_field, operation)
+
+        elif sub_group_current_value != operation.get(sub_group_field):
+            total_item_qty, sub_group_current_value = reset_sub_group_total(data, sub_group_field, operation,
+                                                                            total_item_qty)
         if item_remaining_qty != 0:
             add_data_row(data, group_field, operation, item_remaining_qty)
+            total_item_qty += item_remaining_qty
+
+    # add last Total line
+    if total_item_qty != 0:
+        add_total_item_qty_row(data, total_item_qty)
     return data
+
+def reset_sub_group_total(data,sub_group_field, operation, total_item_qty):
+    if total_item_qty != 0:
+        add_total_item_qty_row(data, total_item_qty)
+    return 0, operation.get(sub_group_field)
+
 
 def add_title_row(data, group_field, operation):
     data.append([])
@@ -109,6 +131,10 @@ def add_data_row(data, group_field, operation, item_remaining_qty):
     else:
         row[7] = None
     data.append(row)
+
+def add_total_item_qty_row(data,total_item_qty):
+    data.append([None, None,None, None, None,total_item_qty])
+    data.append([])
 
 def get_group_field(filters):
     group_fields = {"Workshop": "workshop", "Item": "production_item", "Customer": "customer"}
