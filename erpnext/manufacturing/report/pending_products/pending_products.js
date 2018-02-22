@@ -21,6 +21,18 @@ frappe.query_reports["Pending Products"] = {
 			    };
 			}
 	  },
-
+	  {
+			"fieldname":"customer",
+			"label": __("Customer"),
+			"fieldtype": "Link",
+			"options": "Customer",
+	  },
+	  {
+			"fieldname":"group_by",
+			"label": __("Group By"),
+			"fieldtype": "Select",
+			"options": "Workshop\nItem\nCustomer",
+			"default": "Workshop"
+	  }
 	]
 }
