@@ -368,7 +368,7 @@ class BOM(WebsiteGenerator):
                 d.base_hour_rate = flt(d.hour_rate) * flt(self.conversion_rate)
                 d.base_operating_cost = flt(d.base_hour_rate) * flt(d.time_in_mins) / 60.0"""
 
-			# BAZZ - operation cost is set by user
+            # BAZZ - operation cost is set by user
 
             self.operating_cost += flt(d.operating_cost)
             self.base_operating_cost += flt(d.base_operating_cost)
@@ -520,7 +520,6 @@ def get_bom_items_as_dict(bom, company, qty=1, fetch_exploded=1, fetch_scrap_ite
                 and bom.name = %(bom)s
                 and bom_item.parent = bom.name
                 and item.name = bom_item.item_code
-                and is_stock_item = 1
                 {where_conditions}
                 group by item_code, stock_uom"""
 

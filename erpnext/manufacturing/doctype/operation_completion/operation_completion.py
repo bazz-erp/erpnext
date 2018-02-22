@@ -97,6 +97,9 @@ class OperationCompletion(Document):
         self.db_set("total_operating_cost", self.total_operating_cost + operating_cost)
         self.db_set("total_received_qty", self.total_received_qty + production_item_received_qty)
 
+        production_order.db_set("operations_cost", production_order.operations_cost + operating_cost)
+        production_order.db_set("total_cost", production_order.total_cost + operating_cost)
+
         if (self.total_received_qty == production_order.qty):
             self.db_set("status", "Completed")
             po_operation.db_set("status", "Completed")
@@ -165,6 +168,7 @@ class OperationCompletion(Document):
         stock_entry.production_order = production_order.name
         stock_entry.company = production_order.company
         stock_entry.from_bom = 0
+        stock_entry.operation = self.name
         return stock_entry
 
 

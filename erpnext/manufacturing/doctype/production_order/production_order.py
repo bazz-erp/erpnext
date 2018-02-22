@@ -188,6 +188,8 @@ class ProductionOrder(Document):
     def before_submit(self):
         # BAZZ - Time logs not needed
         # self.make_time_logs()
+        print("before_submit")
+        self.update_costs()
         pass
 
     def on_submit(self):
@@ -199,7 +201,7 @@ class ProductionOrder(Document):
         self.update_reserved_qty_for_production()
         self.update_completed_qty_in_material_request()
         self.update_planned_qty()
-
+        print("on_submit")
         # BAZZ - create operations entries to be able to start and finish operations
         self.create_operations_entries()
 
@@ -262,6 +264,17 @@ class ProductionOrder(Document):
 
         self.set('operations', operations)
         self.calculate_time()
+
+    def update_costs(self):
+        self.operations_cost = 0
+        self.total_cost = self.materials_cost
+
+    def set_initial_costs(self):
+        print("setting initial costs")
+        bom = frappe.get_doc("BOM", self.bom_no)
+        self.operations_cost = bom.operating_cost * (self.qty / bom.quantity)
+        self.materials_cost = bom.raw_material_cost * (self.qty / bom.quantity)
+        self.total_cost = self.operations_cost + self.materials_cost
 
     def calculate_time(self):
         bom_qty = frappe.db.get_value("BOM", self.bom_no, "quantity")
@@ -437,8 +450,7 @@ class ProductionOrder(Document):
     def get_items_and_operations_from_bom(self):
         self.set_required_items()
         self.set_production_order_operations()
-
-
+        self.set_initial_costs()
         return check_if_scrap_warehouse_mandatory(self.bom_no)
 
     def set_available_qty(self):
@@ -674,7 +686,6 @@ def finish_operation(operation_id, operating_cost, items_received):
     operation_completion.finish_operation(flt(operating_cost), json.loads(items_received))
 
     make_operation_cost_gl_entries(operation_completion, operating_cost)
-
 
 def get_operation_completion(operation_id):
     completion_id = frappe.db.sql("""select completion from `tabProduction Order Operation` where name = %s""", operation_id)[0][0]
