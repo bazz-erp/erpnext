@@ -130,7 +130,7 @@ class OperationCompletion(Document):
         for item_code, item_qty in items_received.items():
             product_dict = {"item_code": item_code, "qty": item_qty, "t_warehouse": production_order.wip_warehouse}
             if item_code == production_order.production_item:
-                product_dict["s_warehouse"] = self.get_workshop_warehouse() if self.is_production_item_supplied(production_order) else None
+                product_dict["s_warehouse"] = self.get_workshop_warehouse() if self.is_production_item_supplied(production_order.production_item) else None
             else:
                 product_dict["s_warehouse"] = self.get_workshop_warehouse()
             stock_entry.append("items", product_dict)
@@ -142,13 +142,13 @@ class OperationCompletion(Document):
         return frappe.get_doc("Supplier", self.workshop).workshop_warehouse
 
 
-    def is_production_item_supplied(self, production_order):
-        production_item_supplied = self.get("items_supplied", {"item_code": production_order.production_item})
+    def is_production_item_supplied(self, production_item):
+        production_item_supplied = self.get("items_supplied", {"item_code": production_item})
         return production_item_supplied and production_item_supplied[0].item_qty != 0
 
 
     def consume_raw_materials(self,stock_entry,production_order, items_received):
-        if self.is_production_item_supplied(production_order):
+        if self.is_production_item_supplied(production_order.production_item):
             return
         production_item_received_qty = items_received.get(production_order.production_item)
 
@@ -196,7 +196,7 @@ def calculate_production_item_remaining_qty(operation_id):
     production_item_supplied = operation.get("items_supplied", {"item_code": production_order.production_item})
 
     # check if production item was send to the workshop
-    if production_item_supplied and production_item_supplied[0].item_qty > 0:
+    if operation.is_production_item_supplied(production_order.production_item):
         production_item_received = operation.get("items_received", {"item_code": production_order.production_item})
         return (production_item_supplied[0].item_qty - production_item_received[0].item_qty) if production_item_received else production_item_supplied[0].item_qty
     return 0
