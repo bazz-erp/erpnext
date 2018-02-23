@@ -776,8 +776,9 @@ def make_production_orders(items, sales_order, company, project=None):
 			company=company,
 			sales_order=sales_order,
 			project=project,
-			fg_warehouse=i['warehouse']
-		)).insert()
+			fg_warehouse=i['warehouse'],
+			wip_warehouse= frappe.db.get_single_value("Manufacturing Settings","default_wip_warehouse")
+		))
 		production_order.set_production_order_operations()
 		production_order.save()
 		out.append(production_order)
