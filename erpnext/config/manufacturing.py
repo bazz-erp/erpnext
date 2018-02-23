@@ -26,6 +26,12 @@ def get_data():
 					"name": "Timesheet",
 					"description": _("Time Sheet for manufacturing."),
 				},
+				{
+					"type": "report",
+					"name": "Pending Products",
+					"label": _("Pending Products"),
+                    "is_query_report": True
+				},
 
 			]
 		},
