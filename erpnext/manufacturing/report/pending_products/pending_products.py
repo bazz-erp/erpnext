@@ -19,7 +19,8 @@ def get_columns():
                _("Production Order") + ":Link/Production Order:140",
                _("Pending Qty") + ":Float:140",
                _("Unit of Measure") + ":Link/UOM:120",
-               _("Customer") + ":Link/Customer:120"]
+               _("Customer") + ":Link/Customer:120",
+               _("Sales Order") + ":Link/Sales Order:120"]
     return columns
 
 
@@ -28,36 +29,24 @@ def get_data(filters):
 
     group_field = get_group_field(filters)
 
-    query = """select {projection} from {source} where {conditions} order by {order_by}"""
+    query = """select op.completion, op.parent as production_order, op.workshop,
+    po.production_item, item.item_name, item.stock_uom, so.name as so_name, so.customer_name, so.customer 
+    from `tabProduction Order Operation` as op, `tabProduction Order` po {join_type} 
+    `tabSales Order` as so on po.sales_order = so.name, `tabItem` as item where {conditions} order by {order_by}"""
 
-    query = query.format(projection=get_projection(filters),source=get_source(filters),conditions=get_conditions(filters), order_by=get_order_by(filters))
+    """If report is grouping by client, only production orders that has a target client must be showed, thus
+    the query makes an inner join. Else, if the group field is product or workshop, all pending operations must be
+    showed"""
+    join_type = "inner join" if filters.get("group_by") == "Customer" else "left join"
+
+    query = query.format(conditions=get_conditions(filters), order_by=get_order_by(filters), join_type=join_type)
 
     in_process_operations = frappe.db.sql(query,filters,as_dict=1)
 
-
-
     return get_data_grouped_by_field(in_process_operations, group_field)
-
-def get_source(filters):
-    source = """`tabProduction Order Operation` as op, `tabProduction Order` po, `tabItem` as item"""
-    if filters.get("group_by") == "Customer" or filters.get("customer"):
-        source += """, `tabSales Order` as so"""
-    return source
-
-def get_projection(filters):
-    projection = """op.completion, op.parent as production_order, 
-    op.workshop, po.production_item as production_item, item.item_name as item_name, item.stock_uom"""
-
-    if filters.get("group_by") == "Customer" or filters.get("customer"):
-        projection += ", so.customer, so.customer_name"
-    return projection
 
 def get_conditions(filters):
     conditions = ["""op.parent = po.name and po.production_item = item.item_code and op.status = 'In Process'"""]
-
-    if filters.get("group_by") == "Customer" or filters.get("customer"):
-        conditions.append("po.sales_order = so.name")
-
     if filters.get("workshop"):
         conditions.append("op.workshop=%(workshop)s")
     if filters.get("item"):
@@ -73,7 +62,7 @@ def get_order_by(filters):
         return """po.production_item, op.workshop"""
     # group by client
     else:
-        return """so.customer,op.workshop, po.production_item"""
+        return """so.customer desc,op.workshop, po.production_item"""
 
 def get_data_grouped_by_field(in_process_operations, group_field):
     data = []
@@ -121,7 +110,7 @@ def add_title_row(data, group_field, operation):
 def add_data_row(data, group_field, operation, item_remaining_qty):
     row = [operation.get("production_item"), operation.get("item_name"),
            operation.get("workshop"),operation["completion"], operation["production_order"],
-           item_remaining_qty, operation["stock_uom"], operation.get("customer_name", None)]
+           item_remaining_qty, operation["stock_uom"], operation.get("customer_name"), operation.get("so_name")]
 
     if group_field == "production_item":
         row[0] = None
