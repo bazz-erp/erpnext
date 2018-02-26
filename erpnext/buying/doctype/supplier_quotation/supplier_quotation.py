@@ -40,6 +40,9 @@ class SupplierQuotation(BuyingController):
 	def on_trash(self):
 		pass
 
+	def before_test_insert(self):
+		self.supplier = frappe.db.get_value("Supplier", {"supplier_name" : self.supplier_name}, as_dict=True).name
+
 	def validate_with_previous_doc(self):
 		super(SupplierQuotation, self).validate_with_previous_doc({
 			"Material Request": {

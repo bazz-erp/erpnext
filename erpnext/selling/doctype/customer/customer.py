@@ -45,6 +45,10 @@ class Customer(TransactionBase):
 
         return self.customer_name
 
+    # Set the customer code for testing
+    def before_test_insert(self):
+        self.code = get_customer_code()[0]["code"]
+
     def after_insert(self):
         '''If customer created from Lead, update customer id in quotations, opportunities'''
         self.update_lead_status()

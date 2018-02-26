@@ -169,6 +169,9 @@ class SalesOrder(SellingController):
 			if d.delivered_by_supplier and not d.supplier:
 				frappe.throw(_("Row #{0}: Set Supplier for item {1}").format(d.idx, d.item_code))
 
+	def before_test_insert(self):
+		self.customer = frappe.db.get_value("Customer", {"customer_name" : self.customer_name}, as_dict=True).name
+
 	def on_submit(self):
 		self.check_credit_limit()
 		self.update_reserved_qty()

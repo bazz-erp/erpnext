@@ -99,6 +99,9 @@ class Quotation(SellingController):
 		self.update_opportunity()
 		self.update_lead()
 
+	def before_test_insert(self):
+		self.customer = frappe.db.get_value("Customer", {"customer_name" : self.customer_name}, as_dict=True).name
+
 	def print_other_charges(self,docname):
 		print_lst = []
 		for d in self.get('taxes'):

@@ -276,7 +276,7 @@ def _set_price_list(quotation, cart_settings):
 	selling_price_list = None
 	if quotation.customer:
 		from erpnext.accounts.party import get_default_price_list
-		selling_price_list = get_default_price_list(frappe.get_doc("Customer", quotation.customer))
+		selling_price_list = get_default_price_list(frappe.get_doc("Customer", quotation.customer), "Customer")
 
 	# else check for territory based price list
 	if not selling_price_list:

@@ -34,6 +34,10 @@ class Supplier(TransactionBase):
         else:
             self.name = make_autoname(self.naming_series + '.#####')"""
 
+    # Set the supplier code for testing
+    def before_test_insert(self):
+        self.code = get_supplier_code()[0]["code"]
+
     def autoname(self):
         self.name = str(self.code) + " - " + self.supplier_name
 

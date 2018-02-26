@@ -512,7 +512,7 @@ def make_sales_order(**args):
 		so.transaction_date = args.transaction_date
 
 	so.company = args.company or "_Test Company"
-	so.customer = args.customer or "_Test Customer"
+	so.customer = args.customer or frappe.db.get_value("Customer", {"customer_name" : "_Test Customer"}, as_dict=True).name
 	so.currency = args.currency or "INR"
 	if args.selling_price_list:
 		so.selling_price_list = args.selling_price_list
