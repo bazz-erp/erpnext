@@ -73,53 +73,6 @@ class TestProductionOrder(unittest.TestCase):
 
 		self.assertRaises(StockOverProductionError, s.submit)
 
-	def test_make_time_sheet(self):
-		from erpnext.manufacturing.doctype.production_order.production_order import make_timesheet
-		prod_order = make_prod_order_test_record(item="_Test FG Item 2",
-			planned_start_date=now(), qty=1, do_not_save=True)
-
-		prod_order.set_production_order_operations()
-		prod_order.insert()
-		prod_order.submit()
-		
-		d = prod_order.operations[0]
-		d.completed_qty = flt(d.completed_qty)
-
-		name = frappe.db.get_value('Timesheet', {'production_order': prod_order.name}, 'name')
-		time_sheet_doc = frappe.get_doc('Timesheet', name)
-		self.assertEqual(prod_order.company, time_sheet_doc.company)
-		time_sheet_doc.submit()
-		
-
-		self.assertEqual(prod_order.name, time_sheet_doc.production_order)
-		self.assertEqual((prod_order.qty - d.completed_qty), sum([d.completed_qty for d in time_sheet_doc.time_logs]))
-
-		manufacturing_settings = frappe.get_doc({
-			"doctype": "Manufacturing Settings",
-			"allow_production_on_holidays": 0
-		})
-
-		manufacturing_settings.save()
-
-		prod_order.load_from_db()
-		self.assertEqual(prod_order.operations[0].status, "Completed")
-		self.assertEqual(prod_order.operations[0].completed_qty, prod_order.qty)
-
-		self.assertEqual(prod_order.operations[0].actual_operation_time, 60)
-		self.assertEqual(prod_order.operations[0].actual_operating_cost, 100)
-		
-		time_sheet_doc1 = make_timesheet(prod_order.name, prod_order.company)
-		self.assertEqual(len(time_sheet_doc1.get('time_logs')), 0)
-
-		time_sheet_doc.cancel()
-
-		prod_order.load_from_db()
-		self.assertEqual(prod_order.operations[0].status, "Pending")
-		self.assertEqual(flt(prod_order.operations[0].completed_qty), 0)
-
-		self.assertEqual(flt(prod_order.operations[0].actual_operation_time), 0)
-		self.assertEqual(flt(prod_order.operations[0].actual_operating_cost), 0)
-
 	def test_planned_operating_cost(self):
 		prod_order = make_prod_order_test_record(item="_Test FG Item 2",
 			planned_start_date=now(), qty=1, do_not_save=True)
@@ -177,13 +130,14 @@ class TestProductionOrder(unittest.TestCase):
 
 	def test_projected_qty_for_production_and_sales_order(self):
 		before_production_order = get_bin(self.item, self.warehouse)
+		print(before_production_order)
 		before_production_order.update_reserved_qty_for_production()
 
 		self.pro_order = make_prod_order_test_record(item="_Test FG Item", qty=2,
 			source_warehouse=self.warehouse)
 
 		after_production_order = get_bin(self.item, self.warehouse)
-
+		print(after_production_order)
 		sales_order = make_sales_order(item = self.item, qty = 2)
 		after_sales_order = get_bin(self.item, self.warehouse)
 
@@ -300,6 +254,57 @@ class TestProductionOrder(unittest.TestCase):
 			if item.bom_no and item.item_code in scrap_item_details:
 				self.assertEqual(prod_order_details.scrap_warehouse, item.t_warehouse)
 				self.assertEqual(flt(prod_order_details.qty)*flt(scrap_item_details[item.item_code]), item.qty)
+
+	"""
+	**
+	* BAZZ doesn't use timesheets so this test is useless.
+	**
+	def test_make_time_sheet(self):
+		from erpnext.manufacturing.doctype.production_order.production_order import make_timesheet
+		prod_order = make_prod_order_test_record(item="_Test FG Item 2",
+												 planned_start_date=now(), qty=1, do_not_save=True)
+
+		prod_order.set_production_order_operations()
+		prod_order.insert()
+		prod_order.submit()
+
+		d = prod_order.operations[0]
+		d.completed_qty = flt(d.completed_qty)
+
+		name = frappe.db.get_value('Timesheet', {'production_order': prod_order.name}, 'name')
+		time_sheet_doc = frappe.get_doc('Timesheet', name)
+		self.assertEqual(prod_order.company, time_sheet_doc.company)
+		time_sheet_doc.submit()
+
+		self.assertEqual(prod_order.name, time_sheet_doc.production_order)
+		self.assertEqual((prod_order.qty - d.completed_qty), sum([d.completed_qty for d in time_sheet_doc.time_logs]))
+
+		manufacturing_settings = frappe.get_doc({
+			"doctype": "Manufacturing Settings",
+			"allow_production_on_holidays": 0
+		})
+
+		manufacturing_settings.save()
+
+		prod_order.load_from_db()
+		self.assertEqual(prod_order.operations[0].status, "Completed")
+		self.assertEqual(prod_order.operations[0].completed_qty, prod_order.qty)
+
+		self.assertEqual(prod_order.operations[0].actual_operation_time, 60)
+		self.assertEqual(prod_order.operations[0].actual_operating_cost, 100)
+
+		time_sheet_doc1 = make_timesheet(prod_order.name, prod_order.company)
+		self.assertEqual(len(time_sheet_doc1.get('time_logs')), 0)
+
+		time_sheet_doc.cancel()
+
+		prod_order.load_from_db()
+		self.assertEqual(prod_order.operations[0].status, "Pending")
+		self.assertEqual(flt(prod_order.operations[0].completed_qty), 0)
+
+		self.assertEqual(flt(prod_order.operations[0].actual_operation_time), 0)
+		self.assertEqual(flt(prod_order.operations[0].actual_operating_cost), 0)
+	"""
 
 def get_scrap_item_details(bom_no):
 	scrap_items = {}
