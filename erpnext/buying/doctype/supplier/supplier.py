@@ -52,9 +52,6 @@ class Supplier(TransactionBase):
             if not self.naming_series:
                 msgprint(_("Series is mandatory"), raise_exception=1)
 
-        print("Supplier type:" + self.supplier_type)
-        if (self.supplier_type == 'Taller'):
-            self.create_workshop_warehouse()
         validate_party_accounts(self)
         validate_code(self)
 
@@ -65,13 +62,24 @@ class Supplier(TransactionBase):
         if frappe.defaults.get_global_default('supp_master_name') == 'Supplier Name':
             frappe.db.set(self, "supplier_name", newdn)
 
-    def create_workshop_warehouse(self):
-        if not self.workshop_warehouse:
-            print("Creating supplier workshop")
-            warehouse = frappe.get_doc({"doctype": "Warehouse", "is_group": 0, "company": erpnext.get_default_company(),
-                                        "warehouse_name": self.supplier_name})
+    # BAZZ - returns the workshop warehouse for the company sent as parameter. If it doesn't exist, is created
+    def get_company_warehouse(self, company):
+        # migrates workshop_warehouse field to warehouses table
+        if self.workshop_warehouse:
+            warehouse_detail = frappe.get_doc("Warehouse", self.workshop_warehouse)
+            self.append("warehouses", {"company": warehouse_detail.company, "warehouse_name": self.workshop_warehouse})
+            self.workshop_warehouse = None
+
+        company_warehouse = self.get("warehouses", {"company": company})
+        if not company_warehouse:
+            warehouse = frappe.get_doc({"doctype": "Warehouse", "is_group": 0, "company": company,
+                                        "warehouse_name": self.name})
             warehouse.save()
-            self.workshop_warehouse = warehouse.name
+            self.append("warehouses", {"company": company, "warehouse_name": warehouse.name})
+            self.save()
+            return warehouse.name
+        return company_warehouse[0].warehouse_name
+
 
 
 @frappe.whitelist()
