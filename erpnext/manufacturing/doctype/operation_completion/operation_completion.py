@@ -110,7 +110,7 @@ class OperationCompletion(Document):
 
         stock_entry.purpose = "Manufacturer Shipping"
         stock_entry.title = _("Material Transfer to Workshop")
-        workshop_warehouse = self.get_workshop_warehouse()
+        workshop_warehouse = self.get_workshop_warehouse(production_order.company)
 
         stock_entry.from_warehouse = production_order.wip_warehouse
         stock_entry.to_warehouse = workshop_warehouse
@@ -133,16 +133,16 @@ class OperationCompletion(Document):
         for item_code, item_qty in items_received.items():
             product_dict = {"item_code": item_code, "qty": item_qty, "t_warehouse": production_order.wip_warehouse}
             if item_code == production_order.production_item:
-                product_dict["s_warehouse"] = self.get_workshop_warehouse() if self.is_production_item_supplied(production_order.production_item) else None
+                product_dict["s_warehouse"] = self.get_workshop_warehouse(production_order.company) if self.is_production_item_supplied(production_order.production_item) else None
             else:
-                product_dict["s_warehouse"] = self.get_workshop_warehouse()
+                product_dict["s_warehouse"] = self.get_workshop_warehouse(production_order.company)
             stock_entry.append("items", product_dict)
 
         self.consume_raw_materials(stock_entry, production_order, items_received)
         stock_entry.submit()
 
-    def get_workshop_warehouse(self):
-        return frappe.get_doc("Supplier", self.workshop).workshop_warehouse
+    def get_workshop_warehouse(self, company):
+        return frappe.get_doc("Supplier", self.workshop).get_company_warehouse(company)
 
 
     def is_production_item_supplied(self, production_item):
@@ -161,7 +161,7 @@ class OperationCompletion(Document):
         for bom_item in bom_items.values():
             print (str(bom_item["item_code"]) + " - " +  str(bom_item["qty"]))
             stock_entry.append("items", {"item_code": bom_item["item_code"], "qty": bom_item["qty"],
-                                         "s_warehouse": self.get_workshop_warehouse()})
+                                         "s_warehouse": self.get_workshop_warehouse(production_order.company)})
 
     def create_stock_entry(self, production_order):
         stock_entry = frappe.new_doc("Stock Entry")
