@@ -80,6 +80,11 @@
     "workstation": "_Test Workstation 1",
     "time_in_mins": 60,
     "operating_cost": 100
+   },
+    {
+    "operation": "_Test Operation 2",
+    "description": "_Test",
+    "operating_cost": 200
    }
    ],
   "items": [

@@ -23,5 +23,10 @@
     "company": "_Test Company",
     "account": "_Test Payable USD - _TC"
   }]
+ },
+ {
+  "doctype": "Supplier",
+  "supplier_name": "_Test Workshop Supplier",
+  "supplier_type": "Taller"
  }
 ]
