@@ -40,6 +40,7 @@ class ProductionOrder(Document):
 
         # get production item name
         self.production_item_name = frappe.get_doc("Item", self.production_item).item_name
+        self.set_default_workshop()
 
         self.validate_sales_order()
         self.validate_warehouse_belongs_to_company()
@@ -265,12 +266,16 @@ class ProductionOrder(Document):
         self.set('operations', operations)
         self.calculate_time()
 
+    def set_default_workshop(self):
+        self.default_workshop = frappe.get_doc("Item", self.production_item).default_supplier
+
+
+
     def update_costs(self):
         self.operations_cost = 0
         self.total_cost = self.materials_cost
 
     def set_initial_costs(self):
-        print("setting initial costs")
         bom = frappe.get_doc("BOM", self.bom_no)
         self.operations_cost = bom.operating_cost * (self.qty / bom.quantity)
         self.materials_cost = bom.raw_material_cost * (self.qty / bom.quantity)

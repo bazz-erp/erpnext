@@ -114,9 +114,6 @@ frappe.ui.form.on("Production Order", {
 			})
 		}
 
-		// Bazz - operations can be started when production order is "In Process"
-        frm.fields_dict['operations'].grid.toggle_display("action_button",frm.doc.status === "In Process");
-
 		if (frm.doc.status === "In Process") {
 			update_operations_action(frm);
         }
@@ -454,8 +451,13 @@ var create_start_operation_dialog = function (frm, operation) {
         console.log(dialog.fields_dict["workshop"]);
         dialog.fields_dict["workshop"].df.read_only = 1;
         dialog.set_value("workshop", operation_details.workshop);
-        dialog.fields_dict["workshop"].refresh();
+
     }
+    else if (operation_details.status == 'Pending') {
+        debugger;
+        dialog.set_value("workshop", frm.doc.default_workshop);
+    }
+    dialog.fields_dict["workshop"].refresh();
 
 	// get materials received in previous operation
     previous_operation = $(cur_frm.doc.operations).filter(function (i, op) {
