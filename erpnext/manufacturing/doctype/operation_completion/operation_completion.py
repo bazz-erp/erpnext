@@ -10,6 +10,8 @@ from frappe.utils import flt
 from erpnext.manufacturing.doctype.bom.bom import get_bom_items_as_dict
 import json
 
+class ProductionOrderNotStartedError(frappe.ValidationError): pass
+
 class OperationCompletion(Document):
 
     def autoname(self):
@@ -24,11 +26,15 @@ class OperationCompletion(Document):
     def start_operation(self, workshop, items_supplied):
 
         if self.status == 'Completed':
-           frappe.throw(_("You cant send anymore, the operation is already completed."))
+           frappe.throw(_("Operation is already completed."))
 
         production_order = frappe.get_doc("Production Order", self.production_order)
 
-        # ACUMULAR EN LA TABLA
+        if production_order.status != 'In Process':
+            frappe.throw(_("Production Order must be In Process to start an operation"), ProductionOrderNotStartedError)
+
+        if self.status == "Pending" and not workshop:
+            frappe.throw(_("Workshop is mandatory when sending materials for the first time"))
 
         po_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
 
