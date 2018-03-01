@@ -303,7 +303,7 @@ class TestProductionOrder(unittest.TestCase):
         items_supplied = self.get_items_supplied_for_first_operation()
         self.assertRaises(frappe.ValidationError, operation_completion.start_operation, None, items_supplied)
 
-        operation_completion.start_operation(self.get_test_workshop_name(), self.get_items_supplied_for_first_operation())
+        operation_completion.start_operation(self.get_test_workshop_name(), items_supplied)
 
         material_transferred = frappe.get_value("Stock Entry", {"purpose": "Manufacturer Shipping",
                                                               "operation": operation_completion.name}, "name")
@@ -327,6 +327,65 @@ class TestProductionOrder(unittest.TestCase):
     def test_finish_operation(self):
 
         self.start_production_order()
+        operation_completion = frappe.get_doc("Operation Completion", self.production_order.operations[0].completion)
+
+        operation_completion.start_operation(self.get_test_workshop_name(), self.get_items_supplied_for_first_operation())
+
+        qty_received = 1
+        items_received = {self.production_order.production_item: qty_received}
+
+        # operation cost when receiving materials is mandatory
+        self.assertRaises(frappe.ValidationError, operation_completion.finish_operation, None, items_received)
+
+        operation_completion.finish_operation(100, items_received)
+
+        # operation must be In Process because only one product was received
+        self.assertEqual(operation_completion.status, "In Process")
+
+
+        # validates stock entry of production item receipt
+        material_received = frappe.get_value("Stock Entry", {"purpose": "Manufacturer Receipt",
+                                                              "operation": operation_completion.name}, "name")
+
+        material_received = frappe.get_doc("Stock Entry", material_received)
+
+        production_item_detail = material_received.get("items", {"item_code": self.production_order.production_item})[0]
+
+        self.assertEqual(production_item_detail.qty, qty_received)
+        self.assertEqual(production_item_detail.t_warehouse, self.production_order.wip_warehouse)
+        self.assertIsNone(production_item_detail.s_warehouse)
+
+        workshop_warehouse = frappe.get_doc("Supplier", self.get_test_workshop_name()).get_company_warehouse(self.production_order.company)
+
+        from erpnext.manufacturing.doctype.bom.bom import get_bom_items_as_dict
+
+        # calculates consumption of raw materials for received qty
+        required_materials_for_received_qty = get_bom_items_as_dict(self.production_order.bom_no, self.production_order.company, fetch_exploded=0, qty=qty_received)
+
+        # checks consumption of each raw material in operation
+        for required_material in required_materials_for_received_qty.values():
+            raw_material_consumed = material_received.get("items", {"item_code": required_material.get("item_code")})[0]
+            self.assertEqual(raw_material_consumed.qty, required_material.get("qty"))
+            self.assertEqual(raw_material_consumed.s_warehouse, workshop_warehouse)
+
+        # receives remaining product
+        operation_completion.finish_operation(150, items_received)
+
+        # checks operation status transition
+        self.assertEqual(operation_completion.status, "Completed")
+
+        self.production_order.load_from_db()
+        self.assertEqual(operation_completion.status, self.production_order.operations[0].status)
+
+        # checks total received qty of production item in the operation
+        production_item_received = operation_completion.get("items_received", {"item_code": self.production_order.production_item})[0]
+        self.assertEqual(production_item_received.item_qty, qty_received * 2)
+
+        # validate total operating cost among the multiples receipts
+        self.assertEqual(operation_completion.total_operating_cost, 250)
+
+        # operation cannot be started because it is 'Completed'
+        self.assertRaises(frappe.ValidationError, operation_completion.start_operation, self.get_test_workshop_name(),None)
 
 
 
