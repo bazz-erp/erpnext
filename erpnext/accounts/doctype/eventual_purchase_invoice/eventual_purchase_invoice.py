@@ -102,6 +102,7 @@ class EventualPurchaseInvoice(Document):
         gl_entries.append(
             frappe._dict({
                 "party_type": "Supplier",
+                "posting_date": nowdate(),
                 "account": stock_received_but_not_billed,
                 "debit": self.total_amount,
                 "debit_in_account_currency": self.total_amount,
