@@ -19,6 +19,14 @@ class TestProductionOrder(unittest.TestCase):
         self.warehouse = '_Test Warehouse 2 - _TC'
         self.item = '_Test Item'
 
+        # add raw materials to stores
+        test_stock_entry.make_stock_entry(item_code="_Test Item Home Desktop Manufactured",
+                                          target=self.warehouse, qty=6, basic_rate=5000.0)
+        test_stock_entry.make_stock_entry(item_code="_Test Item",
+                                          target=self.warehouse, qty=2, basic_rate=1000.0)
+
+        self.production_order = make_prod_order_test_record(item="_Test FG Item 2", qty=2, source_warehouse=self.warehouse)
+
     def check_planned_qty(self):
         set_perpetual_inventory(0)
 
@@ -258,43 +266,67 @@ class TestProductionOrder(unittest.TestCase):
                 self.assertEqual(flt(prod_order_details.qty)*flt(scrap_item_details[item.item_code]), item.qty)
 
 
-    def test_operations_status(self):
+    def get_items_supplied_for_first_operation(self):
+        return {item.item_code: item.required_qty for item in self.production_order.required_items}
 
-        # add raw materials to stores
-        test_stock_entry.make_stock_entry(item_code="_Test Item Home Desktop Manufactured",
-                                          target=self.warehouse, qty=6, basic_rate=5000.0)
-        test_stock_entry.make_stock_entry(item_code="_Test Item",
-                                          target=self.warehouse, qty=2, basic_rate=1000.0)
+    def get_test_workshop_name(self):
+        return frappe.get_value("Supplier", {"supplier_name": "_Test Workshop Supplier"}, "name")
 
-        prod_order = make_prod_order_test_record(item="_Test FG Item 2", qty=2, source_warehouse=self.warehouse)
+    def start_production_order(self):
+        frappe.get_doc(make_stock_entry(self.production_order.name, "Material Transfer for Manufacture")).submit()
 
-        for operation in prod_order.operations:
+
+
+    def test_operations_status_before_production_order_is_started(self):
+
+        for operation in self.production_order.operations:
             self.assertEqual(operation.status, "Pending")
             completion = frappe.get_doc("Operation Completion", operation.completion)
             self.assertEqual(completion.status, "Pending")
 
         # operation cannot be finished when its status is 'Pending'
-        completion = frappe.get_doc("Operation Completion", prod_order.operations[0].completion)
-        self.assertRaises(frappe.ValidationError, completion.finish_operation, 20.0, None)
+        operation_completion = frappe.get_doc("Operation Completion", self.production_order.operations[0].completion)
+        self.assertRaises(frappe.ValidationError, operation_completion.finish_operation, 20.0, None)
 
-        initial_stock_entry = frappe.get_doc(make_stock_entry(prod_order.name,"Material Transfer for Manufacture"))
-        initial_stock_entry.submit()
+        # operation cannot be started when production order is in 'Not Started' status
+        from erpnext.manufacturing.doctype.operation_completion.operation_completion import ProductionOrderNotStartedError
 
-        items_supplied = {item.item_code: item.required_qty for item in prod_order.required_items}
+        self.assertRaises(ProductionOrderNotStartedError, operation_completion.start_operation,self.get_test_workshop_name(),self.get_items_supplied_for_first_operation())
 
-        workshop_name = frappe.get_value("Supplier", {"supplier_name": "_Test Workshop Supplier"}, "name")
-        completion.start_operation(workshop_name, items_supplied)
-        self.assertEqual(completion.status, "In Process")
-        self.assertEqual(completion.workshop, workshop_name)
+    def test_start_operation(self):
 
-        # El error se debe a que el almacen asignado al taller pertenece a la compania por default que no es la misma que
-        # la que esta asignada a la orden de produccion.
+        self.start_production_order()
 
-        # Como los proveedores se comparten entre todas las companias, habria que modificar la implementacion
-        # de modo que cada proveedor tenga un almacen por cada compania existente. De forma que cuando se haga
-        # una orden de produccion, se pueda utilizar el almacen del proveedor que corresponda a la compania
-        # asignada a la orden.
+        operation_completion = frappe.get_doc("Operation Completion", self.production_order.operations[0].completion)
 
+        # workshop is mandatory when operation is 'Pending'
+        items_supplied = self.get_items_supplied_for_first_operation()
+        self.assertRaises(frappe.ValidationError, operation_completion.start_operation, None, items_supplied)
+
+        operation_completion.start_operation(self.get_test_workshop_name(), self.get_items_supplied_for_first_operation())
+
+        material_transferred = frappe.get_value("Stock Entry", {"purpose": "Manufacturer Shipping",
+                                                              "operation": operation_completion.name}, "name")
+
+        material_transferred = frappe.get_doc("Stock Entry", material_transferred)
+
+        for item in material_transferred.items:
+            # checks that products supplied in operation are in the stock entry
+            self.assertEqual(item.qty,items_supplied.get(item.item_code))
+
+            # checks that products transferred are stored in operation doctype
+            self.assertEqual(item.qty, operation_completion.get("items_supplied", {"item_code": item.item_code})[0].item_qty)
+
+        self.production_order.load_from_db()
+
+        self.assertEqual(operation_completion.status, "In Process")
+        self.assertEqual(operation_completion.workshop, self.get_test_workshop_name())
+        self.assertEqual(operation_completion.status, self.production_order.operations[0].status)
+        self.assertEqual(operation_completion.workshop, self.production_order.operations[0].workshop)
+
+    def test_finish_operation(self):
+
+        self.start_production_order()
 
 
 
