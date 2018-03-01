@@ -45,10 +45,6 @@ class Customer(TransactionBase):
 
         return self.customer_name
 
-    # Set the customer code for testing
-    def before_test_insert(self):
-        self.code = get_customer_code()[0]["code"]
-
     def after_insert(self):
         '''If customer created from Lead, update customer id in quotations, opportunities'''
         self.update_lead_status()
@@ -59,6 +55,10 @@ class Customer(TransactionBase):
         validate_party_accounts(self)
         self.validate_credit_limit_on_change()
         self.validate_code()
+
+    def before_insert(self):
+        if not self.code:
+            self.code = get_customer_code()[0]["code"]
 
     def autoname(self):
         self.name = str(self.code) + " - " + self.customer_name
