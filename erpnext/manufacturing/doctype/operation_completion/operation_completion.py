@@ -71,6 +71,9 @@ class OperationCompletion(Document):
         if not self.status == 'In Process':
             frappe.throw(_("Operation must be started to send materials."))
 
+        if operating_cost is None:
+            frappe.throw(_("Operation cost is mandatory"))
+
         production_order = frappe.get_doc("Production Order", self.production_order)
         production_item_received_qty = flt(items_received.get(production_order.production_item, 0))
 
