@@ -49,6 +49,11 @@ class StockEntry(StockController):
         self.validate_with_material_request()
         self.validate_batch()
 
+        # BAZZ - remove 'Draft' state
+        if self._action == 'save':
+            self._action = 'submit'
+            self.docstatus = 1
+
         if self._action == 'submit':
             self.make_batches('t_warehouse')
         else:
