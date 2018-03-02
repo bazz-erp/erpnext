@@ -424,6 +424,9 @@ class TestProductionOrder(unittest.TestCase):
                                          {self.production_order.production_item: 2})
         self.assertEqual(calculate_production_item_remaining_qty(second_operation.name), 2)
 
+        # cannot send more than 2 units of production item
+        self.assertRaises(frappe.ValidationError, second_operation.start_operation, self.get_test_workshop_name(),{self.production_order.production_item: 4})
+
         # receives one product in second operation to check the change in the availability
         second_operation.finish_operation(90, items_received)
         self.assertEqual(calculate_production_item_remaining_qty(second_operation.name), 1)
