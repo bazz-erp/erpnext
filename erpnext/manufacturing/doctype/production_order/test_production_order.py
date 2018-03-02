@@ -14,6 +14,9 @@ from erpnext.stock.doctype.item.test_item import get_total_projected_qty
 from erpnext.stock.utils import get_bin
 from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
 
+from erpnext.manufacturing.doctype.operation_completion.operation_completion \
+    import get_production_item_available_qty, calculate_production_item_remaining_qty
+
 class TestProductionOrder(unittest.TestCase):
     def setUp(self):
         self.warehouse = '_Test Warehouse 2 - _TC'
@@ -275,7 +278,13 @@ class TestProductionOrder(unittest.TestCase):
     def start_production_order(self):
         frappe.get_doc(make_stock_entry(self.production_order.name, "Material Transfer for Manufacture")).submit()
 
+    def get_material_receipt_for_operation(self, operation_id):
+        material_received = frappe.get_value("Stock Entry", {"purpose": "Manufacturer Receipt",
+                                                             "operation": operation_id}, "name")
+        return frappe.get_doc("Stock Entry", material_received)
 
+    def get_workshop_warehouse(self):
+        return frappe.get_doc("Supplier", self.get_test_workshop_name()).get_company_warehouse(self.production_order.company)
 
     def test_operations_status_before_production_order_is_started(self):
 
@@ -344,21 +353,20 @@ class TestProductionOrder(unittest.TestCase):
 
 
         # validates stock entry of production item receipt
-        material_received = frappe.get_value("Stock Entry", {"purpose": "Manufacturer Receipt",
-                                                              "operation": operation_completion.name}, "name")
-
-        material_received = frappe.get_doc("Stock Entry", material_received)
+        material_received = self.get_material_receipt_for_operation(operation_completion.name)
 
         production_item_detail = material_received.get("items", {"item_code": self.production_order.production_item})[0]
 
+        # one unit of production item must have received
         self.assertEqual(production_item_detail.qty, qty_received)
+
+        # target warehouse of the transfer must be 'work in progress' warehouse of the production order
         self.assertEqual(production_item_detail.t_warehouse, self.production_order.wip_warehouse)
+
+        # source warehouse is None because the product was created by the workshop
         self.assertIsNone(production_item_detail.s_warehouse)
 
-        workshop_warehouse = frappe.get_doc("Supplier", self.get_test_workshop_name()).get_company_warehouse(self.production_order.company)
-
         from erpnext.manufacturing.doctype.bom.bom import get_bom_items_as_dict
-
         # calculates consumption of raw materials for received qty
         required_materials_for_received_qty = get_bom_items_as_dict(self.production_order.bom_no, self.production_order.company, fetch_exploded=0, qty=qty_received)
 
@@ -366,14 +374,16 @@ class TestProductionOrder(unittest.TestCase):
         for required_material in required_materials_for_received_qty.values():
             raw_material_consumed = material_received.get("items", {"item_code": required_material.get("item_code")})[0]
             self.assertEqual(raw_material_consumed.qty, required_material.get("qty"))
-            self.assertEqual(raw_material_consumed.s_warehouse, workshop_warehouse)
+
+            # raw materials are transferred from workshop warehouse to a Null warehouse
+            self.assertEqual(raw_material_consumed.s_warehouse, self.get_workshop_warehouse())
+            self.assertIsNone(raw_material_consumed.t_warehouse)
 
         # receives remaining product
         operation_completion.finish_operation(150, items_received)
 
         # checks operation status transition
         self.assertEqual(operation_completion.status, "Completed")
-
         self.production_order.load_from_db()
         self.assertEqual(operation_completion.status, self.production_order.operations[0].status)
 
@@ -386,6 +396,50 @@ class TestProductionOrder(unittest.TestCase):
 
         # operation cannot be started because it is 'Completed'
         self.assertRaises(frappe.ValidationError, operation_completion.start_operation, self.get_test_workshop_name(),None)
+
+    def test_production_item_availability_and_remaining_qty(self):
+        self.start_production_order()
+
+        first_operation = frappe.get_doc("Operation Completion", self.production_order.operations[0].completion)
+
+        # starts first operation and receives only one product to test availability of it in next operation
+        first_operation.start_operation(self.get_test_workshop_name(),
+                                             self.get_items_supplied_for_first_operation())
+        qty_received = 1
+        items_received = {self.production_order.production_item: qty_received}
+        first_operation.finish_operation(100, items_received)
+        self.assertEqual(get_production_item_available_qty(self.production_order, self.production_order.operations[1]), 1)
+
+        # checks that 2 products cant be sent in sencond operation because there are only one available
+        second_operation = frappe.get_doc("Operation Completion", self.production_order.operations[1].completion)
+        self.assertRaises(frappe.ValidationError, second_operation.start_operation, self.get_test_workshop_name(),
+                                         {self.production_order.production_item: 2})
+
+        # finish first operation to check that two products are available
+        first_operation.finish_operation(120, items_received)
+        self.assertEqual(get_production_item_available_qty(self.production_order, self.production_order.operations[1]), 2)
+
+        # after sending two products to the workshop, checks that it must to return 2 units of production item
+        second_operation.start_operation(self.get_test_workshop_name(),
+                                         {self.production_order.production_item: 2})
+        self.assertEqual(calculate_production_item_remaining_qty(second_operation.name), 2)
+
+        # receives one product in second operation to check the change in the availability
+        second_operation.finish_operation(90, items_received)
+        self.assertEqual(calculate_production_item_remaining_qty(second_operation.name), 1)
+
+        # check that source warehouse of the production item received is the workshop warehouse
+        material_received = self.get_material_receipt_for_operation(second_operation.name)
+        production_item_detail = material_received.get("items", {"item_code": self.production_order.production_item})[0]
+        self.assertEqual(production_item_detail.s_warehouse, self.get_workshop_warehouse())
+
+
+
+
+
+
+
+
 
 
 
