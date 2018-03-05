@@ -7,7 +7,7 @@
  "doctype": "Report", 
  "idx": 0, 
  "is_standard": "Yes", 
- "modified": "2018-03-05 14:54:28.446785", 
+ "modified": "2018-03-05 16:04:25.762486", 
  "modified_by": "Administrator", 
  "module": "Manufacturing", 
  "name": "Workshop Current Account", 
@@ -15,5 +15,12 @@
  "ref_doctype": "Stock Entry Detail", 
  "report_name": "Workshop Current Account", 
  "report_type": "Script Report", 
- "roles": []
+ "roles": [
+  {
+   "role": "Manufacturing User"
+  }, 
+  {
+   "role": "Manufacturing Manager"
+  }
+ ]
 }
