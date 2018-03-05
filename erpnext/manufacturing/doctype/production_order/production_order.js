@@ -414,7 +414,7 @@ var create_start_operation_dialog = function (frm, operation) {
 
     var fields = [
     {
-        label: "Materials Supplied (Enter the amount)",
+        label: __("Materials Supplied"),
         fieldtype: "Section Break",
         fieldname: "materials_supplied_section"
     }];
