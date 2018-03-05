@@ -499,7 +499,7 @@ var create_start_operation_dialog = function (frm, operation) {
         });
     }
 
-	dialog.set_primary_action(__("Send"),function () {
+	dialog.set_primary_action(__("Confirm"),function () {
 	    var items_supplied = dialog.get_values();
 
 	    // removes workshop key from json object
@@ -563,7 +563,7 @@ var create_finish_operation_dialog = function (operation) {
        dialog.fields_dict["operating_cost"].refresh();
     });
 	
-	dialog.set_primary_action(__("Receive"), function () {
+	dialog.set_primary_action(__("Confirm"), function () {
 		var items_received = dialog.get_values();
 		delete items_received["operating_cost"];
 
