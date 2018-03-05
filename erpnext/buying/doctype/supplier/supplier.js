@@ -47,7 +47,13 @@ frappe.ui.form.on("Supplier", {
 			});
 
 			frm.add_custom_button(__('Current Account'), function () {
-				frappe.set_route('query-report', 'Supplier Current Account', { supplier: frm.doc.name });
+				if (frm.doc.supplier_type == "Taller") {
+				   frappe.set_route('query-report', 'Workshop Current Account', { workshop: frm.doc.name });
+				}
+				else {
+				   frappe.set_route('query-report', 'Supplier Current Account', { supplier: frm.doc.name });
+				}
+
 			});
 
 			// indicators
