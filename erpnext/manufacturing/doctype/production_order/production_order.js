@@ -526,7 +526,8 @@ var create_finish_operation_dialog = function (operation) {
 			{
 				fieldname: "operating_cost",
 				fieldtype: "Currency",
-				label: __("Operating Cost")
+				label: __("Operating Cost"),
+				default: "0"
 			},
             {
 				fieldname: "items_received_section",
@@ -537,13 +538,11 @@ var create_finish_operation_dialog = function (operation) {
                 fieldname: cur_frm.doc.production_item.toString(),
                 label: cur_frm.doc.production_item.toString() + " - " + cur_frm.doc.production_item_name,
                 fieldtype: "Float",
-                default: (cur_frm.doc.qty)
+                default: "0"
             }]
 	});
 
-    dialog.set_value("operating_cost", (operation.operating_cost * cur_frm.doc.qty)/ cur_frm.doc.bom_produced_qty);
-
-    calculate_production_item_remaining_qty(operation,dialog);
+    //calculate_production_item_remaining_qty(operation,dialog);
 
 
     dialog.get_input(cur_frm.doc.production_item.toString()).on("focusout", function () {
@@ -625,7 +624,9 @@ var calculate_production_item_remaining_qty  = function (operation, dialog) {
             operation_id: operation.completion
         },
         callback: function (r) {
-            dialog.set_value(cur_frm.doc.production_item, r.message ? r.message: 0);
+            item_qty = r.message ? r.message: 0;
+            dialog.set_value(cur_frm.doc.production_item, item_qty );
+            dialog.set_value("operating_cost", (operation.operating_cost * item_qty)/ cur_frm.doc.bom_produced_qty);
         }
     });
 };
