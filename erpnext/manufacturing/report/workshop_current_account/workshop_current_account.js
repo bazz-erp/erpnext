@@ -24,5 +24,16 @@ frappe.query_reports["Workshop Current Account"] = {
 			"default": frappe.defaults.get_user_default("Company"),
 			"reqd": 1
 		},
-	]
+	],
+	"formatter": function (row, cell, value, columnDef, dataContext, default_formatter) {
+	    value = default_formatter(row, cell, value, columnDef, dataContext);
+	    console.log(columnDef);
+	    if (columnDef.id == __("Balance")) {
+	        value = "<span style='font-weight:bold'>" + value + "</span>";
+	    }
+	    if (dataContext[__("Operation")] == __("Total")) {
+	        value = "<span style='font-weight:bold;font-size:larger'>" + value + "</span>";
+	    }
+	    return value;
+	}
 }
