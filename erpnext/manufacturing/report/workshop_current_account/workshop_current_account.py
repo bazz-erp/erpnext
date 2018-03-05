@@ -42,4 +42,6 @@ order by se.posting_date""", filters, as_dict=1)
         data.append([_(entry.get("purpose")), entry.get("posting_date"), entry.get("item_code"),
                      entry.get("item_name"), entry.get("qty"), entry.get("debit"), entry.get("credit"), balance])
 
+    data.append([])
+    data.append([_("Total"),None, None,None,None,None, None, balance])
     return data
