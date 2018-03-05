@@ -412,7 +412,30 @@ var create_start_operation_dialog = function (frm, operation) {
 				</div>
 			`); */
 
-    var fields = [{
+    var fields = [
+    {
+        label: "Materials Supplied (Enter the amount)",
+        fieldtype: "Section Break",
+        fieldname: "materials_supplied_section"
+    }];
+    $.each(items, function (i, item) {
+        fields.push({
+            label:item.item_code.toString() + " - " + item.item_name,
+            fieldtype: "Float",
+            fieldname: item.item_code.toString(),
+            reqd: 0,
+            default: "0"
+        });
+    });
+
+    fields.push(
+    {
+        fieldtype: "Section Break",
+        fieldname: "workshop_section"
+    });
+
+    fields.push(
+    {
 		fieldname: "workshop",
 		fieldtype: "Link",
 		options: "Supplier",
@@ -425,20 +448,6 @@ var create_start_operation_dialog = function (frm, operation) {
                 }
             }
         }
-    },{
-        label: "Materials Supplied (Enter the amount)",
-        fieldtype: "Section Break",
-        fieldname: "materials_supplied_section"
-    }];
-
-    $.each(items, function (i, item) {
-        fields.push({
-            label:item.item_code.toString() + " - " + item.item_name,
-            fieldtype: "Float",
-            fieldname: item.item_code.toString(),
-            reqd: 0,
-            default: "0"
-        });
     });
 
 	var dialog = new frappe.ui.Dialog({
