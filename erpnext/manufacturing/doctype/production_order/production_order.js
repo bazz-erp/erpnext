@@ -533,12 +533,6 @@ var create_finish_operation_dialog = function (operation) {
 		title: __("Receive materials"),
 		fields: [
 			{
-				fieldname: "operating_cost",
-				fieldtype: "Currency",
-				label: __("Operating Cost"),
-				default: "0"
-			},
-            {
 				fieldname: "items_received_section",
 				fieldtype: "Section Break",
 				label: __("Items Received")
@@ -548,7 +542,17 @@ var create_finish_operation_dialog = function (operation) {
                 label: cur_frm.doc.production_item.toString() + " - " + cur_frm.doc.production_item_name,
                 fieldtype: "Float",
                 default: "0"
-            }]
+            },
+            {
+				fieldname: "cost_section",
+				fieldtype: "Section Break"
+			},
+            {
+				fieldname: "operating_cost",
+				fieldtype: "Currency",
+				label: __("Operating Cost"),
+				default: "0"
+			}]
 	});
 
     //calculate_production_item_remaining_qty(operation,dialog);
