@@ -2371,7 +2371,7 @@ DocType: Production Order,Manufactured Qty,Cantidad Producida
 DocType: Item,Manufacturer,Fabricante
 DocType: Item,Manufacturer Items,Manufacturer Items
 DocType: Item,Manufacturer Part Number,Número de componente del fabricante
-DocType: Stock Entry,Manufacturer Receipt,Recibo de Taller
+DocType: Stock Entry,Manufacturer Receipt,Recepción de Taller
 DocType: Stock Entry,Manufacturer Shipping,Envío a Taller
 DocType: Item,Manufacturer on first row is used by default,El Fabricante en la primera línea es elegido por defecto.
 DocType: Manufacturer,Manufacturers used in Items,Fabricantes utilizados en artículos
