@@ -2762,7 +2762,7 @@ DocType: BOM,Operating Cost (Company Currency),Costo de funcionamiento (Divisa d
 apps/erpnext/erpnext/manufacturing/doctype/operation_completion/operation_completion.js +38,Operating Cost is mandatory to Finish Operation,El costo de Operacion es obligatorio para finalizarla
 DocType: BOM Operation,Operating Cost(Company Currency),Costo de funcionamiento (Divisa de la Compañia)
 DocType: Workstation,Operating Costs,Costos operativos
-DocType: BOM Operation,Operation,Operación
+DocType: BOM Operation,Operation,Operation
 DocType: Operation Completion,Operation ,
 DocType: Operation Completion,Operation Completion,Realización de Operación
 DocType: Operation Completion Item,Operation Completion Item,Producto de Realización de Operación
@@ -2770,7 +2770,7 @@ DocType: Operation Completion,Operation Cost,Costo de operación
 DocType: Production Order Operation,Operation Description,Descripción de la operación
 DocType: Production Order Operation,Operation Details,Detalles de la Operación
 DocType: Timesheet Detail,Operation Id,One of
-DocType: BOM Website Operation,Operation Time,Tiempo de operación
+DocType: BOM Website Operation,Operation Time,Operation Time
 DocType: BOM Operation,Operation Time ,
 apps/erpnext/erpnext/manufacturing/doctype/production_order/production_order.py +434,Operation Time must be greater than 0 for Operation {0},El tiempo de operación debe ser mayor que 0 para {0}
 DocType: Production Order Operation,Operation completed for how many finished goods?,Se completo la operación para la cantidad de productos terminados?
@@ -2916,7 +2916,7 @@ DocType: Account,Payable,Pagadero
 DocType: Expense Claim,Payable Account,Cuenta por pagar
 DocType: Email Digest,Payables,Cuentas por pagar
 DocType: Cheque Print Template,Payer Settings,Configuración del pagador
-apps/erpnext/erpnext/accounts/doctype/eventual_purchase_invoice/eventual_purchase_invoice.js +8,Payment,Pago
+apps/erpnext/erpnext/accounts/doctype/eventual_purchase_invoice/eventual_purchase_invoice.js +8,Payment,Payment
 apps/erpnext/erpnext/accounts/report/daily_movements/daily_movements.py +56,Payment ,
 DocType: Payment Gateway Account,Payment Account,Cuenta de pagos
 DocType: Bank Check,Payment Date,Fecha de Pago
@@ -5057,6 +5057,7 @@ DocType: Salary Slip,Working Days,Días de Trabajo
 DocType: Salary Slip Timesheet,Working Hours,Horas de Trabajo
 DocType: Training Event,Workshop,Taller
 DocType: Workshop,Workshop Code,Código de Taller
+,Workshop Current Account,Cuenta Corriente de Taller
 DocType: Workshop,Workshop Name,Nombre de Taller
 DocType: Supplier,Workshop Warehouse,Almacén del Taller
 apps/erpnext/erpnext/manufacturing/doctype/workshop/workshop.py +22,Workshop code already exists,El código del Taller ya existe
@@ -5169,6 +5170,7 @@ apps/erpnext/erpnext/accounts/doctype/journal_entry/journal_entry.py +376,{0} ag
 apps/erpnext/erpnext/accounts/doctype/journal_entry/journal_entry.py +360,{0} against Sales Invoice {1},{0} contra la factura de ventas {1}
 apps/erpnext/erpnext/accounts/doctype/journal_entry/journal_entry.py +364,{0} against Sales Order {1},{0} contra la orden de ventas {1}
 apps/erpnext/erpnext/hr/doctype/leave_allocation/leave_allocation.py +59,{0} already allocated for Employee {1} for period {2} to {3},{0} ya ha sido asignado para el empleado {1} para el periodo {2} hasta {3}
+apps/erpnext/erpnext/manufacturing/report/workshop_current_account/workshop_current_account.py +27,{0} and {1} are mandatory,{0} y {1} son obligatorios
 apps/erpnext/erpnext/accounts/doctype/asset_movement/asset_movement.py +18,{0} asset cannot be transferred,{0} activo no se puede transferir
 apps/erpnext/erpnext/accounts/doctype/pricing_rule/pricing_rule.py +67,{0} can not be negative,{0} no puede ser negativo
 apps/erpnext/erpnext/manufacturing/doctype/production_planning_tool/production_planning_tool.py +233,{0} created,{0} creado
