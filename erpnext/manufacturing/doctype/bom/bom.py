@@ -26,17 +26,16 @@ class BOM(WebsiteGenerator):
         names = frappe.db.sql_list("""select name from `tabBOM` where item=%s""", self.item)
 
         if names:
-            """# name can be BOM/ITEM/001, BOM/ITEM/001-1, BOM-ITEM-001, BOM-ITEM-001-1
+            """# name can be BOM/ITEM/001, BOM/ITEM/001-1, BOM-1-001, BOM-ITEM-001-1
 
             # split by item
-            names = [name.split(self.item)[-1][1:] for name in names]
+            names = [name.split(self.item)[-1][1:] for name in names]"""
 
-            # split by (-) if cancelled
-            names = [cint(name.split('-')[-1]) for name in names]"""
+            # split by (-) to get the last number
+            names = [cint(name.split('-')[-1]) for name in names]
 
-            # idx = max(names) + 1
+            idx = max(names) + 1
 
-            idx = len(names) + 1
         else:
             idx = 1
 
