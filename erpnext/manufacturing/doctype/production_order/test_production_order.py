@@ -437,15 +437,32 @@ class TestProductionOrder(unittest.TestCase):
         self.assertEqual(production_item_detail.s_warehouse, self.get_workshop_warehouse())
 
 
+    def test_all_operations_completed(self):
 
+        self.start_production_order()
 
+        # attempt to finish production orders with operations in 'Pending' status
+        self.assertRaises(frappe.ValidationError, make_stock_entry,self.production_order.name, "Manufacture", 2)
 
+        first_operation = frappe.get_doc("Operation Completion", self.production_order.operations[0].completion)
+        first_operation.start_operation(self.get_test_workshop_name(), self.get_items_supplied_for_first_operation())
+        items_received = {self.production_order.production_item: 2}
+        first_operation.finish_operation(100, items_received)
 
+        second_operation = frappe.get_doc("Operation Completion",self.production_order.operations[1].completion)
+        second_operation.start_operation(self.get_test_workshop_name(), items_received)
+        second_operation.finish_operation(120, items_received)
 
+        self.finish_production_order()
 
+        # after the completion of the two operations and the stock movement of the production item
+        # Production Order must be completed
+        self.assertEqual(self.production_order.status, "Completed")
 
-
-
+    def finish_production_order(self):
+        stock_entry = frappe.get_doc(make_stock_entry(self.production_order.name, "Manufacture", 2))
+        stock_entry.save()
+        self.production_order.load_from_db()
 
     """
     **
