@@ -49,6 +49,7 @@ frappe.listview_settings['Item'] = {
                 frappe.views.list_view.Item.refresh();
             }
         });
-    }
+    },
+    method: "erpnext.stock.doctype.item.item_list.get_items"
 };
 frappe.help.youtube_id["Item"] = "qXaEwld4_Ps";
