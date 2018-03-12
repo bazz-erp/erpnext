@@ -28,9 +28,9 @@ def get_data(filters):
 
     group_field = get_group_field(filters)
 
-    query = """select op.completion, op.parent as production_order, op.workshop,
+    query = """select op.completion, op.parent as production_order, op.workshop, oc.start_date,
     po.production_item, item.item_name, item.stock_uom, so.name as so_name, so.customer_name, so.customer 
-    from `tabProduction Order Operation` as op, `tabProduction Order` po {join_type} 
+    from `tabProduction Order Operation` as op, `tabOperation Completion` as oc, `tabProduction Order` po {join_type} 
     `tabSales Order` as so on po.sales_order = so.name, `tabItem` as item where {conditions} order by {order_by}"""
 
     """If report is grouping by client, only production orders that has a target client must be showed, thus
@@ -45,7 +45,7 @@ def get_data(filters):
     return get_data_grouped_by_field(in_process_operations, group_field)
 
 def get_conditions(filters):
-    conditions = ["""op.parent = po.name and po.production_item = item.item_code and op.status = 'In Process'"""]
+    conditions = ["""op.parent = po.name and po.production_item = item.item_code and op.completion = oc.name and op.status = 'In Process'"""]
     if filters.get("workshop"):
         conditions.append("op.workshop=%(workshop)s")
     if filters.get("item"):
@@ -73,8 +73,6 @@ def get_data_grouped_by_field(in_process_operations, group_field):
 
     for operation in in_process_operations:
         item_remaining_qty = calculate_production_item_remaining_qty(operation.completion)
-
-        operation["operation_date"] = calculate_operation_date(operation.get("production_order"))
 
         if current_value != operation.get(group_field) and item_remaining_qty != 0:
             sub_total_item_qty, sub_group_current_value = reset_sub_group_total(data,sub_group_field,operation,sub_total_item_qty)
@@ -116,7 +114,7 @@ def add_title_row(data, group_field, operation):
         data.append([None, None, operation.get("customer_name")])
 
 def add_data_row(data, group_field, operation, item_remaining_qty):
-    row = [operation.get("operation_date"), operation.get("production_item"), operation.get("item_name"),
+    row = [operation.get("start_date"), operation.get("production_item"), operation.get("item_name"),
            operation.get("workshop"),operation["completion"], operation["production_order"],
            item_remaining_qty,operation.get("customer_name"), operation.get("so_name")]
 
@@ -144,9 +142,7 @@ def get_group_field(filters):
         frappe.throw(_("Group by field is mandatory"))
     return group_fields.get(filters.get("group_by"))
 
-def calculate_operation_date(production_order_id):
-    # get the date of the first stock entry of the production order.
-    return frappe.db.sql("""select posting_date from `tabStock Entry` where production_order=%s order by posting_date asc""", production_order_id)[0][0]
+
 
 
 
