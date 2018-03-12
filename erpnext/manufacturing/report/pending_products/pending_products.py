@@ -109,7 +109,7 @@ def add_title_row(data, group_field, operation):
     if group_field == "workshop":
         data.append([None, None, None, operation.get("workshop")])
     elif group_field == "production_item":
-        data.append([operation.get("production_item"), operation.get("item_name")])
+        data.append([None, operation.get("production_item"), operation.get("item_name")])
     else:
         data.append([None, None, operation.get("customer_name")])
 
