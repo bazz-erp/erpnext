@@ -12,7 +12,8 @@ def execute(filters=None):
 
 
 def get_columns():
-    columns = [_("Item Code") + ":Link/Item:80",
+    columns = [_("Date") + ":Date:80",
+               _("Item Code") + ":Link/Item:80",
                _("Item Name") + ":Data:140",
                _("Workshop") + ":Link/Supplier:150",
                _("Operation") + ":Link/Operation Completion:150",
@@ -73,6 +74,8 @@ def get_data_grouped_by_field(in_process_operations, group_field):
     for operation in in_process_operations:
         item_remaining_qty = calculate_production_item_remaining_qty(operation.completion)
 
+        operation["operation_date"] = calculate_operation_date(operation.get("production_order"))
+
         if current_value != operation.get(group_field) and item_remaining_qty != 0:
             sub_total_item_qty, sub_group_current_value = reset_sub_group_total(data,sub_group_field,operation,sub_total_item_qty)
 
@@ -106,33 +109,33 @@ def reset_sub_group_total(data,sub_group_field, operation, total_item_qty):
 def add_title_row(data, group_field, operation):
     data.append([])
     if group_field == "workshop":
-        data.append([None, None, operation.get("workshop")])
+        data.append([None, None, None, operation.get("workshop")])
     elif group_field == "production_item":
         data.append([operation.get("production_item"), operation.get("item_name")])
     else:
-        data.append([None, operation.get("customer_name")])
+        data.append([None, None, operation.get("customer_name")])
 
 def add_data_row(data, group_field, operation, item_remaining_qty):
-    row = [operation.get("production_item"), operation.get("item_name"),
+    row = [operation.get("operation_date"), operation.get("production_item"), operation.get("item_name"),
            operation.get("workshop"),operation["completion"], operation["production_order"],
            item_remaining_qty,operation.get("customer_name"), operation.get("so_name")]
 
     if group_field == "production_item":
-        row[0] = None
         row[1] = None
-    elif group_field == "workshop":
         row[2] = None
+    elif group_field == "workshop":
+        row[3] = None
     else:
-        row[6] = None
+        row[7] = None
     data.append(row)
 
 def add_sub_total_item_qty_row(data, sub_total_item_qty):
-    data.append([None, None,None, None, None,sub_total_item_qty])
+    data.append([None, None, None,None, None, None,sub_total_item_qty])
     data.append([])
 
 def add_total_item_qty_row(data, total_item_qty, current_value):
     if total_item_qty != 0:
-        data.append([None, _("Total") + " " + current_value, None, None,None, total_item_qty])
+        data.append([None, None, _("Total") + " " + current_value, None, None,None, total_item_qty])
 
 
 def get_group_field(filters):
@@ -140,6 +143,10 @@ def get_group_field(filters):
     if not filters.get("group_by"):
         frappe.throw(_("Group by field is mandatory"))
     return group_fields.get(filters.get("group_by"))
+
+def calculate_operation_date(production_order_id):
+    # get the date of the first stock entry of the production order.
+    return frappe.db.sql("""select posting_date from `tabStock Entry` where production_order=%s order by posting_date asc""", production_order_id)[0][0]
 
 
 
