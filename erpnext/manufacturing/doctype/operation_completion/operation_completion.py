@@ -44,8 +44,11 @@ class OperationCompletion(Document):
             frappe.throw(_("Available qty of production item is {0}").format(production_item_available_qty))
 
         if self.status == 'Pending':
-            self.db_set("status", "In Process")
-            self.db_set("workshop", workshop)
+            self.status = "In Process"
+            self.workshop = workshop
+            self.start_date = frappe.utils.nowdate()
+            self.save()
+
             po_operation.db_set("status", "In Process")
             po_operation.db_set("workshop", workshop)
 
