@@ -512,7 +512,9 @@ def get_bom_items_as_dict(bom, company, qty=1, fetch_exploded=1, fetch_scrap_ite
                 item.stock_uom,
                 item.default_warehouse,
                 item.expense_account as expense_account,
-                item.buying_cost_center as cost_center
+                item.buying_cost_center as cost_center,
+                bom_item.rate,
+                bom_item.amount
                 {select_columns}
             from
                 `tab{table}` bom_item, `tabBOM` bom, `tabItem` item
