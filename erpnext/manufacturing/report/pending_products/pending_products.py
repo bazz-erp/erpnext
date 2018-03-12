@@ -18,7 +18,6 @@ def get_columns():
                _("Operation") + ":Link/Operation Completion:150",
                _("Production Order") + ":Link/Production Order:140",
                _("Pending Qty") + ":Float:140",
-               _("Unit of Measure") + ":Link/UOM:120",
                _("Customer") + ":Link/Customer:120",
                _("Sales Order") + ":Link/Sales Order:120"]
     return columns
@@ -111,12 +110,12 @@ def add_title_row(data, group_field, operation):
     elif group_field == "production_item":
         data.append([operation.get("production_item"), operation.get("item_name")])
     else:
-        data.append([None, operation.get("customer_name"), None, None, None, None, None])
+        data.append([None, operation.get("customer_name")])
 
 def add_data_row(data, group_field, operation, item_remaining_qty):
     row = [operation.get("production_item"), operation.get("item_name"),
            operation.get("workshop"),operation["completion"], operation["production_order"],
-           item_remaining_qty, operation["stock_uom"], operation.get("customer_name"), operation.get("so_name")]
+           item_remaining_qty,operation.get("customer_name"), operation.get("so_name")]
 
     if group_field == "production_item":
         row[0] = None
@@ -124,7 +123,7 @@ def add_data_row(data, group_field, operation, item_remaining_qty):
     elif group_field == "workshop":
         row[2] = None
     else:
-        row[7] = None
+        row[6] = None
     data.append(row)
 
 def add_sub_total_item_qty_row(data, sub_total_item_qty):
@@ -133,7 +132,7 @@ def add_sub_total_item_qty_row(data, sub_total_item_qty):
 
 def add_total_item_qty_row(data, total_item_qty, current_value):
     if total_item_qty != 0:
-        data.append([None, _("Total") + " " + current_value, None, None, None, total_item_qty])
+        data.append([None, _("Total") + " " + current_value, None, None,None, total_item_qty])
 
 
 def get_group_field(filters):
