@@ -155,16 +155,13 @@ class ProductionOrder(Document):
             status = 'Draft'
         elif self.docstatus==1:
             if status != 'Stopped':
-                stock_entries = frappe._dict(frappe.db.sql("""select purpose, sum(fg_completed_qty)
-                    from `tabStock Entry` where production_order=%s and docstatus=1
-                    group by purpose""", self.name))
-
                 status = "Not Started"
-                if stock_entries:
+                # production order is 'In Progress' if any of its operations is 'In Progress'
+                if self.get("operations", {"status": "In Process"}):
                     status = "In Process"
-                    produced_qty = stock_entries.get("Manufacture")
-                    if flt(produced_qty) == flt(self.qty):
-                        status = "Completed"
+                # production order is 'Completed' when all operations are Completed
+                elif len(self.operations) == len(self.get("operations", {"status": "Completed"})):
+                    status = "Completed"
         else:
             status = 'Cancelled'
 

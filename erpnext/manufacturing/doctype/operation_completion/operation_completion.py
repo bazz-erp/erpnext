@@ -50,6 +50,7 @@ class OperationCompletion(Document):
 
             po_operation.db_set("status", "In Process")
             po_operation.db_set("workshop", workshop)
+            production_order.update_status()
 
         # Clear items whose transferred qty is 0 and update total qty supplied to the workshop in items supplied Table
         for item_code, item_qty in items_supplied.items():
@@ -65,9 +66,7 @@ class OperationCompletion(Document):
                 items_supplied_detail[0].save()
 
 
-        # REALIZAR EL MOVIMIENTO DE STOCK
         self.transfer_material_to_workshop(production_order, items_supplied)
-
 
     def finish_operation(self, operating_cost, items_received):
         if not self.status == 'In Process':
@@ -114,7 +113,7 @@ class OperationCompletion(Document):
         if (self.total_received_qty == production_order.qty):
             self.db_set("status", "Completed")
             po_operation.db_set("status", "Completed")
-
+            production_order.update_status()
 
     def transfer_material_to_workshop(self, production_order, items_supplied):
         stock_entry = self.create_stock_entry(production_order)
