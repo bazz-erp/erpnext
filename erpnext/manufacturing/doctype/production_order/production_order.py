@@ -493,7 +493,7 @@ class ProductionOrder(Document):
                 from `tabStock Entry` entry, `tabStock Entry Detail` detail
                 where
                     entry.production_order = %s
-                    and entry.purpose = "Material Transfer for Manufacture"
+                    and entry.purpose = "Manufacturer Shipping"
                     and entry.docstatus = 1
                     and detail.parent = entry.name
                     and detail.item_code = %s''', (self.name, d.item_code))[0][0]
