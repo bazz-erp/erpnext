@@ -106,6 +106,10 @@ class Item(WebsiteGenerator):
 
         self.validate_price_lists()
 
+        if not self.default_production_warehouse:
+            self.default_production_warehouse = frappe.db.get_value("Stock Settings", None, "default_warehouse")
+
+
         if not self.get("__islocal"):
             self.old_item_group = frappe.db.get_value(self.doctype, self.name, "item_group")
             self.old_website_item_groups = frappe.db.sql_list("""select item_group
