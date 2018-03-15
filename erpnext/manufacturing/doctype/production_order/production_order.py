@@ -479,7 +479,7 @@ class ProductionOrder(Document):
                     'rate': item.rate,
                     'description': item.description,
                     'required_qty': item.qty,
-                    'source_warehouse': item.source_warehouse or item.default_warehouse
+                    'source_warehouse': item.source_warehouse or item.default_production_warehouse
                 })
 
             self.set_available_qty()
