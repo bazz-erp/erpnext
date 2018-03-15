@@ -122,11 +122,17 @@ class OperationCompletion(Document):
         stock_entry.title = _("Material Transfer to Workshop")
         workshop_warehouse = self.get_workshop_warehouse(production_order.company)
 
-        stock_entry.from_warehouse = production_order.wip_warehouse
-        stock_entry.to_warehouse = workshop_warehouse
 
         for item_code, item_qty in items_supplied.items():
-            stock_entry.append("items", {"item_code": item_code, "qty": item_qty})
+            stock_entry_detail = {"item_code": item_code, "qty": item_qty}
+
+            # raw materials are taken from warehouse defined in required_items table
+            # production item is get from 'work in progress' warehouse
+            stock_entry_detail["s_warehouse"] = production_order.wip_warehouse if item_code == production_order.production_item \
+        else production_order.get("required_items", {"item_code": item_code})[0].source_warehouse
+
+            stock_entry_detail["t_warehouse"] = workshop_warehouse
+            stock_entry.append("items", stock_entry_detail)
 
         stock_entry.submit()
 
@@ -141,11 +147,16 @@ class OperationCompletion(Document):
         If this item was sent, it must be deducted from the workshop's warehouse. 
         Else, if the workshop origin the product, source warehouse is null"""
         for item_code, item_qty in items_received.items():
-            product_dict = {"item_code": item_code, "qty": item_qty, "t_warehouse": production_order.wip_warehouse}
+            product_dict = {"item_code": item_code, "qty": item_qty}
+
             if item_code == production_order.production_item:
                 product_dict["s_warehouse"] = self.get_workshop_warehouse(production_order.company) if self.is_production_item_supplied(production_order.production_item) else None
+                product_dict["t_warehouse"] = production_order.wip_warehouse
+            # raw materials must be transferred to its production warehouse
             else:
                 product_dict["s_warehouse"] = self.get_workshop_warehouse(production_order.company)
+                product_dict["t_warehouse"] = production_order.get("required_items", {"item_code": item_code})[0].source_warehouse
+
             stock_entry.append("items", product_dict)
 
         self.consume_raw_materials(stock_entry, production_order, items_received)
