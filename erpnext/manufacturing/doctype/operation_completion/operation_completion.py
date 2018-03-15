@@ -30,9 +30,6 @@ class OperationCompletion(Document):
 
         production_order = frappe.get_doc("Production Order", self.production_order)
 
-        if production_order.status != 'In Process':
-            frappe.throw(_("Production Order must be In Process to start an operation"), ProductionOrderNotStartedError)
-
         if self.status == "Pending" and not workshop:
             frappe.throw(_("Workshop is mandatory when sending materials for the first time"))
 
