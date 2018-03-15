@@ -114,9 +114,6 @@ frappe.ui.form.on("Production Order", {
 			})
 		}
 
-		if (frm.doc.status === "In Process") {
-			update_operations_action(frm);
-        }
 	},
 	
 	show_progress: function(frm) {
