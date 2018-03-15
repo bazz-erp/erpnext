@@ -114,6 +114,8 @@ frappe.ui.form.on("Production Order", {
 			})
 		}
 
+		update_operations_action(frm);
+
 	},
 	
 	show_progress: function(frm) {
