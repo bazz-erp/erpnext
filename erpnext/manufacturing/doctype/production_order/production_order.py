@@ -155,9 +155,11 @@ class ProductionOrder(Document):
             status = 'Draft'
         elif self.docstatus==1:
             if status != 'Stopped':
-                status = "Not Started"
+                # when all operations are Pending production order is 'Not Started'
+                if len(self.operations) == len(self.get("operations", {"status": "Pending"})):
+                    status = "Not Started"
                 # production order is 'In Progress' if any of its operations is 'In Progress'
-                if self.get("operations", {"status": "In Process"}):
+                elif self.get("operations", {"status": "In Process"}):
                     status = "In Process"
                 # production order is 'Completed' when all operations are Completed
                 elif len(self.operations) == len(self.get("operations", {"status": "Completed"})):
