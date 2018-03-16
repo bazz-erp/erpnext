@@ -67,13 +67,11 @@ class StockEntry(StockController):
 
         from erpnext.stock.doctype.serial_no.serial_no import update_serial_nos_after_submit
         update_serial_nos_after_submit(self, "items")
-        self.update_production_order()
         self.validate_purchase_order()
         self.make_gl_entries()
 
     def on_cancel(self):
         self.update_stock_ledger()
-        self.update_production_order()
         self.make_gl_entries_on_cancel()
 
     def validate_purpose(self):
@@ -160,7 +158,6 @@ class StockEntry(StockController):
             if self.purpose in ["Manufacture", "Repack"]:
                 if validate_for_manufacture_repack:
                     if d.bom_no:
-                        d.s_warehouse = None
 
                         if not d.t_warehouse:
                             frappe.throw(_("Target warehouse is mandatory for row {0}").format(d.idx))
@@ -466,23 +463,6 @@ class StockEntry(StockController):
 
         return gl_entries
 
-    def update_production_order(self):
-        def _validate_production_order(pro_doc):
-            if flt(pro_doc.docstatus) != 1:
-                frappe.throw(_("Production Order {0} must be submitted").format(self.production_order))
-
-            if pro_doc.status == 'Stopped':
-                frappe.throw(_("Transaction not allowed against stopped Production Order {0}").format(self.production_order))
-
-        if self.production_order:
-            pro_doc = frappe.get_doc("Production Order", self.production_order)
-            _validate_production_order(pro_doc)
-            pro_doc.run_method("update_status")
-            if self.fg_completed_qty:
-                pro_doc.run_method("update_production_order_qty")
-                if self.purpose == "Manufacture":
-                    pro_doc.run_method("update_planned_qty")
-
     def get_item_details(self, args=None, for_update=False):
         item = frappe.db.sql("""select stock_uom, description, image, item_name,
                 expense_account, buying_cost_center, item_group, has_serial_no,
@@ -630,7 +610,7 @@ class StockEntry(StockController):
         self.add_to_stock_entry_detail({
             item.name: {
                 "to_warehouse": to_warehouse,
-                "from_warehouse": "",
+                "from_warehouse": self.from_warehouse,
                 "qty": self.fg_completed_qty,
                 "item_name": item.item_name,
                 "description": item.description,
