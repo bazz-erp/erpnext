@@ -164,10 +164,10 @@ class ProductionOrder(Document):
                 # production order is 'Completed' when all operations are Completed
                 elif len(self.operations) == len(self.get("operations", {"status": "Completed"})):
                     status = "Completed"
-                    self.update_production_order_qty()
-                    self.update_planned_qty()
                     # transfer production item from 'work in progress' to finish goods warehouse
                     frappe.get_doc(make_stock_entry(self.name, "Manufacture")).save()
+                    self.update_production_order_qty()
+                    self.update_planned_qty()
         else:
             status = 'Cancelled'
 
