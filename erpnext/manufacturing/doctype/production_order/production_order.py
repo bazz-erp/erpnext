@@ -154,7 +154,7 @@ class ProductionOrder(Document):
         if self.docstatus==0:
             status = 'Draft'
         elif self.docstatus==1:
-            if status != 'Stopped':
+            if status != 'Stopped' and status != 'Completed':
                 # when all operations are Pending production order is 'Not Started'
                 if len(self.operations) == len(self.get("operations", {"status": "Pending"})):
                     status = "Not Started"
@@ -164,6 +164,10 @@ class ProductionOrder(Document):
                 # production order is 'Completed' when all operations are Completed
                 elif len(self.operations) == len(self.get("operations", {"status": "Completed"})):
                     status = "Completed"
+                    self.update_production_order_qty()
+                    self.update_planned_qty()
+                    # transfer production item from 'work in progress' to finish goods warehouse
+                    frappe.get_doc(make_stock_entry(self.name, "Manufacture")).save()
         else:
             status = 'Cancelled'
 
