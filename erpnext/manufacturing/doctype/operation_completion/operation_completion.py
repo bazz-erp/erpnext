@@ -158,6 +158,7 @@ class OperationCompletion(Document):
 
         self.consume_raw_materials(stock_entry, production_order, items_received)
         stock_entry.submit()
+        production_order.update_production_order_qty()
 
     def get_workshop_warehouse(self, company):
         return frappe.get_doc("Supplier", self.workshop).get_company_warehouse(company)
