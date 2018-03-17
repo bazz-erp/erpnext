@@ -43,7 +43,6 @@ class StockEntry(StockController):
         self.validate_uom_is_integer("uom", "qty")
         self.validate_uom_is_integer("stock_uom", "transfer_qty")
         self.validate_warehouse()
-        self.validate_production_order()
         self.validate_bom()
         self.validate_finished_goods()
         self.validate_with_material_request()
@@ -523,7 +522,6 @@ class StockEntry(StockController):
 
     def get_items(self):
         self.set('items', [])
-        self.validate_production_order()
 
         if not self.posting_date or not self.posting_time:
             frappe.throw(_("Posting date and posting time is mandatory"))
