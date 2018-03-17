@@ -48,6 +48,9 @@ class StockEntry(StockController):
         self.validate_with_material_request()
         self.validate_batch()
 
+        if self.purpose == "Manufacture":
+            self.title = _("Finished Products")
+
         # BAZZ - remove 'Draft' state
         if self._action == 'save':
             self._action = 'submit'
