@@ -164,30 +164,31 @@ class ProductionOrder(Document):
                 # production order is 'Completed' when all operations are Completed
                 elif len(self.operations) == len(self.get("operations", {"status": "Completed"})):
                     status = "Completed"
-                    # transfer production item from 'work in progress' to finish goods warehouse
-                    frappe.get_doc(make_stock_entry(self.name, "Manufacture")).save()
-                    self.update_production_order_qty()
-                    self.update_planned_qty()
         else:
             status = 'Cancelled'
 
         return status
 
     def update_production_order_qty(self):
-        """Update **Manufactured Qty** and **Material Transferred for Qty** in Production Order
-            based on Stock Entry"""
+        """Update **Manufactured Qty** based on operations"""
 
-        for purpose, fieldname in (("Manufacture", "produced_qty"),
-            ("Material Transfer for Manufacture", "material_transferred_for_manufacturing")):
-            qty = flt(frappe.db.sql("""select sum(fg_completed_qty)
-                from `tabStock Entry` where production_order=%s and docstatus=1
-                and purpose=%s""", (self.name, purpose))[0][0])
+        total_received_in_each_operation = frappe.db.sql("""select item_qty 
+        from `tabOperation Completion Item` oi, `tabOperation Completion` oc 
+        where oi.parent=oc.name and oi.parentfield="items_received" and oi.item_code=%s and oc.production_order=%s""", (self.production_item, self.name))
 
-            if qty > self.qty:
-                frappe.throw(_("{0} ({1}) cannot be greater than planned quanitity ({2}) in Production Order {3}").format(\
-                    self.meta.get_label(fieldname), qty, self.qty, self.name), StockOverProductionError)
+        total_received_in_each_operation = [item[0] for item in total_received_in_each_operation]
 
-            self.db_set(fieldname, qty)
+        # the qty of finished items is given by the qty of products that went through all operations
+        finished_items_qty = min(total_received_in_each_operation)
+
+        # transfer to 'finished goods' warehouse items that remains in 'work in progress'
+        remaining_items = finished_items_qty - self.produced_qty
+        if remaining_items != 0:
+            frappe.get_doc(make_stock_entry(self.name, "Manufacture", qty= remaining_items)).save()
+
+        self.db_set("produced_qty", finished_items_qty)
+        self.update_planned_qty()
+
 
     def before_submit(self):
         # BAZZ - Time logs not needed
