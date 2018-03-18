@@ -539,9 +539,9 @@ apps/erpnext/erpnext/stock/doctype/stock_entry/stock_entry.js +319,BOM and Manuf
 apps/erpnext/erpnext/stock/doctype/material_request/material_request.js +895,BOM does not contain any stock item,BOM no contiene ningún artículo de stock
 apps/erpnext/erpnext/manufacturing/doctype/bom/bom.py +318,BOM recursion: {0} cannot be parent or child of {2},Recursividad de lista de materiales (LdM): {0} no puede ser padre o hijo de {2}
 apps/erpnext/erpnext/manufacturing/doctype/bom_update_tool/bom_update_tool.py +22,BOM replaced,Lista de materiales (LdM) reemplazada
-apps/erpnext/erpnext/manufacturing/doctype/bom/bom.py +573,BOM {0} does not belong to Item {1},La lista de materiales (LdM) {0} no pertenece al producto {1}
-apps/erpnext/erpnext/manufacturing/doctype/bom/bom.py +567,BOM {0} must be active,La lista de materiales (LdM) {0} debe estar activa
-apps/erpnext/erpnext/manufacturing/doctype/bom/bom.py +570,BOM {0} must be submitted,La lista de materiales (LdM) {0} debe ser validada
+apps/erpnext/erpnext/manufacturing/doctype/bom/bom.py +572,BOM {0} does not belong to Item {1},La lista de materiales (LdM) {0} no pertenece al producto {1}
+apps/erpnext/erpnext/manufacturing/doctype/bom/bom.py +566,BOM {0} must be active,La lista de materiales (LdM) {0} debe estar activa
+apps/erpnext/erpnext/manufacturing/doctype/bom/bom.py +569,BOM {0} must be submitted,La lista de materiales (LdM) {0} debe ser validada
 DocType: Manufacturing Settings,Backflush Raw Materials Based On,Adquisición retroactiva de materia prima basada en
 DocType: Payment Entry,Balance,Balance
 DocType: Repayment Schedule,Balance Loan Amount,Saldo del balance del préstamo
@@ -2764,7 +2764,7 @@ DocType: BOM,Operating Cost (Company Currency),Costo de funcionamiento (Divisa d
 apps/erpnext/erpnext/manufacturing/doctype/operation_completion/operation_completion.js +38,Operating Cost is mandatory to Finish Operation,El costo de Operacion es obligatorio para finalizarla
 DocType: BOM Operation,Operating Cost(Company Currency),Costo de funcionamiento (Divisa de la Compañia)
 DocType: Workstation,Operating Costs,Costos operativos
-DocType: BOM Operation,Operation,Operacion
+DocType: BOM Operation,Operation,Operation
 DocType: Operation Completion,Operation ,
 DocType: Operation Completion,Operation Completion,Realización de Operación
 DocType: Operation Completion Item,Operation Completion Item,Producto de Realización de Operación
@@ -2918,7 +2918,7 @@ DocType: Account,Payable,Pagadero
 DocType: Expense Claim,Payable Account,Cuenta por pagar
 DocType: Email Digest,Payables,Cuentas por pagar
 DocType: Cheque Print Template,Payer Settings,Configuración del pagador
-apps/erpnext/erpnext/accounts/doctype/eventual_purchase_invoice/eventual_purchase_invoice.js +8,Payment,Pago
+apps/erpnext/erpnext/accounts/doctype/eventual_purchase_invoice/eventual_purchase_invoice.js +8,Payment,Payment
 apps/erpnext/erpnext/accounts/report/daily_movements/daily_movements.py +56,Payment ,
 DocType: Payment Gateway Account,Payment Account,Cuenta de pagos
 DocType: Bank Check,Payment Date,Fecha de Pago
@@ -3633,6 +3633,7 @@ DocType: SMS Log,Requested Numbers,Números solicitados
 DocType: Bin,Requested Quantity,Cantidad requerida
 apps/erpnext/erpnext/accounts/doctype/payment_request/payment_request.py +341,Requesting payment against {0} {1} for amount {2},Solicitando el pago contra {0} {1} para la cantidad {2}
 apps/erpnext/erpnext/config/stock.py +27,Requests for items.,Listado de solicitudes de productos.
+DocType: Production Order Item,Required,Requerido
 DocType: Purchase Receipt Item,Required By,Solicitado por
 DocType: Request for Quotation Item,Required Date,Fecha de solicitud
 DocType: Production Order,Required Items,Artículos Requeridos
@@ -4785,9 +4786,9 @@ apps/erpnext/erpnext/accounts/doctype/asset/asset.js +260,Transfer Asset,Transfe
 apps/erpnext/erpnext/stock/doctype/material_request/material_request.js +814,Transfer Material,Transferencia de Material
 apps/erpnext/erpnext/config/accounts.py +286,Transfer an asset from one warehouse to another,Transferir un activo de un almacén a otro
 apps/erpnext/erpnext/stock/doctype/material_request/material_request_list.js +14,Transfered,Transferido
-DocType: Material Request,Transferred,Transferido
+DocType: Production Order Item,Transferred,Transferido
 apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +687,Transferred Amount,Cantidad Transferida
-DocType: Production Order Item,Transferred Qty,Cantidad Transferida
+,Transferred Qty,Cantidad Transferida
 DocType: Program Enrollment,Transportation,Transporte
 DocType: Purchase Receipt,Transporter Details,Detalles de Transporte
 DocType: Delivery Note,Transporter Info,Información de Transportista
