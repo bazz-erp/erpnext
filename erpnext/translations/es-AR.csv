@@ -2769,6 +2769,7 @@ DocType: Operation Completion,Operation ,
 DocType: Operation Completion,Operation Completion,Realización de Operación
 DocType: Operation Completion Item,Operation Completion Item,Producto de Realización de Operación
 DocType: Operation Completion,Operation Cost,Costo de operación
+apps/erpnext/erpnext/manufacturing/doctype/production_order/production_order.js +541,Operation Cost per Unit,Costo de Operación Unitario
 DocType: Production Order Operation,Operation Description,Descripción de la operación
 DocType: Production Order Operation,Operation Details,Detalles de la Operación
 DocType: Timesheet Detail,Operation Id,One of
@@ -3504,7 +3505,7 @@ DocType: Email Digest,Receivables,Cuentas por cobrar
 DocType: Payment Entry,Receive,Cobro Cliente
 apps/erpnext/erpnext/manufacturing/doctype/operation_completion/operation_completion.py +142,Receive Material from Workshop,Recepción de Materiales desde Taller
 apps/erpnext/erpnext/accounts/doctype/payment_entry/payment_entry.js +1347,Receive from,Cobro de
-apps/erpnext/erpnext/manufacturing/doctype/production_order/production_order.js +522,Receive materials,Recibir materiales
+apps/erpnext/erpnext/manufacturing/doctype/production_order/production_order.js +521,Receive materials,Recibir materiales
 apps/erpnext/erpnext/buying/doctype/request_for_quotation/request_for_quotation.js +954,Received,Recibido
 DocType: Payment Entry,Received Amount,Cantidad Cobrada
 DocType: Payment Entry,Received Amount (Company Currency),Cantidad Cobrada (Divisa de Compañia)
