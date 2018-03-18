@@ -64,6 +64,7 @@ class OperationCompletion(Document):
 
 
         self.transfer_material_to_workshop(production_order, items_supplied)
+        production_order.update_required_items()
 
     def finish_operation(self, operating_cost, items_received):
         if not self.status == 'In Process':
