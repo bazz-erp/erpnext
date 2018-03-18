@@ -377,43 +377,27 @@ var create_start_operation_dialog = function (frm, operation) {
 
     operation_details = get_operation_by_name(frm, operation).doc;
 
-    var items = [{item_code : frm.doc.production_item,
-                        item_name: frm.doc.production_item_name}];
-	items = items.concat(frm.doc.required_items);
-
-	/**var html = $(`
-				<div style="border: 1px solid #d1d8dd" data-attribute="items_supplied">
-					<div class="list-item list-item--head">
-						<div class="list-item__content list-item__content--flex-2">
-							${__("Materials supplied")}
-						</div>
-					</div>
-					${items.map(item => `
-						<div class="list-item">
-							<div class="list-item__content list-item__content--flex-2">
-								<label class="control-label">
-								${item.item_name}
-								</label>
-								<input type="text" data-fieldname="qty" data-item="${item.item_code}" class="form-control bold" data-fieldtype="Float"/>
-							</div>
-						</div>
-					`).join("")}
-				</div>
-			`); */
-
     var fields = [
     {
         label: __("Materials Supplied"),
         fieldtype: "Section Break",
         fieldname: "materials_supplied_section"
     }];
-    $.each(items, function (i, item) {
+
+    fields.push({
+        label: frm.doc.production_item.toString() +  " - " + frm.doc.production_item_name,
+        fieldtype: "Float",
+        fieldname: frm.doc.production_item.toString(),
+        default: "0"
+    });
+
+    $.each(frm.doc.required_items, function (i, item) {
         fields.push({
             label:item.item_code.toString() + " - " + item.item_name,
             fieldtype: "Float",
             fieldname: item.item_code.toString(),
             reqd: 0,
-            default: "0"
+            default: (item.required_qty - item.transferred_qty).toString()
         });
     });
 
@@ -452,41 +436,9 @@ var create_start_operation_dialog = function (frm, operation) {
 
     }
     else if (operation_details.status == 'Pending') {
-        debugger;
         dialog.set_value("workshop", frm.doc.default_workshop);
     }
     dialog.fields_dict["workshop"].refresh();
-
-	// get materials received in previous operation
-    previous_operation = $(cur_frm.doc.operations).filter(function (i, op) {
-       return op.idx == (operation_details.idx - 1);
-    });
-
-    // If previous operation not exist
-    if (previous_operation.length == 0) {
-        $.each(cur_frm.doc.required_items, function (i, item) {
-           dialog.set_value(item.item_code, item.required_qty);
-        });
-    }
-    else {
-        // get materials availables to be sent to the workshop based on items received in previous operation
-        previous_operation = previous_operation[0];
-        frappe.call({
-           method: "erpnext.manufacturing.doctype.operation_completion.operation_completion.get_available_materials",
-            args: {
-               	operation_id: operation_details.completion,
-           		previous_operation_id: previous_operation.completion
-            },
-            callback: function (r) {
-              if (r.message) {
-                   $.each(r.message, function (i, item) {
-                    dialog.set_value(item.item_code, item.item_qty)
-                   });
-
-              }
-            }
-        });
-    }
 
 	dialog.set_primary_action(__("Confirm"),function () {
 	    var items_supplied = dialog.get_values();
