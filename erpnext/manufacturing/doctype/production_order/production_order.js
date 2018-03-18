@@ -517,7 +517,6 @@ var create_start_operation_dialog = function (frm, operation) {
 }
 
 var create_finish_operation_dialog = function (operation) {
-
     var dialog = new frappe.ui.Dialog({
 		title: __("Receive materials"),
 		fields: [
@@ -536,25 +535,37 @@ var create_finish_operation_dialog = function (operation) {
 				fieldname: "cost_section",
 				fieldtype: "Section Break"
 			},
+			{
+				fieldname: "operating_cost_per_unit",
+				fieldtype: "Currency",
+				label: __("Operation Cost per Unit"),
+				default: operation.operating_cost? (operation.operating_cost / cur_frm.doc.bom_produced_qty):"0"
+			},
             {
 				fieldname: "operating_cost",
 				fieldtype: "Currency",
-				label: __("Operating Cost"),
-				default: "0"
+				label: __("Total Operation Cost"),
+				default: "0",
+				read_only: 1
 			}]
 	});
 
-    //calculate_production_item_remaining_qty(operation,dialog);
-
-
+    // updates total operation cost when production item qty changes
     dialog.get_input(cur_frm.doc.production_item.toString()).on("focusout", function () {
-       dialog.set_value("operating_cost", (operation.operating_cost * dialog.get_value(cur_frm.doc.production_item))/ cur_frm.doc.bom_produced_qty);
+       dialog.set_value("operating_cost", dialog.get_value("operating_cost_per_unit") * dialog.get_value(cur_frm.doc.production_item));
+       dialog.fields_dict["operating_cost"].refresh();
+    });
+
+    // updates total operation cost when production operation cost per unit changes
+    dialog.get_input("operating_cost_per_unit").on("focusout", function () {
+       dialog.set_value("operating_cost", dialog.get_value("operating_cost_per_unit") * dialog.get_value(cur_frm.doc.production_item));
        dialog.fields_dict["operating_cost"].refresh();
     });
 	
 	dialog.set_primary_action(__("Confirm"), function () {
 		var items_received = dialog.get_values();
 		delete items_received["operating_cost"];
+		delete items_received["operating_cost_per_unit"];
 
 	    frappe.call({
 			method: "erpnext.manufacturing.doctype.production_order.production_order.finish_operation",
