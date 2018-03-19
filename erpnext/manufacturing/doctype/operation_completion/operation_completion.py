@@ -96,19 +96,18 @@ class OperationCompletion(Document):
                 items_received_detail[0].item_qty += item_qty
                 items_received_detail[0].save()
 
-
-        self.receive_material_from_workshop(production_order, filtered_items)
-
         self.db_set("total_operating_cost", self.total_operating_cost + operating_cost)
         self.db_set("total_received_qty", self.total_received_qty + production_item_received_qty)
 
         production_order.db_set("operations_cost", production_order.operations_cost + operating_cost)
         production_order.db_set("total_cost", production_order.total_cost + operating_cost)
 
-        if (self.total_received_qty == production_order.qty):
+        if (self.total_received_qty >= production_order.qty):
             self.db_set("status", "Completed")
             po_operation.db_set("status", "Completed")
             production_order.update_status()
+
+        self.receive_material_from_workshop(production_order, filtered_items)
 
     def transfer_material_to_workshop(self, production_order, items_supplied):
         stock_entry = self.create_stock_entry(production_order)
@@ -159,7 +158,8 @@ class OperationCompletion(Document):
 
             stock_entry.append("items", product_dict)
 
-        self.consume_raw_materials(stock_entry, production_order, items_received)
+        if self.status == 'Completed':
+            self.consume_raw_materials(stock_entry, production_order)
         stock_entry.submit()
         production_order.update_production_order_qty()
 
@@ -172,18 +172,16 @@ class OperationCompletion(Document):
         return production_item_supplied and production_item_supplied[0].item_qty != 0
 
 
-    def consume_raw_materials(self,stock_entry,production_order, items_received):
-        if self.is_production_item_supplied(production_order.production_item):
-            return
-        production_item_received_qty = items_received.get(production_order.production_item)
-
-        """based on production_item_qty raw materials in the workshop's warehouse are deducted"""
-        bom_items = get_bom_items_as_dict(production_order.bom_no, production_order.company, qty=production_item_received_qty,
-                                          fetch_exploded=production_order.use_multi_level_bom)
-        for bom_item in bom_items.values():
-            print (str(bom_item["item_code"]) + " - " +  str(bom_item["qty"]))
-            stock_entry.append("items", {"item_code": bom_item["item_code"], "qty": bom_item["qty"],
+    def consume_raw_materials(self,stock_entry, production_order):
+        """the amount of each material in the workshop (sent - received)
+        is transferred to a Null warehouse to the represent the use of the material"""
+        for item in self.items_supplied:
+            item_qty_in_workshop = self.get_item_qty_in_workshop(item.item_code)
+            if item.item_code != production_order.production_item and item_qty_in_workshop > 0:
+                stock_entry.append("items", {"item_code": item.item_code,
+                                         "qty": item_qty_in_workshop,
                                          "s_warehouse": self.get_workshop_warehouse(production_order.company)})
+
 
     def create_stock_entry(self, production_order):
         stock_entry = frappe.new_doc("Stock Entry")
@@ -223,7 +221,7 @@ class OperationCompletion(Document):
         return max_production_item_qty - production_item_received_qty
 
     def get_item_qty_in_workshop(self, item_code):
-        """Obtains the amount of a specific material that the workshop possesses for complete this operation."""
+        """Obtains the amount of a specific material that the workshop possesses dedicated to this operation."""
         sent_qty = self.get("items_supplied", {"item_code": item_code})[0].item_qty if self.get("items_received", {"item_code": item_code}) else 0
         received_qty = self.get("items_received", {"item_code": item_code})[0].item_qty if self.get("items_received", {"item_code": item_code}) else 0
         return sent_qty - received_qty
