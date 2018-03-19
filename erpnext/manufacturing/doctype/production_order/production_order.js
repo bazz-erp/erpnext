@@ -397,7 +397,7 @@ var create_start_operation_dialog = function (frm, operation) {
             fieldtype: "Float",
             fieldname: item.item_code.toString(),
             reqd: 0,
-            default: (item.required_qty - item.transferred_qty).toString()
+            default: (item.required_qty - item.transferred_qty) > 0 ? (item.required_qty - item.transferred_qty): "0"
         });
     });
 
