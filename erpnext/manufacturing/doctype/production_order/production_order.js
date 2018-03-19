@@ -388,7 +388,7 @@ var create_start_operation_dialog = function (frm, operation) {
         label: frm.doc.production_item.toString() +  " - " + frm.doc.production_item_name,
         fieldtype: "Float",
         fieldname: frm.doc.production_item.toString(),
-        default: "0"
+        default: frm.doc.work_in_progress_qty.toString()
     });
 
     $.each(frm.doc.required_items, function (i, item) {
@@ -445,11 +445,6 @@ var create_start_operation_dialog = function (frm, operation) {
 
 	    // removes workshop key from json object
 	    delete items_supplied["workshop"];
-
-	    /**	items_supplied = dialog.wrapper.find("input[data-fieldname='qty']").map( function (i, el) {
-             return {item_code: $(el).attr('data-item'), qty: $(el).val()}; }).toArray();*/
-
-		console.log(items_supplied);
 
 		frappe.call({
 			method: "erpnext.manufacturing.doctype.production_order.production_order.start_operation",

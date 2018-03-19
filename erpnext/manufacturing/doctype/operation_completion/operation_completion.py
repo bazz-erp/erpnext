@@ -35,10 +35,10 @@ class OperationCompletion(Document):
 
         po_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
 
-        # supplied qty of production item cannot be greather than qty received in previous operation
-        production_item_available_qty = get_production_item_available_qty(production_order, po_operation)
-        if items_supplied.get(production_order.production_item) and items_supplied.get(production_order.production_item) > production_item_available_qty:
-            frappe.throw(_("Available qty of production item is {0}").format(production_item_available_qty))
+        # supplied qty of production item cannot be greather than work in progress qty
+        if items_supplied.get(production_order.production_item, 0) > production_order.work_in_progress_qty:
+
+            frappe.throw(_("Available qty of production item is {0}").format(production_order.work_in_progress_qty))
 
         if self.status == 'Pending':
             self.db_set("status", "In Process")
@@ -123,8 +123,12 @@ class OperationCompletion(Document):
 
             # raw materials are taken from warehouse defined in required_items table
             # production item is get from 'work in progress' warehouse
-            stock_entry_detail["s_warehouse"] = production_order.wip_warehouse if item_code == production_order.production_item \
-        else production_order.get("required_items", {"item_code": item_code})[0].source_warehouse
+            if item_code == production_order.production_item:
+                stock_entry_detail["s_warehouse"] = production_order.wip_warehouse
+                # update production item qty in 'work in progress' warehouse that corresponds to this po order
+                production_order.db_set("work_in_progress_qty", production_order.work_in_progress_qty - item_qty)
+            else:
+                stock_entry_detail["s_warehouse"] = production_order.get("required_items", {"item_code": item_code})[0].source_warehouse
 
             stock_entry_detail["t_warehouse"] = workshop_warehouse
             stock_entry.append("items", stock_entry_detail)
@@ -138,17 +142,18 @@ class OperationCompletion(Document):
 
         stock_entry.title = _("Receive Material from Workshop")
 
-        """production item must be transferred to 'work in progress' warehouse. 
-        If this item was sent, it must be deducted from the workshop's warehouse. 
-        Else, if the workshop origin the product, source warehouse is null"""
         for item_code, item_qty in items_received.items():
             product_dict = {"item_code": item_code, "qty": item_qty}
 
             if item_code == production_order.production_item:
+                """production item must be transferred to 'work in progress' warehouse. 
+                    If this item was sent, it must be deducted from the workshop's warehouse. 
+                    Else, if the workshop origin the product, source warehouse is null"""
                 product_dict["s_warehouse"] = self.get_workshop_warehouse(production_order.company) if self.is_production_item_supplied(production_order.production_item) else None
                 product_dict["t_warehouse"] = production_order.wip_warehouse
-            # raw materials must be transferred to its production warehouse
+                production_order.db_set("work_in_progress_qty", production_order.work_in_progress_qty + item_qty)
             else:
+                # raw materials must be transferred to its production warehouse
                 product_dict["s_warehouse"] = self.get_workshop_warehouse(production_order.company)
                 product_dict["t_warehouse"] = production_order.get("required_items", {"item_code": item_code})[0].source_warehouse
 

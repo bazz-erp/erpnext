@@ -185,6 +185,7 @@ class ProductionOrder(Document):
         remaining_items = finished_items_qty - self.produced_qty
         if remaining_items != 0:
             frappe.get_doc(make_stock_entry(self.name, "Manufacture", qty= remaining_items)).save()
+            self.db_set("work_in_progress_qty", self.work_in_progress_qty - remaining_items)
 
         self.db_set("produced_qty", finished_items_qty)
         self.update_planned_qty()
