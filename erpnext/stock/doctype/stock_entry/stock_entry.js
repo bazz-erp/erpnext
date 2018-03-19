@@ -240,7 +240,8 @@ erpnext.stock.StockEntry = erpnext.stock.StockController.extend({
 		}
 
 		this.frm.set_indicator_formatter('item_code',
-			function(doc) { return (doc.qty<=doc.actual_qty) ? "green" : "orange" })
+            function(doc) { return (doc.qty<=doc.actual_qty) ? "green" : "orange" },
+            function (doc) { return doc.item_code + " - " + doc.item_name})
 
 		this.frm.add_fetch("purchase_order", "supplier", "supplier");
 
