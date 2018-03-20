@@ -44,7 +44,10 @@ class ProductionOrder(Document):
 
         self.validate_sales_order()
         self.validate_warehouse_belongs_to_company()
-        self.calculate_operating_cost()
+
+        # BAZZ - operating cost is calculated in operations
+        #self.calculate_operating_cost()
+
         self.validate_qty()
 
         # Operation time is not used in Bazz
@@ -194,9 +197,8 @@ class ProductionOrder(Document):
     def before_submit(self):
         # BAZZ - Time logs not needed
         # self.make_time_logs()
-        print("before_submit")
-        self.update_costs()
         pass
+
 
     def on_submit(self):
         if not self.wip_warehouse:
@@ -282,9 +284,10 @@ class ProductionOrder(Document):
 
     def set_initial_costs(self):
         bom = frappe.get_doc("BOM", self.bom_no)
-        self.operations_cost = bom.operating_cost * (self.qty / bom.quantity)
+        self.planned_operating_cost = bom.operating_cost * (self.qty / bom.quantity)
         self.materials_cost = bom.raw_material_cost * (self.qty / bom.quantity)
-        self.total_cost = self.operations_cost + self.materials_cost
+        self.operations_cost = 0
+        self.total_cost = self.materials_cost
 
     def calculate_time(self):
         bom_qty = frappe.db.get_value("BOM", self.bom_no, "quantity")
@@ -292,7 +295,8 @@ class ProductionOrder(Document):
         for d in self.get("operations"):
             d.time_in_mins = flt(d.time_in_mins) / flt(bom_qty) * flt(self.qty)
 
-        self.calculate_operating_cost()
+        # BAZZ - operating cost is calculated in operations
+        # self.calculate_operating_cost()
 
     def get_holidays(self, workstation):
         holiday_list = frappe.db.get_value("Workstation", workstation, "holiday_list")

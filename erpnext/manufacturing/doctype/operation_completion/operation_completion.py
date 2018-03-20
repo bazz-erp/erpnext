@@ -79,7 +79,6 @@ class OperationCompletion(Document):
         if production_item_received_qty <= 0:
             frappe.throw(_("Quantity must be greater than 0."))
 
-        po_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
         remaining_production_item_qty = self.calculate_production_item_remaining_qty()
 
         if production_item_received_qty > remaining_production_item_qty:
@@ -99,12 +98,16 @@ class OperationCompletion(Document):
         self.db_set("total_operating_cost", self.total_operating_cost + operating_cost)
         self.db_set("total_received_qty", self.total_received_qty + production_item_received_qty)
 
+        # Get the operation row in production order to update the status and the operating cost
+        production_order_operation = filter(lambda op: op.completion == self.name, production_order.operations)[0]
+        production_order_operation.db_set("total_operating_cost", production_order_operation.total_operating_cost + operating_cost)
+
         production_order.db_set("operations_cost", production_order.operations_cost + operating_cost)
         production_order.db_set("total_cost", production_order.total_cost + operating_cost)
 
         if (self.total_received_qty >= production_order.qty):
             self.db_set("status", "Completed")
-            po_operation.db_set("status", "Completed")
+            production_order_operation.db_set("status", "Completed")
             production_order.update_status()
 
         self.receive_material_from_workshop(production_order, filtered_items)
