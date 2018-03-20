@@ -24,6 +24,9 @@ class OperationCompletion(Document):
 
 
     def start_operation(self, workshop, items_supplied):
+        items_supplied = self.remove_empty_items(items_supplied)
+        if not items_supplied:
+            return
 
         if self.status == 'Completed':
            frappe.throw(_("Operation is already completed."))
@@ -49,11 +52,8 @@ class OperationCompletion(Document):
             po_operation.db_set("workshop", workshop)
             production_order.update_status()
 
-        # Clear items whose transferred qty is 0 and update total qty supplied to the workshop in items supplied Table
-        for item_code, item_qty in items_supplied.items():
-            if item_qty == 0:
-                items_supplied.pop(item_code)
 
+        for item_code, item_qty in items_supplied.items():
             items_supplied_detail = self.get("items_supplied", {"item_code": item_code})
             if not items_supplied_detail:
                 item_name = frappe.get_value("Item", {"name": item_code}, "item_name")
@@ -66,7 +66,15 @@ class OperationCompletion(Document):
         self.transfer_material_to_workshop(production_order, items_supplied)
         production_order.update_required_items()
 
+
+    def remove_empty_items(self, items_collection):
+        return {code: qty for code, qty in items_collection.items() if qty != 0}
+
     def finish_operation(self, operating_cost, items_received):
+        items_received = self.remove_empty_items(items_received)
+        if not items_received:
+            return
+
         if not self.status == 'In Process':
             frappe.throw(_("Operation must be started to send materials."))
 
@@ -76,10 +84,7 @@ class OperationCompletion(Document):
         production_order = frappe.get_doc("Production Order", self.production_order)
         production_item_received_qty = flt(items_received.get(production_order.production_item, 0))
 
-
-        filtered_items = {code: qty for code, qty in items_received.items() if qty != 0}
-
-        for item_code, item_qty in filtered_items.items():
+        for item_code, item_qty in items_received.items():
 
             item_name = frappe.get_value("Item", {"name": item_code}, "item_name")
             item_available_qty = self.calculate_item_remaining_qty(item_code)
@@ -109,12 +114,11 @@ class OperationCompletion(Document):
             production_order_operation.db_set("status", "Completed")
             production_order.update_status()
 
-        self.receive_material_from_workshop(production_order, filtered_items)
+        self.receive_material_from_workshop(production_order, items_received)
         production_order.update_required_items()
 
     def transfer_material_to_workshop(self, production_order, items_supplied):
         stock_entry = self.create_stock_entry(production_order)
-
         stock_entry.purpose = "Manufacturer Shipping"
         stock_entry.title = _("Material Transfer to Workshop")
         workshop_warehouse = self.get_workshop_warehouse(production_order.company)
