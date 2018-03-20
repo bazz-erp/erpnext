@@ -76,20 +76,19 @@ class OperationCompletion(Document):
         production_order = frappe.get_doc("Production Order", self.production_order)
         production_item_received_qty = flt(items_received.get(production_order.production_item, 0))
 
-        if production_item_received_qty <= 0:
-            frappe.throw(_("Quantity must be greater than 0."))
-
-        remaining_production_item_qty = self.calculate_production_item_remaining_qty()
-
-        if production_item_received_qty > remaining_production_item_qty:
-            frappe.throw(_("Remaining qty of production item is {0}").format(remaining_production_item_qty))
 
         filtered_items = {code: qty for code, qty in items_received.items() if qty != 0}
 
         for item_code, item_qty in filtered_items.items():
+
+            item_name = frappe.get_value("Item", {"name": item_code}, "item_name")
+            item_available_qty = self.calculate_item_remaining_qty(item_code)
+
+            if item_qty > item_available_qty:
+                frappe.throw(_("Available qty of {0} is {1}").format(item_name, item_available_qty))
+
             items_received_detail = self.get("items_received", {"item_code": item_code})
             if not items_received_detail:
-                item_name = frappe.get_value("Item", {"name": item_code}, "item_name")
                 self.append("items_received", {"item_code": item_code, "item_qty": item_qty, "item_name": item_name})
                 self.save()
             else:
@@ -111,6 +110,7 @@ class OperationCompletion(Document):
             production_order.update_status()
 
         self.receive_material_from_workshop(production_order, filtered_items)
+        production_order.update_required_items()
 
     def transfer_material_to_workshop(self, production_order, items_supplied):
         stock_entry = self.create_stock_entry(production_order)
@@ -194,13 +194,13 @@ class OperationCompletion(Document):
         stock_entry.operation = self.name
         return stock_entry
 
-    def calculate_production_item_remaining_qty(self):
+    def calculate_item_remaining_qty(self, item_code):
         production_order = frappe.get_doc("Production Order", self.production_order)
-        # check if production item was send to the workshop
-        if self.is_production_item_supplied(production_order.production_item):
-            return self.get_item_qty_in_workshop(production_order.production_item)
-        else:
+        # if the item is the production item and it was not previously sent to the workshop, its remaining qty is based on raw materials
+        if item_code == production_order.production_item and not (self.is_production_item_supplied(production_order.production_item)):
             return self.calculate_production_item_remaining_qty_based_on_raw_materials()
+        else:
+            return self.get_item_qty_in_workshop(item_code)
 
 
     def calculate_production_item_remaining_qty_based_on_raw_materials(self):
@@ -253,7 +253,8 @@ def get_available_materials(operation_id, previous_operation_id):
 @frappe.whitelist()
 def calculate_production_item_remaining_qty(operation_id):
     operation = frappe.get_doc("Operation Completion", operation_id)
-    return operation.calculate_production_item_remaining_qty()
+    production_order = frappe.get_doc("Production Order", operation.production_order)
+    return operation.calculate_item_remaining_qty(production_order.production_item)
 
 def get_production_item_available_qty(production_order, production_order_operation):
     # operation has no predecessor

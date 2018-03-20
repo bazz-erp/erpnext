@@ -391,15 +391,7 @@ var create_start_operation_dialog = function (frm, operation) {
         default: frm.doc.work_in_progress_qty.toString()
     });
 
-    $.each(frm.doc.required_items, function (i, item) {
-        fields.push({
-            label:item.item_code.toString() + " - " + item.item_name,
-            fieldtype: "Float",
-            fieldname: item.item_code.toString(),
-            reqd: 0,
-            default: (item.required_qty - item.transferred_qty) > 0 ? (item.required_qty - item.transferred_qty): "0"
-        });
-    });
+    add_required_items_to_dialog(frm, fields, "send");
 
     fields.push(
     {
@@ -463,10 +455,20 @@ var create_start_operation_dialog = function (frm, operation) {
 	dialog.show();
 }
 
+var add_required_items_to_dialog = function (frm, fields, dialog_type) {
+    $.each(frm.doc.required_items, function (i, item) {
+        fields.push({
+            label:item.item_code.toString() + " - " + item.item_name,
+            fieldtype: "Float",
+            fieldname: item.item_code.toString(),
+            reqd: 0,
+            default: (item.required_qty - item.transferred_qty > 0 && dialog_type == "send") ? (item.required_qty - item.transferred_qty): "0"
+        });
+    });
+}
+
 var create_finish_operation_dialog = function (operation) {
-    var dialog = new frappe.ui.Dialog({
-		title: __("Receive materials"),
-		fields: [
+    fields = [
 			{
 				fieldname: "items_received_section",
 				fieldtype: "Section Break",
@@ -477,7 +479,11 @@ var create_finish_operation_dialog = function (operation) {
                 label: cur_frm.doc.production_item.toString() + " - " + cur_frm.doc.production_item_name,
                 fieldtype: "Float",
                 default: "0"
-            },
+            }];
+
+    add_required_items_to_dialog(cur_frm,fields, "receive");
+
+    fields = fields.concat([
             {
 				fieldname: "cost_section",
 				fieldtype: "Section Break"
@@ -494,7 +500,11 @@ var create_finish_operation_dialog = function (operation) {
 				label: __("Total Operation Cost"),
 				default: "0",
 				read_only: 1
-			}]
+			}]);
+
+	var dialog = new frappe.ui.Dialog({
+		title: __("Receive materials"),
+		fields: fields
 	});
 
     // updates total operation cost when production item qty changes
@@ -518,7 +528,7 @@ var create_finish_operation_dialog = function (operation) {
 			method: "erpnext.manufacturing.doctype.production_order.production_order.finish_operation",
 			args: {
 				operation_id: operation.name,
-				operating_cost: dialog.get_value("operating_cost"),
+				operating_cost: dialog.get_value("operating_cost")? dialog.get_value("operating_cost"): "0",
 				items_received: items_received
 			},
 			callback: function (r) {

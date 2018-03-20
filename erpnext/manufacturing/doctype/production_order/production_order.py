@@ -498,7 +498,9 @@ class ProductionOrder(Document):
 
     def update_transaferred_qty_for_required_items(self):
         '''update transferred qty from submitted stock entries for that item against
-            the production order'''
+            the production order.
+            workshops can return materials to company. Thus, to get the transferred qty is necessary to take
+            into account the stock entries of each material which target warehouse is the company'''
 
         for d in self.required_items:
             transferred_qty = frappe.db.sql('''select sum(qty)
@@ -510,6 +512,17 @@ class ProductionOrder(Document):
                     and detail.parent = entry.name
                     and detail.item_code = %s''', (self.name, d.item_code))[0][0]
 
+            returned_qty = frappe.db.sql('''select sum(qty)
+                from `tabStock Entry` entry, `tabStock Entry Detail` detail
+                where
+                    entry.production_order = %s
+                    and entry.purpose = "Manufacturer Receipt"
+                    and entry.docstatus = 1
+                    and detail.parent = entry.name
+                    and detail.item_code = %s
+                    and detail.t_warehouse= %s''', (self.name, d.item_code, d.source_warehouse))[0][0]
+
+            transferred_qty = transferred_qty - returned_qty if returned_qty else transferred_qty
             d.db_set('transferred_qty', transferred_qty, update_modified = False)
 
 
@@ -706,8 +719,8 @@ def start_operation(operation_id, workshop, items_supplied):
 def finish_operation(operation_id, operating_cost, items_received):
     operation_completion = get_operation_completion(operation_id)
     operation_completion.finish_operation(flt(operating_cost), json.loads(items_received))
-
-    make_operation_cost_gl_entries(operation_completion, operating_cost)
+    if flt(operating_cost) != 0:
+        make_operation_cost_gl_entries(operation_completion, operating_cost)
 
 def get_operation_completion(operation_id):
     completion_id = frappe.db.sql("""select completion from `tabProduction Order Operation` where name = %s""", operation_id)[0][0]
