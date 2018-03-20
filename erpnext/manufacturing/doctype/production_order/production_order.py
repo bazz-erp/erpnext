@@ -520,8 +520,8 @@ class ProductionOrder(Document):
 
             # initialization of received items table is required later to calculate produced qty
             for item in self.required_items:
-                op_completion.append("items_received", {"item_code": item.item_code, "item_qty":0})
-            op_completion.append("items_received", {"item_code": self.production_item, "item_qty": 0})
+                op_completion.append("items_received", {"item_code": item.item_code, "item_qty":0, "item_name": item.item_name})
+            op_completion.append("items_received", {"item_code": self.production_item, "item_qty": 0,"item_name": self.production_item_name})
             op_completion.submit()
 
             operation.db_set("completion", op_completion.db_get("name"))

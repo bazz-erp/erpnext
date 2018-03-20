@@ -56,7 +56,8 @@ class OperationCompletion(Document):
 
             items_supplied_detail = self.get("items_supplied", {"item_code": item_code})
             if not items_supplied_detail:
-                self.append("items_supplied", {"item_code": item_code, "item_qty": item_qty})
+                item_name = frappe.get_value("Item", {"name": item_code}, "item_name")
+                self.append("items_supplied", {"item_code": item_code, "item_qty": item_qty, "item_name": item_name})
                 self.save()
             else:
                 items_supplied_detail[0].item_qty += item_qty
@@ -90,7 +91,8 @@ class OperationCompletion(Document):
         for item_code, item_qty in filtered_items.items():
             items_received_detail = self.get("items_received", {"item_code": item_code})
             if not items_received_detail:
-                self.append("items_received", {"item_code": item_code, "item_qty": item_qty})
+                item_name = frappe.get_value("Item", {"name": item_code}, "item_name")
+                self.append("items_received", {"item_code": item_code, "item_qty": item_qty, "item_name": item_name})
                 self.save()
             else:
                 items_received_detail[0].item_qty += item_qty
