@@ -60,8 +60,7 @@ class OperationCompletion(Document):
                 self.append("items_supplied", {"item_code": item_code, "item_qty": item_qty, "item_name": item_name})
                 self.save()
             else:
-                items_supplied_detail[0].item_qty += item_qty
-                items_supplied_detail[0].save()
+                items_supplied_detail[0].db_set("item_qty", items_supplied_detail[0].item_qty + item_qty)
 
 
         self.transfer_material_to_workshop(production_order, items_supplied)
@@ -95,8 +94,7 @@ class OperationCompletion(Document):
                 self.append("items_received", {"item_code": item_code, "item_qty": item_qty, "item_name": item_name})
                 self.save()
             else:
-                items_received_detail[0].item_qty += item_qty
-                items_received_detail[0].save()
+                items_received_detail[0].db_set("item_qty", items_received_detail[0].item_qty + item_qty)
 
         self.db_set("total_operating_cost", self.total_operating_cost + operating_cost)
         self.db_set("total_received_qty", self.total_received_qty + production_item_received_qty)

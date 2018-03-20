@@ -75,7 +75,7 @@
   },
   {
    "allow_bulk_edit": 0, 
-   "allow_on_submit": 1,
+   "allow_on_submit": 0,
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0,
@@ -114,7 +114,7 @@
  "issingle": 0, 
  "istable": 1, 
  "max_attachments": 0, 
- "modified": "2018-03-20 17:06:42.138574",
+ "modified": "2018-03-20 17:18:42.138574",
  "modified_by": "Administrator", 
  "module": "Manufacturing", 
  "name": "Operation Completion Item", 
