@@ -523,7 +523,8 @@ def get_bom_items_as_dict(bom, company, qty=1, fetch_exploded=1, fetch_scrap_ite
                 and bom_item.parent = bom.name
                 and item.name = bom_item.item_code
                 {where_conditions}
-                group by item_code, stock_uom"""
+                group by item_code, stock_uom
+                order by bom.name,bom_item.idx"""
 
     if fetch_exploded:
         query = query.format(table="BOM Explosion Item",
