@@ -653,9 +653,7 @@ def get_outstanding_invoices(party_type, party, account, condition=None):
             'posting_date': d.posting_date,
             'invoice_amount': flt(d.invoice_amount),
             'payment_amount': flt(d.payment_amount),
-            'outstanding_amount': flt(d.invoice_amount - d.payment_amount, precision),
-            'due_date': frappe.db.get_value(d.voucher_type, d.voucher_no,
-                                            "posting_date" if party_type == "Employee" else "due_date"),
+            'outstanding_amount': flt(d.invoice_amount - d.payment_amount, precision)
         }))
 
     outstanding_invoices = sorted(outstanding_invoices, key=lambda k: k['due_date'] or getdate(nowdate()))
