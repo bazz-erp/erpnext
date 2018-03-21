@@ -114,7 +114,7 @@ class OperationCompletion(Document):
             production_order_operation.db_set("status", "Completed")
             production_order.update_status()
 
-        self.receive_material_from_workshop(production_order, items_received)
+        self.receive_material_from_workshop(production_order, items_received, operating_cost)
         production_order.update_required_items()
 
     def transfer_material_to_workshop(self, production_order, items_supplied):
@@ -142,7 +142,7 @@ class OperationCompletion(Document):
         stock_entry.submit()
 
 
-    def receive_material_from_workshop(self, production_order, items_received):
+    def receive_material_from_workshop(self, production_order, items_received, operation_cost):
         stock_entry = self.create_stock_entry(production_order)
         stock_entry.purpose = "Manufacturer Receipt"
 
@@ -157,6 +157,11 @@ class OperationCompletion(Document):
                     Else, if the workshop origin the product, source warehouse is null"""
                 product_dict["s_warehouse"] = self.get_workshop_warehouse(production_order.company) if self.is_production_item_supplied(production_order.production_item) else None
                 product_dict["t_warehouse"] = production_order.wip_warehouse
+
+                # set operation cost per unit
+                # total operation cost is automatically calculated in stock entry
+                product_dict["basic_rate"] = operation_cost / item_qty
+
                 production_order.db_set("work_in_progress_qty", production_order.work_in_progress_qty + item_qty)
             else:
                 # raw materials must be transferred to its production warehouse
