@@ -4,7 +4,15 @@
 
 frappe.query_reports["Workshop Current Account"] = {
 	"filters": [
-       {
+	  {
+			"fieldname":"company",
+			"label": __("Company"),
+			"fieldtype": "Link",
+			"options": "Company",
+			"default": frappe.defaults.get_user_default("Company"),
+			"reqd": 1
+	  },
+        {
 			"fieldname":"workshop",
 			"label": __("Workshop"),
 			"fieldtype": "Link",
@@ -16,14 +24,13 @@ frappe.query_reports["Workshop Current Account"] = {
 			},
 			"reqd": 1
 	  },
-	  {
-			"fieldname":"company",
-			"label": __("Company"),
+        {
+			"fieldname":"item",
+			"label": __("Item"),
 			"fieldtype": "Link",
-			"options": "Company",
-			"default": frappe.defaults.get_user_default("Company"),
-			"reqd": 1
-		},
+			"options": "Item"
+	  }
+
 	],
 	"formatter": function (row, cell, value, columnDef, dataContext, default_formatter) {
 	    value = default_formatter(row, cell, value, columnDef, dataContext);

@@ -48,14 +48,17 @@ def get_data(filters):
     return data
 
 def get_stock_entry_details(filters):
+    item_filter = " and sd.item_code=%(item)s " if filters.get("item") else ""
+
     return frappe.db.sql("""SELECT sd.creation, item.item_name, sd.item_code, sd.qty, sd.amount, sd.s_warehouse, 
             sd.t_warehouse, sd.uom, se.posting_date, se.purpose FROM `tabStock Entry` as se, 
         `tabStock Entry Detail` as sd, `tabItem` as item, `tabProduction Order` as po, 
         `tabOperation Completion` as op
         where op.workshop = %(workshop)s and sd.parent = se.name
         and se.operation = op.name and sd.item_code = item.name and op.production_order=po.name 
-        and po.company=%(company)s and (se.purpose = 'Manufacturer Shipping' or se.purpose = 'Manufacturer Receipt') 
-        order by se.posting_date, sd.creation""", filters, as_dict=1)
+        and po.company=%(company)s and (se.purpose = 'Manufacturer Shipping' or se.purpose = 'Manufacturer Receipt')
+        {item_filter} 
+        order by se.posting_date, sd.creation""".format(item_filter=item_filter), filters, as_dict=1)
 
 
 
