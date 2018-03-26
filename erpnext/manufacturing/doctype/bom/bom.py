@@ -426,6 +426,7 @@ class BOM(WebsiteGenerator):
                     'stock_uom'		: d.stock_uom,
                     'stock_qty'			: flt(d.stock_qty),
                     'rate'			: d.base_rate,
+                    'idx': d.idx
                 }))
 
     def company_currency(self):
@@ -443,7 +444,7 @@ class BOM(WebsiteGenerator):
         child_fb_items = frappe.db.sql("""select bom_item.item_code, bom_item.item_name,
             bom_item.description, bom_item.source_warehouse,
             bom_item.stock_uom, bom_item.stock_qty, bom_item.rate,
-            bom_item.stock_qty / ifnull(bom.quantity, 1) as qty_consumed_per_unit
+            bom_item.stock_qty / ifnull(bom.quantity, 1) as qty_consumed_per_unit, bom_item.idx
             from `tabBOM Explosion Item` bom_item, tabBOM bom
             where bom_item.parent = bom.name and bom.name = %s and bom.docstatus = 1""", bom_no, as_dict = 1)
 
@@ -456,13 +457,14 @@ class BOM(WebsiteGenerator):
                 'stock_uom'				: d['stock_uom'],
                 'stock_qty'				: d['qty_consumed_per_unit'] * stock_qty,
                 'rate'					: flt(d['rate']),
+                'idx': d.idx
             }))
 
     def add_exploded_items(self):
         "Add items to Flat BOM table"
         frappe.db.sql("""delete from `tabBOM Explosion Item` where parent=%s""", self.name)
         self.set('exploded_items', [])
-        for d in sorted(self.cur_exploded_items, key=itemgetter(0)):
+        for d in sorted(self.cur_exploded_items, key=lambda d: self.cur_exploded_items[d]["idx"]):
             ch = self.append('exploded_items', {})
             for i in self.cur_exploded_items[d].keys():
                 ch.set(i, self.cur_exploded_items[d][i])
@@ -513,6 +515,8 @@ def get_bom_items_as_dict(bom, company, qty=1, fetch_exploded=1, fetch_scrap_ite
                 item.default_production_warehouse,
                 item.expense_account as expense_account,
                 item.buying_cost_center as cost_center,
+                bom_item.idx,
+                bom_item.parent as bom_no,
                 (bom_item.amount * %(qty)s)/ifnull(bom.quantity, 1) as amount
                 {select_columns}
             from
@@ -523,8 +527,7 @@ def get_bom_items_as_dict(bom, company, qty=1, fetch_exploded=1, fetch_scrap_ite
                 and bom_item.parent = bom.name
                 and item.name = bom_item.item_code
                 {where_conditions}
-                group by item_code, stock_uom
-                order by bom_item.idx"""
+                group by item_code, stock_uom"""
 
     if fetch_exploded:
         query = query.format(table="BOM Explosion Item",
