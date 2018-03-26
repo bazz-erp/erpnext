@@ -274,7 +274,7 @@ class ProductionOrder(Document):
         self.calculate_time()
 
     def set_default_workshop(self):
-        self.default_workshop = frappe.get_doc("Item", self.production_item).default_supplier
+        self.default_workshop = frappe.get_doc("Item", self.production_item).manufacturer
 
 
 

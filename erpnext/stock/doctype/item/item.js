@@ -26,6 +26,16 @@ frappe.ui.form.on("Item", {
 		// item code in price lists is not required
 		var df = frappe.meta.get_docfield("Item Price","item_code",cur_frm.doc.name);
         df.reqd = 0;
+
+
+        // add filter to workshops
+        frm.set_query("manufacturer","manufacturer_items", function () {
+            return {
+                filters: {
+                    "supplier_type": "Taller",
+                }
+            }
+        });
 	},
 
 	refresh: function(frm) {
