@@ -163,6 +163,7 @@ class OperationCompletion(Document):
                 product_dict["basic_rate"] = operation_cost / item_qty
 
                 production_order.db_set("work_in_progress_qty", production_order.work_in_progress_qty + item_qty)
+                self.consume_raw_materials(stock_entry, production_order, item_qty)
             else:
                 # raw materials must be transferred to its production warehouse
                 product_dict["s_warehouse"] = self.get_workshop_warehouse(production_order.company)
@@ -170,8 +171,6 @@ class OperationCompletion(Document):
 
             stock_entry.append("items", product_dict)
 
-        if self.status == 'Completed':
-            self.consume_raw_materials(stock_entry, production_order)
         stock_entry.submit()
         production_order.update_production_order_qty()
 
@@ -184,14 +183,25 @@ class OperationCompletion(Document):
         return production_item_supplied and production_item_supplied[0].item_qty != 0
 
 
-    def consume_raw_materials(self,stock_entry, production_order):
-        """the amount of each material in the workshop (sent - received)
+    def consume_raw_materials(self,stock_entry, production_order, production_item_qty):
+        """the amount of each material in the workshop used to producte production_item_qty units of production item
         is transferred to a Null warehouse to the represent the use of the material"""
         for item in self.items_supplied:
             item_qty_in_workshop = self.get_item_qty_in_workshop(item.item_code)
             if item.item_code != production_order.production_item and item_qty_in_workshop > 0:
+
+                # get required qty of item for the whole production order
+                item_total_required_qty = production_order.get("required_items", {"item_code": item.item_code})[0].required_qty
+
+                # calculate required qty to produce production_item_qty items
+                item_used_qty = (production_item_qty * item_total_required_qty) / production_order.qty
+
+                if item_used_qty > item_qty_in_workshop:
+                    frappe.throw(_("{0} units of {1} are needed to produce "
+                                   "{2} units of {3}. Workshop has {4}").format(item_used_qty, item.item_name,
+                                                                                production_item_qty, production_order.production_item_name, item_qty_in_workshop))
                 stock_entry.append("items", {"item_code": item.item_code,
-                                         "qty": item_qty_in_workshop,
+                                         "qty": item_used_qty,
                                          "s_warehouse": self.get_workshop_warehouse(production_order.company)})
 
 
