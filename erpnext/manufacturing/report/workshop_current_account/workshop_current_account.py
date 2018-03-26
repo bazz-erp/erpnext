@@ -33,7 +33,7 @@ def get_data(filters):
 
     entries = payment_entries + stock_entry_details
     balance = 0
-    for entry in sorted(entries, key=lambda e: e["creation"]):
+    for entry in sorted(entries, key=lambda e: e["posting_date"] and e["creation"]):
         entry["debit"] = entry.get("amount") if (entry.get("purpose") == "Manufacturer Shipping"
                                                  or entry.get("purpose") == "Payment") else 0
 
@@ -57,13 +57,40 @@ def get_stock_entry_details(filters):
         where op.workshop = %(workshop)s and sd.parent = se.name
         and se.operation = op.name and sd.item_code = item.name and op.production_order=po.name 
         and po.company=%(company)s and (se.purpose = 'Manufacturer Shipping' or se.purpose = 'Manufacturer Receipt')
+        and item.item_group in {group_list}
         {item_filter} 
-        order by se.posting_date, sd.creation""".format(item_filter=item_filter), filters, as_dict=1)
-
+        order by se.posting_date, sd.creation""".format(item_filter=item_filter, group_list=get_selected_item_groups()),filters, as_dict=1)
 
 
 
 def get_workshop_payment_entries(filters):
     return frappe.db.sql("""select creation, posting_date, paid_amount as amount, 'Payment' as purpose from `tabPayment Entry` 
 where party_type='Supplier' and party=%(workshop)s order by posting_date, creation""", filters, as_dict=1)
+
+
+def get_selected_item_groups():
+    checked_item_groups = frappe.db.sql("""select item_group from `tabChecked Item Group` where parentfield='item_groups_table' 
+and parenttype='Manufacturing Settings'""")
+
+    selected_item_groups = []
+    for item_group in checked_item_groups:
+        selected_item_groups.append(item_group[0])
+        get_item_group_subgroups(item_group, selected_item_groups)
+
+    # return group list in the form ('A', 'B', 'C') to add to the query
+    selected_item_groups = ["'" + item_group + "'" for item_group in selected_item_groups]
+    return "(" + ",".join(selected_item_groups) + ")"
+
+def get_item_group_subgroups(item_group, item_group_list):
+    """ finds all subgroups of an item group recursively and adds it to item_group_list"""
+    subgroups = frappe.db.sql("""select name from `tabItem Group` where parent_item_group=%s""", item_group)
+
+    # convert from list of tuples to list of strings
+    subgroups_list = [item_group[0] for item_group in subgroups]
+    item_group_list += subgroups_list
+    for item_subgroup in subgroups_list:
+        get_item_group_subgroups(item_subgroup, item_group_list)
+
+
+
 
