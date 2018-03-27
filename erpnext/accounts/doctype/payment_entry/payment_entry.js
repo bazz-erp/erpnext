@@ -137,7 +137,7 @@ frappe.ui.form.on('Payment Entry', {
             if (frm.doc.party_type == "Customer") {
                 var doctypes = ["Sales Order", "Sales Invoice", "Journal Entry"];
             } else if (frm.doc.party_type == "Supplier") {
-                var doctypes = ["Purchase Order", "Purchase Invoice", "Journal Entry"];
+                var doctypes = ["Purchase Order", "Purchase Invoice", "Journal Entry", "Operation Completion"];
             } else if (frm.doc.party_type == "Employee") {
                 var doctypes = ["Expense Claim", "Journal Entry"];
             } else {
@@ -933,7 +933,7 @@ frappe.ui.form.on('Payment Entry', {
             }
 
             if (frm.doc.party_type == "Supplier" &&
-                !in_list(["Purchase Order", "Purchase Invoice", "Journal Entry"], row.reference_doctype)
+                !in_list(["Purchase Order", "Purchase Invoice", "Journal Entry", "Operation Completion"], row.reference_doctype)
             ) {
                 frappe.model.set_value(row.doctype, row.name, "against_voucher_type", null);
                 frappe.msgprint(__("Row #{0}: Reference Document Type must be one of Purchase Order, Purchase Invoice or Journal Entry", [row.idx]));

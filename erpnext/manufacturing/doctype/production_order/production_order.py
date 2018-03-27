@@ -533,7 +533,8 @@ class ProductionOrder(Document):
                                             "workshop": operation.workshop,
                                             "production_order": self.name,
                                             "operation": operation.operation,
-                                            "status": operation.status})
+                                            "status": operation.status,
+                                            "company": self.company})
 
             # initialization of received items table is required later to calculate produced qty
             for item in self.required_items:
