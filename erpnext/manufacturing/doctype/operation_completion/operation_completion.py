@@ -24,12 +24,12 @@ class OperationCompletion(Document):
 
 
     def start_operation(self, workshop, items_supplied):
+        if self.status == 'Completed':
+           frappe.throw(_("Operation is already completed."))
+
         items_supplied = self.remove_empty_items(items_supplied)
         if not items_supplied:
             return
-
-        if self.status == 'Completed':
-           frappe.throw(_("Operation is already completed."))
 
         production_order = frappe.get_doc("Production Order", self.production_order)
 
