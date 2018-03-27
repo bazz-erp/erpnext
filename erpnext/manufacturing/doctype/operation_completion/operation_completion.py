@@ -99,7 +99,7 @@ class OperationCompletion(Document):
             else:
                 items_received_detail[0].db_set("item_qty", items_received_detail[0].item_qty + item_qty)
 
-        self.db_set("total_operating_cost", self.total_operating_cost + operating_cost)
+        self.db_set("total_amount", self.total_amount + operating_cost)
         self.db_set("total_received_qty", self.total_received_qty + production_item_received_qty)
 
         # Get the operation row in production order to update the status and the operating cost
@@ -247,6 +247,11 @@ class OperationCompletion(Document):
         sent_qty = self.get("items_supplied", {"item_code": item_code})[0].item_qty if self.get("items_received", {"item_code": item_code}) else 0
         received_qty = self.get("items_received", {"item_code": item_code})[0].item_qty if self.get("items_received", {"item_code": item_code}) else 0
         return sent_qty - received_qty
+
+
+    # empty method to guarantee polymorphism when updating outstanding amount in gl entry
+    def set_status(self, update=True):
+        pass
 
 
 @frappe.whitelist()

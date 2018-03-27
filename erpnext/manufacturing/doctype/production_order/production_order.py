@@ -719,8 +719,9 @@ def start_operation(operation_id, workshop, items_supplied):
 def finish_operation(operation_id, operating_cost, items_received):
     operation_completion = get_operation_completion(operation_id)
     operation_completion.finish_operation(flt(operating_cost), json.loads(items_received))
-    #if flt(operating_cost) != 0:
-    #    make_operation_cost_gl_entries(operation_completion, operating_cost)
+
+    if flt(operating_cost) != 0:
+        make_operation_cost_gl_entries(operation_completion, operating_cost)
 
 def get_operation_completion(operation_id):
     completion_id = frappe.db.sql("""select completion from `tabProduction Order Operation` where name = %s""", operation_id)[0][0]
@@ -742,7 +743,9 @@ def make_operation_cost_gl_entries(operation_completion, operating_cost):
             "credit_in_account_currency": flt(operating_cost),
             "voucher_no": operation_completion.name,
             "voucher_type": operation_completion.doctype,
-            "against": operation_completion.workshop
+            "against": operation_completion.workshop,
+            "against_voucher_type": operation_completion.doctype,
+            "against_voucher": operation_completion.name
         })
     )
 
@@ -759,7 +762,7 @@ def make_operation_cost_gl_entries(operation_completion, operating_cost):
             "against": company.default_payable_account
         })
     )
-    make_gl_entries(gl_entries, update_outstanding='No')
+    make_gl_entries(gl_entries, update_outstanding='Yes')
 
 
 

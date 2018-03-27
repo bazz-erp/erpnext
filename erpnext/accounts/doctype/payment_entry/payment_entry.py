@@ -219,7 +219,7 @@ class PaymentEntry(AccountsController):
         if self.party_type == "Customer":
             valid_reference_doctypes = ("Sales Order", "Sales Invoice", "Journal Entry")
         elif self.party_type == "Supplier":
-            valid_reference_doctypes = ("Purchase Order", "Purchase Invoice", "Journal Entry")
+            valid_reference_doctypes = ("Purchase Order", "Purchase Invoice", "Journal Entry", "Operation Completion")
         elif self.party_type == "Employee":
             valid_reference_doctypes = ("Expense Claim", "Journal Entry")
 
@@ -240,7 +240,7 @@ class PaymentEntry(AccountsController):
                 else:
                     ref_doc = frappe.get_doc(d.reference_doctype, d.reference_name)
 
-                    if d.reference_doctype != "Journal Entry" and d.reference_doctype != "Eventual Purchase Invoice":
+                    if d.reference_doctype not in ["Journal Entry", "Eventual Purchase Invoice", "Operation Completion"]:
                         if self.party != ref_doc.get(scrub(self.party_type)):
                             frappe.throw(_("{0} {1} does not associated with {2} {3}")
                                          .format(d.reference_doctype, d.reference_name, self.party_type, self.party))
@@ -1059,7 +1059,7 @@ def get_reference_details(reference_doctype, reference_name, party_account_curre
     total_amount = outstanding_amount = exchange_rate = None
     ref_doc = frappe.get_doc(reference_doctype, reference_name)
 
-    if reference_doctype != "Journal Entry" and reference_doctype != "Eventual Purchase Invoice":
+    if reference_doctype not in ["Journal Entry", "Eventual Purchase Invoice", "Operation Completion"]:
         if party_account_currency == ref_doc.company_currency:
             if ref_doc.doctype == "Expense Claim":
                 total_amount = ref_doc.total_sanctioned_amount
@@ -1083,7 +1083,7 @@ def get_reference_details(reference_doctype, reference_name, party_account_curre
         exchange_rate = get_exchange_rate(party_account_currency,
                                           ref_doc.company_currency, ref_doc.posting_date)
 
-    # reference_doctype is Eventual Purchase Invoice
+    # reference_doctype is Eventual Purchase Invoice or Operation Completion
     else:
         exchange_rate = 1
         total_amount = ref_doc.total_amount
