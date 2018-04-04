@@ -36,6 +36,10 @@ def get_data(filters):
     for entry in sorted(entries, key=lambda e: e["posting_date"] and e["creation"]):
 
         balance += entry.get("debit", 0) - entry.get("credit", 0)
+
+        # the function _ is explicitly invoked with the term 'Workforce' to translate it
+        entry["purpose"] = _("Workforce") if entry.get("purpose") == "Workforce" else entry["purpose"]
+
         data.append([_(entry.get("purpose")), entry.get("posting_date"), entry.get("item_code"),
                      entry.get("item_name"), entry.get("qty"), entry.get("uom"), entry.get("debit"), entry.get("credit"), balance])
 
