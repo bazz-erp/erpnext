@@ -6,6 +6,17 @@ frappe.ui.form.on("Supplier", {
 		if(!frm.doc.code){
 			set_supplier_code();
 		}
+		frm.make_methods = {
+			"Payment Entry": function (frm) {
+				frappe.model.with_doctype("Payment Entry", function() {
+					var new_doc = frappe.model.get_new_doc("Payment Entry");
+					new_doc.party = frm.doc.name;
+					new_doc.party_type = "Supplier";
+					new_doc.payment_type = "Pay";
+					frappe.set_route('Form', "Payment Entry", new_doc.name);
+				});
+            }
+		};
     },
 	setup: function (frm) {
 		frm.set_query('default_price_list', { 'buying': 1 });

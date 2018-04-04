@@ -378,7 +378,6 @@ frappe.ui.form.on('Payment Entry', {
         check_counter = 0;
         doc_counter = 0;
 
-        frm.set_value("party", null);
         frm.set_value("references", null);
 
 
@@ -425,6 +424,7 @@ frappe.ui.form.on('Payment Entry', {
     },
 
     party: function (frm) {
+        debugger
         if (frm.doc.payment_type && frm.doc.party_type && frm.doc.party) {
             if (!frm.doc.posting_date) {
                 frappe.msgprint(__("Please select Posting Date before selecting Party"))
