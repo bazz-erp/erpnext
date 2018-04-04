@@ -296,9 +296,9 @@ frappe.ui.form.on('Payment Entry', {
 
         // Paid amount always is in company currency. Internal Transfer has other label to paid_amount field
         if (frm.doc.payment_type != "Internal Transfer") {
-            frm.set_currency_labels(["paid_amount"], company_currency);
+            frm.set_df_property("paid_amount", "label",(is_income(frm) ? __("Received Amount"): __("Paid Amount"))
+                    + " (" + get_company_currency(frm) + ")");
         }
-
 
         frm.set_currency_labels(["received_amount"], company_currency);
 
@@ -348,7 +348,7 @@ frappe.ui.form.on('Payment Entry', {
 
     payment_type: function (frm) {
         frm.toggle_reqd(["paid_to", "paid_from"], frm.doc.payment_type == "Internal Transfer");
-
+        frm.set_value("party", null);
         if (frm.doc.payment_type == "Internal Transfer") {
             $.each(["party", "party_balance", "paid_from", "paid_to",
                 "references", "total_allocated_amount"], function (i, field) {
@@ -364,13 +364,8 @@ frappe.ui.form.on('Payment Entry', {
             set_party_type(frm);
 
             if (!frm.doc.party) {
-                if (is_income(frm)) {
-
-                    frm.set_df_property("paid_amount", "label", __("Received Amount") + " (ARS)");
-                }
-                else {
-                    frm.set_df_property("paid_amount", "label", __("Paid Amount") + " (ARS)");
-                }
+                frm.set_df_property("paid_amount", "label",(is_income(frm) ? __("Received Amount"): __("Paid Amount"))
+                    + " (" + get_company_currency(frm) + ")");
             }
             else {
                 frm.events.party(frm);
