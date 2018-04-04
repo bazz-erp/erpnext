@@ -27,17 +27,16 @@ def get_data(filters):
     if not (filters.get("workshop") and filters.get("company")):
         frappe.throw(_("{0} and {1} are mandatory".format(_("Workshop"), _("Company"))))
 
-    payment_entries = get_workshop_payment_entries(filters)
+    payment_entries = get_workshop_gl_entries(filters)
 
     stock_entry_details = get_stock_entry_details(filters)
 
     entries = payment_entries + stock_entry_details
     balance = 0
     for entry in sorted(entries, key=lambda e: e["posting_date"] and e["creation"]):
-        entry["debit"] = entry.get("amount") if (entry.get("purpose") == "Manufacturer Shipping"
-                                                 or entry.get("purpose") == "Payment") else 0
-
-        entry["credit"] = entry.get("amount") if entry.get("purpose") == "Manufacturer Receipt" else 0
+        if entry["purpose"] in ("Manufacturer Shipping", "Manufacturer Receipt"):
+            entry["debit"] = entry.get("amount") if entry.get("purpose") == "Manufacturer Shipping" else 0
+            entry["credit"] = entry.get("amount") if entry.get("purpose") == "Manufacturer Receipt" else 0
 
         balance += entry["debit"] - entry["credit"]
         data.append([_(entry.get("purpose")), entry.get("posting_date"), entry.get("item_code"),
@@ -57,15 +56,16 @@ def get_stock_entry_details(filters):
         where op.workshop = %(workshop)s and sd.parent = se.name
         and se.operation = op.name and sd.item_code = item.name and op.production_order=po.name 
         and po.company=%(company)s and (se.purpose = 'Manufacturer Shipping' or se.purpose = 'Manufacturer Receipt')
-        and item.item_group in {group_list}
+        {group_list}
         {item_filter} 
         order by se.posting_date, sd.creation""".format(item_filter=item_filter, group_list=get_selected_item_groups()),filters, as_dict=1)
 
 
 
-def get_workshop_payment_entries(filters):
-    return frappe.db.sql("""select creation, posting_date, paid_amount as amount, 'Payment' as purpose from `tabPayment Entry` 
-where party_type='Supplier' and party=%(workshop)s order by posting_date, creation""", filters, as_dict=1)
+def get_workshop_gl_entries(filters):
+    return frappe.db.sql("""select creation, posting_date, credit, debit, if(voucher_type = "Payment Entry", "Payment", "Workforce") as purpose from `tabGL Entry` 
+    where company=%(company)s and party_type='Supplier' and party=%(workshop)s and against_voucher_type='Operation Completion'
+    order by posting_date, creation""", filters, as_dict=1)
 
 
 def get_selected_item_groups():
@@ -77,9 +77,9 @@ and parenttype='Manufacturing Settings'""")
         selected_item_groups.append(item_group[0])
         get_item_group_subgroups(item_group, selected_item_groups)
 
-    # return group list in the form ('A', 'B', 'C') to add to the query
+    # return group list in the form ('A', 'B', 'C') to add to the query, null represents empty item group set
     selected_item_groups = ["'" + item_group + "'" for item_group in selected_item_groups]
-    return "(" + ",".join(selected_item_groups) + ")"
+    return "and item.item_group in (" + ",".join(selected_item_groups) + ")" if selected_item_groups else "and item.item_group is null"
 
 def get_item_group_subgroups(item_group, item_group_list):
     """ finds all subgroups of an item group recursively and adds it to item_group_list"""
